@@ -13,6 +13,7 @@ from backend.storage.event_store import EventStore
 from backend.graphs.execution_graph import ExecutionGraphBuilder
 from backend.graphs.authority_graph import AuthorityGraphBuilder
 from backend.graphs.interaction_graph import InteractionGraphBuilder
+from backend.graphs.cross_graph_validator import CrossGraphValidator
 
 class ThreeGraphCoordinator:
     def __init__(self, event_store: EventStore):
@@ -20,6 +21,11 @@ class ThreeGraphCoordinator:
         self.exec_builder = ExecutionGraphBuilder(self.store)
         self.auth_builder = AuthorityGraphBuilder(self.store)
         self.interact_builder = InteractionGraphBuilder(self.store)
+
+    def validate_workflow(self, workflow_id: str) -> Dict[str, Any]:
+        """Runs cross-graph invariant validation and alignment scoring for a workflow."""
+        validator = CrossGraphValidator(self.store)
+        return validator.run_full_validation(workflow_id)
 
     def get_graphs_for_workflow(self, workflow_id: str, conversation_id: Optional[str] = None) -> Dict[str, Any]:
         """Builds all three graphs for a given workflow execution."""

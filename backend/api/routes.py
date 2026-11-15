@@ -21,6 +21,7 @@ from backend.tools.file_tools import list_sample_datasets
 from backend.agents.llm_client import is_gemini_available, query_gemini, query_gemini_chat
 from backend.orchestration.hf_simulation import run_huggingface_transparency_simulation
 from backend.graphs.three_graphs import ThreeGraphCoordinator
+from backend.graphs.cross_graph_validator import CrossGraphValidator
 from backend.provenance.tracker import ProvenanceTracker
 from backend.evaluation.runner import BenchmarkRunner
 from backend.agents.response_synthesizer import format_direct_task_findings, answer_user_query_directly
@@ -269,6 +270,111 @@ def get_graphs(workflow_id: str):
         "authority_graph": serialize_nx(graphs["authority_graph"]),
         "interaction_graph": serialize_nx(graphs["interaction_graph"])
     }
+
+@router.get("/graphs/cross-graph-context")
+def get_cross_graph_context(event_id: str = Query(...)):
+    """
+    Lookup event in G_exec, get delegation_id, find related interactions
+    (where event_id in downstream_action_ids), find provenance edges where source_id == event's resource_id.
+    Return: { event, delegation_chain, triggering_interactions, provenance_edges, invariant_checks }
+    """
+    # 1. Load the event from store
+    event = store.get_execution_event(event_id)
+    if not event:
+        events = store.list_execution_events(limit=5000)
+        for ev in events:
+            if ev.event_id == event_id:
+                event = ev
+                break
+    if not event:
+        raise HTTPException(status_code=404, detail=f"Execution event '{event_id}' not found")
+
+    event_dict = event.model_dump() if hasattr(event, "model_dump") else dict(event)
+
+    # 2. Load the delegation record and its ancestors using EventStore
+    delegation_chain = []
+    curr_del_id = event.delegation_id
+    visited_dels = set()
+    while curr_del_id and curr_del_id not in visited_dels:
+        visited_dels.add(curr_del_id)
+        d = store.get_delegation(curr_del_id)
+        if not d:
+            break
+        delegation_chain.append(d.model_dump() if hasattr(d, "model_dump") else dict(d))
+        curr_del_id = d.delegation_parent_id
+
+    # 3. Load interactions where the event_id appears in downstream_action_ids
+    triggering_interactions = []
+    try:
+        conn = store._conn()
+        cur = conn.execute(
+            "SELECT * FROM interactions WHERE downstream_action_ids LIKE ?",
+            (f"%{event_id}%",)
+        )
+        for row in cur.fetchall():
+            row_dict = dict(row)
+            for json_col in ("resource_refs", "downstream_action_ids", "provenance_refs", "metadata"):
+                if json_col in row_dict and row_dict[json_col]:
+                    try:
+                        row_dict[json_col] = json.loads(row_dict[json_col])
+                    except Exception:
+                        pass
+                elif json_col in row_dict:
+                    row_dict[json_col] = [] if json_col != "metadata" else {}
+            if event_id in (row_dict.get("downstream_action_ids") or []):
+                triggering_interactions.append(row_dict)
+    except Exception:
+        pass
+
+    if not triggering_interactions:
+        candidate_interactions = store.list_interactions(workflow_id=event.workflow_id, limit=500) if event.workflow_id else store.list_interactions(limit=500)
+        for it in candidate_interactions:
+            if event_id in (it.downstream_action_ids or []):
+                triggering_interactions.append(it.model_dump() if hasattr(it, "model_dump") else dict(it))
+
+    # 4. Load provenance edges where source_id == event.resource_id
+    provenance_edges = []
+    if event.resource_id:
+        edges = store.list_provenance_edges(workflow_id=event.workflow_id) if event.workflow_id else store.list_provenance_edges()
+        for edge in edges:
+            if edge.source_id == event.resource_id:
+                provenance_edges.append(edge.model_dump() if hasattr(edge, "model_dump") else dict(edge))
+
+    # Invariant checks for this event
+    del_ok = len(delegation_chain) > 0
+    temporal_ok = False
+    if del_ok:
+        del_rec = delegation_chain[0]
+        issued_at = del_rec.get("issued_at")
+        completed_at = del_rec.get("completed_at")
+        ev_time = event.time
+        t_ok = True
+        if issued_at and ev_time and issued_at > ev_time:
+            t_ok = False
+        if completed_at and ev_time and completed_at < ev_time:
+            t_ok = False
+        temporal_ok = t_ok
+
+    invariant_checks = {
+        "authority_coverage_valid": del_ok,
+        "temporal_validity_valid": temporal_ok,
+        "interaction_link_present": len(triggering_interactions) > 0,
+        "provenance_edges_count": len(provenance_edges)
+    }
+
+    return {
+        "event": event_dict,
+        "delegation_chain": delegation_chain,
+        "triggering_interactions": triggering_interactions,
+        "provenance_edges": provenance_edges,
+        "invariant_checks": invariant_checks
+    }
+
+@router.get("/graphs/validation")
+def validate_cross_graph(workflow_id: str = Query(...)):
+    """Runs full cross-graph invariant validation and alignment scoring for a workflow."""
+    validator = CrossGraphValidator(store)
+    return validator.run_full_validation(workflow_id=workflow_id)
 
 from backend.graphs.goal_flow import generate_goal_flow_dot, generate_langgraph_statemachine_dot, extract_goal_traceability
 
@@ -778,3 +884,6 @@ def run_hf_simulation_endpoint(req: SimulationRequest):
         "matrix": result["matrix"],
         "goal_dot": result["goal_dot"]
     }
+
+# Ensure static routes match before parameterized routes on the same prefix (e.g. /graphs/validation before /graphs/{workflow_id})
+router.routes.sort(key=lambda r: "{" in getattr(r, "path", ""))
