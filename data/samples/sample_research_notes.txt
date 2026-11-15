@@ -1,0 +1,7 @@
+Q4 Operations & Customer Support Research Brief
+Subject: Escalated Incident Summary & Security Review
+Key Observations:
+1. High concentration of negative sentiment in Billing and Service Downtime categories.
+2. Enterprise accounts account for 75% of critical severity incident reports.
+3. User privacy incident TKT-1006 requires immediate compliance review under audit guidelines.
+4. Latency degradation noted in dashboard queries during morning UTC peaks.

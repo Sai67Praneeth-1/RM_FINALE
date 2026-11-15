@@ -1,0 +1,6 @@
+log_id,timestamp,user_id,resource,action,sensitivity,authorized
+LOG-501,2026-10-15T08:12:00Z,usr_dev_01,db://crm_prod/customers,read,confidential,true
+LOG-502,2026-10-15T08:15:30Z,usr_dev_01,s3://internal-exports/q3_dump.tar,read,restricted,true
+LOG-503,2026-10-15T08:22:10Z,usr_dev_01,slack://channel/public-general,share,confidential,false_flagged
+LOG-504,2026-10-15T09:01:00Z,usr_support_09,ticket://crm/TKT-1001,write,internal,true
+LOG-505,2026-10-15T09:45:12Z,usr_agent_b,db://analytics/sentiment_scores,read,internal,true

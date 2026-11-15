@@ -1,0 +1,9 @@
+ticket_id,customer_id,channel,category,severity,sentiment_score,description,status,account_tier
+TKT-1001,CUST-849,email,Billing Overcharge,High,-0.85,Charged twice for monthly premium subscription in October.,open,Enterprise
+TKT-1002,CUST-392,web_portal,Service Downtime,Critical,-0.92,API endpoint 500 server errors during peak deployment hours.,investigating,Enterprise
+TKT-1003,CUST-119,chat,Feature Request,Low,0.15,Requesting dark mode support and CSV bulk export for analytics dashboard.,backlog,Standard
+TKT-1004,CUST-582,email,Account Lockout,Medium,-0.45,MFA SMS verification codes delayed by over 15 minutes.,resolved,Professional
+TKT-1005,CUST-731,phone,Billing Dispute,High,-0.78,Disputed cancellation penalty fee after terminating trial within 30-day window.,escalated,Standard
+TKT-1006,CUST-412,web_portal,Data Privacy,Critical,-0.95,User reports audit log export contained coworker email addresses unexpectedly.,under_review,Enterprise
+TKT-1007,CUST-904,chat,Performance Latency,Medium,-0.35,Dashboard reporting page takes 12 seconds to load queries exceeding 100 rows.,in_progress,Professional
+TKT-1008,CUST-223,email,Contract Renewal,Low,0.4,Inquiring regarding multi-year enterprise volume discount schedule.,pending_sales,Enterprise

@@ -1,0 +1,1870 @@
+=== PAGE 1 ===
+Observability for Delegated Execution in Agentic Al Systems
+Abhinav Mishra
+Kumar Sharad
+Splunk, Cisco Inc
+Splunk, Cisco Inc
+abhinmi3@cisco.com
+kusharad@cisco.com
+Abstract
+analytics (e.g., SIEM/UEBA) to investigate composite outcomes in
+human activity [6, 10]. In agentic systems, similar outcomes can
+Delegation-scoped execution is not identifiable from standard ob-
+servables: audit logs and execution traces can be identical under
+arise from misuse or overly broad delegations [2, 40, 50], emer-
+multiple incompatible delegation assignments. This gap is espe-
+gent multi-agent coordination [4, 12], or LLM-mediated deviations
+cially acute in LLM-based agentic systems, where agents dynam-
+where untrusted content steers downstream tool use (prompt injec-
+ically select tools, vary execution sequences across runs for the
+tion / indirect prompt injection) [11, 38, 51]. Because these actions
+same instruction, and spawn cooperating sub-agents. These dy-
+still occur under the user-issued delegation, the practical question
+3 Jun 2026
+namics fragment and interleave traces, making delegation-scoped
+becomes: what exactly did the delegation do across tools, and what
+reconstruction from causal structure alone structurally underde-
+was the resulting access/share footprint?
+termined. Although individual actions are authorized and logged,
+We argue that agentic systems require delegation-aware observ-
+existing audit, tracing, and security schemas lack the semantics to
+ability. Because delegated authority is not causally bound to any
+reconstruct what actions occurred under a given delegation across
+single execution path, it cannot be reconstructed reliably after
+heterogeneous systems. We focus on delegation-scoped attribution
+the fact from traces and event-local attributes alone [22, 37, 44]
+and access/share footprint reconstruction, not intent inference or
+We present an agent-aware Common Information Model (CIM)
+reasoning reconstruction. We present an agent-aware observability
+and a lightweight gateway that intercepts agent tool invocations
+substrate consisting of a lightweight gateway and a common infor-
+to bind delegation context at execution time and emit structured
+[cs.CR]
+telemetry. CIM makes delegation membership and authority prop-
+mation model that binds delegation context at execution time. This
+enables reliable cross-tool delegation-scoped reconstruction and
+agation first-class audit concepts, enabling reliable post-hoc re-
+direct forensic queries without heuristic time-window correlation.
+construction without inspecting prompts or payload content. CIM
+provides delegation-scoped attribution of executed actions and
+1 Introduction
+their access/share footprint, even when behavior is influenced by
+AI agents act under delegated authority, executing tasks on behalf
+untrusted inputs (e.g., prompt injection or accidental instruction
+arXiv:2606.09692v1
+sources). It is not an intent verifier: injected or unintended actions
+of users across heterogeneous tools and services [21, 42, 48, 49].
+Unlike fixed pipelines, LLM-based agents do not execute a single
+are still attributable to the delegation under which they executed,
+and questions of intent or policy compliance are orthogonal to the
+predetermined plan: for the same high-level request, they may fol-
+observability guarantees studied here.
+low different tool sequences across runs (execution graph being
+In this paper, we make three primary contributions: (i) We for-
+different), backtrack after intermediate failures, decompose tasks in
+malize delegation-observability: a system property under which the
+set of actions performed under a delegation can be reconstructed
+spawn sub-agents [47-49]. These behaviors increase overlap, inter-
+without heuristic time-window correlation, even under concurrency,
+leaving, and trace fragmentation across tool adapters and runtimes,
+retries, and multi-agent composition. (i) Prove a non-identifiability
+making post-hoc delegation-scoped reconstruction from traces or
+result: audit logs and causal tracing alone cannot, in general, re-
+time windows especially undetermined.
+cover delegation-scoped execution because delegated authority is
+As a result, execution is no longer prescribed but delegated. We
+define delegation as a durable authorization context issued by a
+orthogonal to causal control flow. (iii) Introduce an agent-aware
+CIM that models delegated execution as dual structures-an au-
+principal (user/service) to an agent, whose scope persists indepen-
+thority graph and an execution graph that make delegation-scoped
+dently of any single execution trace or workflow instance. Once
+delegated, the agent determines how authority is exercised across
+reconstruction well-defined across tools.
+tools, time, and potentially multiple cooperating agents. As a result,
+2 Observability for Delegated Agentic Execution
+traditional telemetry records individual actions correctly, yet often
+Agentic systems expose a structural observability gap: a principal
+cannot answer basic post-hoc questions: Which actions belonged to
+delegates durable authority to an autonomous agent, after which
+execution unfolds across tools, time, and often multiple cooperat-
+How did execution unfold causally across tools? [8, 44]
+ing agents [35, 47, 48]. Existing telemetry (enterprise audit logs
+This gap is most visible in multi-tool workflows: an agent may
+aggregated by SIEM systems [10], security schemas such as OCSF
+read internal documents, query issue trackers, scan collaboration
+[28], and distributed tracing such as OpenTelemetry [30]) is ef-
+channels, and post synthesized outputs to messaging [47, 49]. Al-
+fectiveatrecordinglocal actions, but is semanticallyinsufficient
+though each step is individually authorized and logged, incompati-
+to reconstruct delegation-scoped execution and authority propaga-
+ble audit formats and interleaving executions make the delegation-
+tion. This section formalizes semantic requirements and proves the
+scoped workflow difficult to reconstruct reliably; existing mecha-
+infeasibility of reconstruction.
+nisms provide records, not delegation-aware structure [1, 10, 28].
+
+
+=== PAGE 2 ===
+Abhinav Mishra and Kumar Sharad
+Tracing (OTel)
+Audit Logs / SIEM
+RequirementfromDefinition1
+CIM
+Partial
+No
+Ri: Persistent delegation context
+(event-local actor only)
+Each event is bound toa durable delegation_id.
+(carriable, not defined)
+No
+No
+R2: Authority-causality separation
+Yes
+(implicit only)
+Authority partitions need not coincide with traces/spans.
+(trace defines unit)
+No
+No
+R3: Delegation closure (lineage)
+Re-delegation/agent spawning represented; lineage queryable.
+(no lineage primitive)
+(no closure semantics)
+Partial
+Partial
+R4:Cross-system normalized action/resource semantics
+(tool-specific)
+Minimal stable verbs + resource attribution across tools.
+(spans, no stable verbs)
+Table 1: Coverage of the semantic requirements implied by delegation-observability (Def. 1).
+2.1
+Delegation Is Not Reconstructable from
+Both of the following delegation assignments are consistent with
+Execution Traces
+identical observed telemetry: (i) a trace-aligned assignment Rauth =
+((di, ei) iff ei E TA) and (ii) a tool-aligned assignment R'
+auth
+In agentic systems, the execution graph is not a pre-specified
+[(di, e;) iff tool(ei) = Drive). In both cases the observable (E, Gexec)
+workflow DAG: it is produced online by an LLM that selects tools,
+is unchanged because standard telemetry does not include a predi-
+parameters, and decompositions based on intermediate observa-
+cate that binds events to delegation membership [29-31].
+tions. As a result, the same delegation may span causally discon-
+PROPOSITION2.1(NON-IDENTIFIABILITYOFDELEGATIONASSIGN-
+nected tool calls (parallel retrieval, asynchronous retries) and may
+MENT). Let the observable telemetry be (E, Reausal, attr), where attr :
+fragment across multiple tool-specific traces, while multiple del-
+E →  are event-local attributes that do not encode delegation
+egations may interleave through shared tools and shared agent
+membership.Thenthere existtwo distinct authorization relations
+Rauth + Rauth  D× E such that the induced observable telemetry
+runtimes [47-49]. These properties make delegation membership
+particularly difficult to infer from traces or time windows alone.
+LetE denotethe set of observed execution events.Conventional
+Consequently, Rauth is not identifiable from (E, Gexec) and event-local
+observability provides event-local attributes (actor, action, resource,
+attributes alone.
+outcome) and a causal structure over E, e.g., an execution graph
+Proof sketch. Fix any telemetry (E, Rcausal, attr) that does not en-
+Gexec = (E, Reausal) induced by trace/span parent-child links and
+code delegation membership. Choose D with at least two delega-
+other propagation mechanisms [8, 32, 44, 45]. Let D denote the set of
+tions and define two different, valid assignments of events in E to
+delegations, and let Rauth  D ×x E denote the (latent) authorization
+delegations (e.g., trace-aligned vs tool-aligned as above). Because
+relation assigning each event to the delegation under which it
+the observables do not depend on Rauth, both assignments induce
+executed. In standard telemetry, Rauth is not directly observed.
+the same telemetry. A complete proof appears in Appendix A.
+Authority structure. We also model delegation andre-delegation
+Retries/backtracking, and multi-agent fanout becomes common,
+as an authority graph Gauth = (D, Rineage), where (d,d') e Rineage
+traces fragment across runtimes and events interleave across shared
+iff delegation d' was created under (re-delegated from) delegation d
+tools. Consequently, any reconstruction based solely on time win-
+(e.g., sub-agent spawning or delegated subtask creation). We use lin-
+dows, trace boundaries, or inferred workflow tokens is inherently
+eage to support delegation closure queries (e.g., attributing actions
+heuristic. Delegation must therefore be captured at execution time.
+by a spawned sub-agent to the originating delegation context). We
+Pragmatic baseline: session_id/task_id augmentation.A natu-
+assume Rineage is acyclic (a DAG), so the ancestry relation d  d' is
+ral baseline is to attach a session_id or task_id to events and treat
+well-defined via transitive closure. In this section we only require
+it as the reconstruction unit. This baseline fails in delegated sys-
+the induced lineage relation; additional node/edge typing used by
+tems for three reasons: (i) fragmentation-multi-agent composition
+the gateway is specified in Appendix C.
+emits disjoint sessions across runtimes [48]; (ii) multiplicity-retries
+In general, Rauth is not identifiable from (E, Gexec) and event-local
+and backtracking yield multiple sessions for a single delegation;
+attributes alone; Proposition 2.1 formalizes this (Appendix A). Let
+and (ii) lack of closure-re-delegation induces an authority lineage
+trace(e)denotethetraceidentifierassociatedwithevente(when
+that flat session identifiers cannot represent. The result is heuristic
+present), and let tool(e) denote the tool/service emitting e.
+correlation rather than delegation-scoped reconstruction.
+Minimal counterexample. Consider two delegations d and d2
+2.2Authority and Causal Flows are Orthogonal
+issued to the same agent over overlapping intervals. Suppose the
+observed event stream contains interleaved actions across shared
+Delegation introduces an authority structure that is independent
+tools and two traces Ta and T:
+of execution causality. Distributed tracing encodes causal relation-
+ships: a request induces downstream calls; spans form a directed
+e = Drive.read(ri, TA), e2 = Slack.read(r2, Tb),
+acyclic graph representing a causally connected computation; and
+e3 = Drive.read(r3, TA),
+e4 = Confluence.read(r4, TB),
+context propagation follows causal edges [8, 32, 44, 45]. Delegated
+e5 = Slack.post(rs, TB),
+e6 = Drive.write(r6, TA).
+authority does not obey this propagation model. A single delegation
+
+
+=== PAGE 3 ===
+Observability for Delegated Execution in Agentic AI Systems
+can authorize causally disconnected actions (parallel tool calls, asyn-
+identifiers and how they bind to authenticated principals; (i) it
+chronous retries, multi-agent decomposition), while causally con-
+imposes no cross-tool consistency checks on action/resource seman-
+nected actions may occur under distinct delegations (re-delegation,
+tics, so shared IDs do not imply comparable event meaning ; and
+scoped sub-authorizations) [41].
+(iv) it provides no semantics of absence, making "not delegated"
+Litmus test: shared authority + shared causality Any telemetry
+indistinguishable from "telemetry missing". By making these in-
+variants explicit, CIM turns heuristic correlation into a well-posed
+will fail under delegated execution. Tracing encodes Rcausal, whereas
+reconstruction problem with clear correctness conditions.
+delegation-aware observability requires representing Rauth as an
+These requirements motivate an agent-aware Common Infor-
+independent structure with lineage closure.
+mation Model that explicitly encodes both execution causality and
+delegated authority. We introduce the model in s4 and analyze its
+2.3Derived Semantic Requirements
+structural consequences in s5. Table 3 enumerates assumptions.
+Definition 1: Delegation-Observable System. A system is delegation-
+3Observability Models and Related Work
+observable if, for every delegation d e D, the set of events executed
+under d (including any events executed under re-delegations in the
+LLM/agent security threats and model auditing (complemen-
+lineage of d)can be reconstructed from telemetry without heuristic
+tary). Work on LLM security catalogs threats such as prompt injec-
+time-window correlation, even under concurrency, retries, and multi-
+tion (including indirect injection), insecure tool/output handling,
+agent composition. Achieving delegation-observability requires the
+data disclosure, supply-chain risks, and privilege/identity abuse
+following semantic commitments (Table 1 for comparison with
+[33, 34]. Other work studies agentic misalignment and deceptive
+Audit logs and Trace).
+behaviors that may persist through training, as well as auditing
+R1: Persistent delegation context. Events must be bound to
+models for hidden objectives [2, 17]. These efforts primarily analyze
+delegation identifiers. Otherwise, delegation-scoped blast radius
+threats, mitigations, or model properties; CIM is complementary
+and accountability queries collapse to correlation heuristics.
+infrastructure that makes delegation-scoped cross-tool actions and
+R2: Authority-causality separation. Telemetry must represent
+access/share footprint auditable, without intent inference.
+authority structure independently of causal structure (delegation
+LLM/agent observability platforms (LangSmith, Langfuse,
+partitions need not coincide with traces/spans). Without this, authority-
+and related tooling). LLM observability platforms provide developer-
+causality divergence is not definable.
+facing traces of LLM calls, tool invocations, and agent steps for
+R3: Delegation closure over authority propagation. Telemetry
+debugging and monitoring, often with payload/prompt inspection
+must represent re-delegation and agent spawning and support lin-
+and evaluation hooks [18-20]. They are typically scoped to a single
+eage closure so a delegation and its descendants can be queried as a
+application stack and do not aim to define cross-system enterprise
+unit. Without closure, multi-agent compositions remain fragmented
+observability semantics [10].
+and reconstruction is incomplete.
+Enterprise audit logs and SIEM. Audit logs and SIEM systems
+R4:Cross-systemnormalizationfordelegation-scopedqueries.
+aggregate event-local facts across tools [10], but remain event-
+Telemetry must normalize an action vocabulary and resource attri-
+centric and do not natively represent durable delegated authority
+bution sufficient for cross-tool querying. Without normalization,
+or authority propagation. Correlation via time windows or inferred
+analysis remains siloed per tool and delegation-scoped investiga-
+workflow tokens breaks under overlap, retries, and multi-agent
+tions fail in practice [1, 10, 28].
+composition [5, 7]; security schemas such as OCSF standardize
+Intent vs. Attribution. CIM supports delegation-scoped attribu-
+fields but still treat delegation as optional annotation [1, 28].
+tion of executed actions and their access/share footprint; it does
+Distributed tracing (e.g., OpenTelemetry). Tracing encodes
+not infer whether a deviation reflects intent, error, or manipulation.
+causal context via trace/span identifiers and parent-child links,
+A “sleeper" agent [16] may behave benignly across many runs but
+yielding Gexec [8, 30, 32, 44, 45]. While OpenTelemetry can trans-
+later access sensitive resources; CIM makes the resulting footprint
+port arbitrary metadata [29, 31, 46], transport alone does not define
+auditable while remaining agnostic to intent.
+delegation semantics (minting/binding, lineage closure, or recon-
+struction guarantees) required for delegation-scoped observability.
+2.4 Not just delegation_id
+Provenance and lineage (W3C PROV and related models).
+CIM is not the introduction of a single identifier; it is a set of bind-
+PROV formalizes entities, activities, and agents and supports rich
+ing, closure, and consistency invariants that make delegation-scoped
+lineage across heterogeneous systems [24-26]; whole-system prove-
+reconstruction well-defined across heterogeneous tools . Moreover,
+nance further demonstrates the value of high-fidelity capture for
+delegation membership is non-identifiable from execution telemetry
+investigations [3, 36, 39].However, PROV is not specialized for
+alone: there exist distinct authorization relations Rauth + Rauth that
+delegation-scoped observability in agentic execution, where a sin-
+induce the same observed events and causal structure (E, Rcausal)
+gle user-issued authority context may span asynchronous, dis-
+(s2.1). Storing a delegation_id in OpenTelemetry attributes/bag-
+connected, and dynamically expanding tool interactions [47, 48].
+gage [29, 31, 46] is therefore an implementation technique, but it does
+CIM can be viewed as a PROV profile by mapping tool events to
+not by itself define a delegation-aware observability model: (i) it pro-
+PROV activities and representing delegations (and re-delegations)
+vides transport but no authority closure over re-delegations/agent
+as typed objects and relations; our contribution is the delegation-
+observability contract (binding/minting, lineage-closure semantics,
+
+
+=== PAGE 4 ===
+Abhinav Mishra and Kumar Sharad
+and semantics of missing coverage) needed for reliable delegation-
+(i) resource_class (e.g, document, message, repository, ticket, cre-
+scoped reconstruction, which PROV does not standardize.
+dential), (ii) sensitivity_label (e.g., public/internal/confidential/re-
+Access control (capabilities, ABAC, XACML). Access-control
+stricted or organization-defined labels), and (iv) principal_scope (e.g.,
+frameworks study how authority is granted and enforced [13, 27].
+self/team/org/external-partner). Tier-1 enables stable cross-tool ag-
+Our focus is orthogonal: even with correct enforcement, organi-
+gregation; Tier-2 supports governance and security queries [10, 23].
+zations still need delegation-scoped, cross-tool accountability of
+4.2.1 Canonical delegation-scoped query patterns. CIM is designed
+what actions executed under delegated authority [43].
+so common post-hoc questions can be expressed as direct delegation-
+4 Common Information Model (CIM)
+scoped queries rather than heuristic joins [5]. Examples include: (i)
+delegation-scoped resource touch set (blast radius): return distinct
+(resource_id,resource_class,sensitivity_label)forevents
+Delegated execution is inherently dual-structured: it induces (i)
+withdelegation_id =dandaction e (read, write, share, invoke);
+a control-flow describing how actions occur, and (i) an authority
+(i) lineage aggregation (closure over propagation): aggregate counts
+describing under which delegated authorization they occur. CIM
+and distinct agents over all delegations in the lineage of d (including
+preserves both structures explicitly and independently.
+descendants); and (i) authority-causality divergence filters: identify
+4.1 Delegated Execution as Dual Structures
+traces containing multiple delegation identifiers and delegations
+spanning multiple traces, both of which arise naturally under asyn-
+Execution structure. Let E denote the set of execution events
+chronous and multi-agent execution.
+emitted by an agentic system. The causal organization of execution
+is represented as an execution graph Gexec = (E, Rcausal), where
+4.3Structural Invariants
+Rcausal encodes causal links among events (e.g., trace/span parent-
+child relationships).
+CIM specifies a small set of semantic invariants required for
+Authority structure. Delegation induces a distinct structure that
+delegation-observability (Def. 1). If these invariants do not hold,
+is not implied by causality. Let D denote the set of delegations. Each
+delegation-scoped reconstruction becomes ambiguous or ill-defined.
+delegation is a durable authorization context issued by a principal
+I1:Delegation consistency.Events sharing a delegation_id
+to an agent, spanning asynchronous actions and multiple execution
+must correspond to a stable authority context. Failure mode: if
+subgraphs. Delegation induces (i) an authority graph Gauth over
+delegation_id can be reused or repurposed, delegation-scoped
+principals and agents capturing delegation and re-delegation re-
+queries mix scopes, corrupting blast-radius and policy analyses.
+lationships, and (ii) an authorization relation Rauth  D × E that
+I2: Authority-causality separation. Authority partitions may
+assigns events to the delegations under which they execute.
+cut across traces, and traces may contain multiple delegations. Fail-
+4.2Core Semantic Components
+ure mode:if delegation_id is forced to coincide with trace_id,
+asynchronous fanout and re-delegation are misrepresented and
+CIM introduces a minimal set of semantic components designed
+divergence predicates become undefined.
+to preserve both execution and authority structure:
+Delegation identifiers, which bind each event to a durable autho-
+I3:Lineage closure under authority propagation.Re-delegation
+and agent spawning must preserve attribution through lineage (via
+rization context, thereby preserving the delegation-induced parti-
+inheritance or explicit linkage). Failure mode: without lineage edges,
+tion of events .
+multi-agent workflows fragment and “all actions under delegation
+Agent identity, which distinguishes autonomous execution enti-
+d (including descendants)” is not a well-defined query.
+ties (agents and agent instances) from human principals and back-
+I4: Cross-system semantic normalization.A stable action/re-
+ground services.
+Workflow correlation identifiers (e.g., trace and span identifiers),
+source vocabulary must be preserved across tools. Failure mode:
+without normalization, delegation-scoped investigations devolve
+which preserve the causal execution graph Gexec.
+into per-tool logic and queries are not portable across environments.
+Normalized semantic actions, which abstract heterogeneous
+tool operations into a shared vocabulary sufficient for cross-system
+I5 (Evidentiary settings):Binding integrity.delegation_id
+should be bound to authenticated principals and minting context
+analysis without payload inspection.
+(e.g-, gateway/session) rather than accepted as unauthenticated
+Appendix B specifies a minimal CIM event schema and a tool-
+to-action mapping. Here we state the semantic contract required
+free-formstrings.Failuremode:compromised components canmis-
+attribute actions to benign delegations, undermining accountability.
+for delegation-observability (Def. 1) and for the requirements in
+s2.3 to be operational. CIM normalizes actions in two tiers. Tier-
+4.4 Lean Core and Extension Points
+1 defines a required minimal verb set: read, write, share, invoke.
+CIM is designed as a lean core: each component preserves a distinct
+Tier-1 is intentionally coarse; deployments may extend it with
+aspect of delegation-observability, while allowing deployments to
+additional verbs (e.g., delete, permission-change, admin/config, exe-
+attach richer context (e.g., queries, payload-derived labels, or tool-
+cute, download/upload) while preserving cross-tool comparability
+specific attributes) as optional enrichment [26, 30].
+by mapping tool-specific operations to a shared action vocabulary
+Why each core component is necessary. Each field class sup-
+[28]. Tier-2 provides optional qualifiers that refine the action seman-
+ports at least one requirement from s2.4: without delegation identi-
+tics without referencing content: (i) direction (internal vs. external),
+fiers, the delegation-induced partition Rauth is not reconstructable;
+without agent identity, multi-agent authority propagation is not
+
+
+=== PAGE 5 ===
+Observability for Delegated Execution in Agentic AI Systems
+Query
+Baseline (audit/tracing)effort
+CIM effort
+filter;
+Blast radius (Q1)
+Single
+delegation-scoped
+Per-tool queries + heuristic joins on (user, time window, inferred
+group
+by
+workflow token); manual reconciliation under overlap
+resource_class/sensitivity_label
+by
+Often unavailable (no stable agent identity across tools); requires
+Filter
+Agent attribution (Q2)
+delegation_id;
+group
+by
+manual attribution from tool-specific fields
+agent_id/agent_instance_id
+Filter
+with
+action=share
+Externalization prove-
+Per-tool "share/export/email" searches + manual correlation to
+delegation_id
+and
+nance (Q3)
+upstream actions; traces fragment across systems
+direction=external; optionally join to causal ancestry
+Table 2: Delegation-scoped query effort: baseline observability relies on heuristic cross-tool correlation, whereas CIM enables
+direct delegation-scoped predicates [7, 10, 30].
+attributable;without causal correlation identifiers,execution struc
+e3 Docs.read(D2), trace T3
+ture andtemporal evolution cannotbe reconstructed;without
+e4 Slack.post(#sales, “draft summary"), trace T4
+normalized semanticactionsandresourceattribution, cross-system
+e5 Docs.write(Report), trace Ts
+queries required in enterprise settings cannot be expressed. Appen-
+Under baseline correlation, multiple delegation partitions are con-
+dix B contains complete CIM definitions and examples.
+sistent with the observables: grouping by time window yields one
+Baselines and failure modes. Two simpler alternatives are natu-
+workflow; grouping by tool yields (Docs actions) vs. [Slack actions);
+ral competitors: (B1) session_id/task_id-only correlation and (B2)
+grouping by trace yields five disjoint “tasks" Each grouping is plau-
+delegation_id carried as free-form metadata.B1 fails delegation
+sible without additional assumptions. CIM creates unique partition;
+closure and cross-graph span under multi-agent fanout and retries,
+all events with the same delegation_id belong to the same dele-
+yielding fragmented sessions for a single delegation and no lineage
+gated authority context regardless of trace fragmentation.
+semantics. B2 may transport a string named delegation_id, but
+Delegation-scoped blast radius. Since the delegation partition
+it does not satisfy requirements R1-R4 ($2.4) and does not make
+is defined across tools and time, investigators can compute a del-
+delegation-scoped reconstruction well-defined.
+egation's blast radius as a first-class object: Which resources (by
+CIM is an observability substrate, not an intent-inference or pre-
+resource_class and sensitivity_label)were touched under del-
+vention mechanism: it enables post-hoc reconstruction of actions
+egation d, across all systems, including asynchronous follow-ups? This
+under delegated authority. To retain evidentiary value, delegation
+question is ill-posed under baseline logs unless one assumes trace
+identifiers must be bound to authenticated principals and mint-
+connectivity or uses fragile time-window joins [1o]. Even then it is
+ing context; in our architecture this binding occurs at the gateway
+expensive to perform a series of join/ aggregation (Table 2).
+boundary, and lineage/bindings are recorded in gateway-emitted
+telemetry rather than accepted solely as agent-asserted metadata.
+5.2Authority-Causality Divergence
+CIM is designed to be framework-agnostic. The next section instan-
+tiates these semantics in a concrete event schema (e.g.,Table 2) that
+Authority boundaries and causal structure are independent: ac-
+are not structurally representable with audit logs or tracing .
+tions may share authority without causal linkage, and causally
+related actions may occur under distinct delegations. CIM makes
+5 Structural Consequences of CIM
+this orthogonality explicit and testable.
+Checkable divergence conditions. Let C(e) denote the causal
+This section derives analytic consequences of delegation-aware
+connected component containing event e in Gexec (e.g., a trace-
+telemetry. Since Rauth is non-identifiable from traces and event-local
+connected component). For a delegation d, define Comp(d) =
+attributes alone (s2.1), making delegation explicit yields qualita-
+(C(e) I (d,e) E Rauth ). We say d exhibits authority-causality
+tively new, delegation-scoped analyses that are ill-posed under
+divergence if |Comp(d)I > 1, i.e., a single delegation spans mul-
+audit-only or trace-only telemetry.
+tiple causal components. Dually, a causal component C exhibits
+divergence if it contains events with multiple delegation identi-
+5.1 Cross-System Delegation Partitions
+fiers: Fei, e2 E C such that del(e) + del(e2). These conditions are
+Delegation-aware identifiers induce a stable partition of heteroge-
+structural and can be evaluated directly from CIM telemetry.
+neous events across tools. Formally, CIM defines an equivalence rela-
+If the system emits a delegation issuance/approval event issue(d),
+tion on events by shared delegation_id; the resulting classes form
+CIM supports predicates of the form: events with delegation_id=d
+a cross-system delegation partition of E, remaining well-defined
+that are not causally descended from issue(d). Operationally, this
+evenwhentracesfragment.
+corresponds to filtering events where delegation_id = d and
+Worked example (baseline ambiguity vs.CIM determinism).
+either (i) trace_id + trace_id(issue(d)) or (i) the event lacks an
+Consider the following five events across two tools (Docs and Slack),
+ancestor relationship to the issuance span. Such authority-scoped
+observed within a narrow time window and produced by the same
+queries are not expressible in trace-only telemetry because tracing
+user and agent instance:
+lacks a durable authority identifier independent of causal structure.
+ei Docs.read(D1), trace Ti
+e2 Slack.search(#sales), trace T2
+
+
+=== PAGE 6 ===
+Abhinav Mishra and Kumar Sharad
+Scenario / Question
+Structural signal from CIM
+Assumptions/Limits
+Cross-tool delegation re-
+Delegation-scoped partition over events across tools and
+Actions traverse the instrumented boundary (gateway/SDK);
+construction
+time (delegation_id; cross-system normalization)
+uninstrumented channels are out of scope
+Multi-agent propagation ac-
+Delegation lineage(delegation_parent_id)and closure en-
+Requires lineage emission at delegation boundaries; child
+able attribution across sub-agents with fragmented traces
+countability
+agents must propagate or be bound by gateway
+Authority-causality diver-
+Checkable divergence predicates: IComp(d)I > 1 or multi-
+Requires both delegation IDs and causal correlation fields;
+gence analysis
+ple delegation IDs per causal component
+incomplete tracing reduces causal ancestry tests
+Execution drift under fixed
+Envelopeexpansion
+(tool_class,
+action,
+over
+Requires a notion of authority expansion/approval event or
+authorization
+resource_class, sensitivity) without authority ex-
+a baseline envelope; payload semantics remain out of scope
+pansion event
+Delegation misbinding /
+Detect inconsistent bindings between delegation, principal,
+Assumes delegation IDs are gateway-minted/validated and
+and minting context; audit of issuance/approval edges
+spoofing (within channel)
+bound to authenticated principals; tamper-proof logging is
+complementary
+Gateway bypass / out-of-
+No direct signal (outside CIM coverage); can only detect
+Enforcement/mandatory routing is out of scope; must be
+band actions
+absence relative to expected tool inventory
+provided by deployment controls
+Table 3: CIM as structural signal: what delegation-aware telemetry makes observable, and the assumptions required for those
+signals to be valid. This framing separates observability from enforcement and prevention [9, 43].
+5.3
+Multi-Agent Authority Propagation
+(2) search CRM for customer segments (plausible); (3) read em-
+Agentic systems often fragment causal context propagation
+breakdown to a broad Slack channel (dissemination). With CIM,
+across frameworks, queues, and vendor-managed backends. CIM en-
+all actions remain grouped under a single delegation_id, making
+codes delegation through lineage semantics [26]. We model delega-
+drift visible as delegation-scoped temporal evolution. Without CIM,
+tion propagation as a directed forest over delegations in which each
+these actions appear as unrelated tool events and require heuristic
+delegation d may reference a parent parent(d) (for re-delegation
+correlation to attribute them to the same delegated objective.
+or agent spawning). The transitive closure yields Ancestors(d) and
+Detector sketch. A simple drift detector computes a baseline en-
+Descendants(d), enabling lineage-scoped queries that are indepen-
+velope Envo from early-phase events, then flags a delegation if (i)
+Env(d)/Envo contains a high-impact tuple (e.g., share to external,
+a child delegation d executed by a specialized sub-agent in a sep-
+write to sensitive resource_class), and (i) the lineage contains
+arate runtime, producing a disjoint execution trace. Delegation
+no post-hoc authority expansion/approval event after the envelope
+closure ensures events under d remain attributable to the originat-
+change. This yields a structural “no authority expansion" check
+ing authority context via lineage, even when Gexec fragments.
+using only CIM fields and lineage relations [24, 26].
+5.4Execution Drift Under Fixed Authorization
+5.5Post-Hoc Structural Accountability
+Delegated workflows evolve over time. Under a fixed delegated
+When delegation partitions, causal relationships, and agent iden-
+authority context, the set of tool classes, action types, and resource
+tity are preserved, a delegated workflow can be reconstructed as
+classes accessed by an agent may expand. CIM enables drift charac-
+a structured object rather than a flat event stream . This enables
+terization using metadata only (no prompt/payload inspection) by
+governance and security questions to be answered directly from
+comparing the observed envelope of actions/resources to authority
+telemetry without time-window correlations.
+events recorded in the delegation lineage.
+Accountability queries. Examples of post-hoc questions enabled
+Metadata-only drift definition. For a delegation d, define an
+by CIM include: (Q1) What is the complete resource touch set under
+envelope Env(d) ={(tool_class,action_tier1
+delegation d (including descendants), grouped by resource_class
+,resource_class,sensitivity_label) I (d',e) E Rauth, d' E
+and sensitivity_label?(Q2) Which agent instances acted under
+(d) U Descendants(d) ). We say drift occurs if Env(d) expands
+delegation d, and which actions were performed by sub-agents versus
+along a monitored dimension (e.g., new resource_class, first oc-
+the primaryagent? (Q3)Did delegation d result in any externalization
+currence of write/share, orincreased sensitivity_label)with-
+events (e.g., share with direction=external), and which causal
+out an accompanying authority expansion event in the lineage (e.g.,
+subgraphs produced those outcomes? These queries align with com-
+a new delegation issuance/approval that broadens scope). Similar
+mon SIEM/EDR investigative workflows but become well-posed
+execution drifts can be applied to users or agents using CIM .
+when delegation and lineage are explicit [10, 14, 15].
+Execution Drift Example.A user delegates:“Summarize our Q4
+sales performance." During autonomous execution, the agent's re-
+alized action scope evolves: (1) read sales_data.xlsx (in-scope);
+
+
+=== PAGE 7 ===
+Observability for Delegated Execution in Agentic AI Systems
+5.6 Attribution vs. Intent under Untrusted
+not require payload inspection; organizations may choose whether
+Inputs
+to store or analyze content separately from CIM.
+Scope. The gateway is an implementation mechanism that realizes
+CIM provides delegation-scoped attribution of executed actions
+the observability semantics defined by CIM; it is not required to
+and their access/sharefootprint.This attribution holds regardless
+be deployed as a single centralized service, and it may be realized
+of whether actions were intended by the delegating principal.
+as a per-environment adapter. Full design details are provided in
+Prompt injection and indirect manipulation. Untrusted con-
+Appendix C. Appendix D further analyzes three classes of insider
+tent in the environment (e.g., a malicious document, crafted tool
+evasion (out-of-band channels, delegation fragmentation, and iden-
+response, or injected instructions in retrieved data) can steer an
+tifier spoofing).
+agent to issue unintended tool calls [11, 38]. Under CIM, such calls
+are attributed to the active delegation because they executed under
+Experiments
+its authority. CIM makes the resulting footprint auditable (resources
+7.1
+touched, sensitivity labels, and dissemination targets). Determin-
+Evaluation Environments
+ing whether a particular action was injection-induced or benign is
+We evaluate CIM along three axes: (i) delegation reconstruction-
+outside CIM's scope.
+whether delegation-scoped execution and authority propagation
+Footprint change as a structural signal. The drift characteri-
+can be recovered without heuristic correlation under overlap, re-
+zation in s5.4 summarizes how a delegation's observed envelope
+tries, and multi-agent composition; (i) operational overhead-the
+changes over time (e.g., new resource classes, first write/share,
+incremental cost of emitting CIM events at a gateway boundary
+higher sensitivity). Such changes may be caused by benign au-
+and querying them in downstream observability/security pipelines;
+tonomy, mis-specification, or adversarial influence; CIM does not
+and (ii) query construction burden-the analyst effort required to
+attribute cause. The role of the drift signal is to surface salient
+express delegation-scoped questions with and without CIM, mea-
+footprint expansions for review, not to detect injection.
+sured as the number of correlation, normalization, and join op-
+erations per query class (Table 2). We use two complementary
+6 Capture Boundary: Gateway for CIM
+environments: (i) a high-volume synthetic generator that isolates
+The semantic requirements in s2 (R1-R4) and the reconstruction
+delegation-reconstruction failure modes under overlap, spawning,
+properties in s4 assume that delegation context is bound at cap-
+and retries/backtracking,and (i)a small micro-deployment that exe-
+ture time rather than inferred post hoc from event-local audit logs
+cutes real tool invocations through a gateway to measure emission
+or causal traces [10, 30, 44]. In delegated execution, the authority
+overhead and query runtimes. Table 4 lists the parameter ranges;
+relation Rauth in many cases is not identifiable from (E, Gexec). A
+they define a stress-test envelope, not a claim of universal produc-
+gateway provides a practical capture boundary that observes tool
+tion distributions.
+invocations and emits minimal, metadata-only CIM events with ex-
+Synthetic environment. Synthetic runs instantiate U = 10,000
+plicit delegation structure. Table 3 later highlights various scenarios
+users and A = 100,000 agents with a shared resource universe (106
+with CIM along with any limitations.
+files; 103 repos; 102 channels) and K  [3, 7] tools sampled from a
+Gateway contract. The gateway is a mediation layer (library, side-
+tool catalog. Gateway coverage and bypass are realized by routing
+car, proxy, or MCP middleware) that sits on the invocation path
+each tool invocation through the gateway with probability given by
+between an agent runtime and external tools/services. Its job is
+the coverage range, and emitting bypass events out-of-band with
+not to interpret prompts or tool payloads, but to ensure that each
+the bypass probability.
+emitted CIM event carries (i) a stable delegation identifier, (ii) a
+principal binding, and (ii) normalized action semantics sufficient to
+Parameter
+Setting (artifact runs)
+support the queries in s4. Concretely, the gateway enforces the fol-
+Users (U)
+lowing contract: (a) minting and binding-each delegation instance
+10,000
+Agents (A)
+is associated with an authenticated principal (human or service
+100,000
+Tools (K)
+identity) and an issuance time; (b) propagation-delegation context
+3-7
+Resources
+10 files; 103 repos; 102 channels
+is attached to all downstream tool calls made under that delegation,
+Delegations/day (Dday)
+[2×105-2×106]
+including across multi-agent delegation chains; (c) normalization-
+Events/delegation (Ea)
+[20-500] (workflow-dependent)
+tool-specific operations are mapped to a small set of canonical verbs
+Overlap rate
+[10%-40%] users with ≥ 2 delegations
+(e.g., read/write/share/invoke) and stable target descriptors; and (d)
+Spawn fanout
+mean [2-5] children; depth [1-4]
+explicit absence-if delegation context is missing at the boundary,
+Retry/backtrack rate
+mean retries/step [0-10] (W3)
+the event is emitted with an explicit “unbound/unknown” state.
+Coverage (synthetic / micro)
+0.8/0.95
+Provenance and trust boundary. The gateway distinguishes
+Bypass probability (synth / micro)
+0.05/0.01
+Trace coverage (by tool)
+gateway-bound metadata (e.g., authenticated principal, delegation_id
+60-80% of events carry trace/span ids
+Loops per workflow (W1/W2/W3)
+50/60/75 (event scaling)
+minting binding, tool endpoint identity, timestamps) from agent-
+Runs per workflow (synth / micro)
+provided context (e.g., optional labels, high-level task tags) . This
+3000 / 50 (main runs)
+separation supports integrity reasoning: the main paper's guaran-
+Table 4: Environment used to instantiate the synthetic work-
+tees hold for fields derived at the capture boundary, while optional
+flows and micro-deployment in the artifact.
+agent-provided annotations are treated as untrusted hints . We do
+
+
+=== PAGE 8 ===
+Abhinav Mishra and Kumar Sharad
+Ambiguity Amb (median, p95)
+Delegation recall Rec(d) (median, p05)
+Divergence: Comp(d) stats
+Workflow
+B0
+B1
+B2
+B0
+B1
+B2
+Workflow
+Median
+Workflow
+p95
+W1
+1(2)
+0.06 (0.03)
+1 (0.79)
+1 (1)
+W1
+W1
+169 (314)
+1543 (1543)
+35
+43
+W2
+1 (1)
+W2
+1 (1)
+1 (1)
+1 (0.50)
+10856 (12379)
+107718 (107718)
+W3
+1(2)
+W3
+130 (236)
+1107 (1107)
+0.04 (0.03)
+1 (0.68)
+1 (1)
+W3
+55
+64
+Table 5: Results summary (W1-W3) on synthetic: ambiguity under overlap/interleaving (lower is better; CIM achieves Amb = 1
+for covered events), delegation recall (higher is better), and prevalence of authority-causality divergence (Comp).
+Micro-deployment.The micro-deployment executes workflows
+In all conditions,observed telemetry includes event stream E
+W1-W3 (s7.2) in a local agent runtime and emits CIM events at
+with event-local attributes (tool, action, resource, outcome, times-
+a gateway boundary for each tool invocation. Micro experiments
+tamps) and, when available, causal structure Rcausal. Trace coverage
+varies by tool (60-80% of events carry a trace identifier).
+eventsunder the default configuration (50 runs/workflow).We use
+7.2.2Methods compared. We compare CIMto three baselines with-
+this environment to estimate order-of-magnitude gateway emis-
+out delegation-aware identifiers, operating on the same observed
+sion overhead and query runtime differences; results are reported
+telemetry (E, Rcausal, attr): Bo (trace-only): group by trace id; fall
+as p50/p95 latency and median query runtime and should not be
+back to session/task id or singletons. B1 (time-window): sliding
+interpreted as production-scale performance claims.
+window  e [5s, 30s, 2min); best-performing  reported per work-
+Trace coverage and baseline windows. To reflect heterogeneous
+flow. B2 (best-effort hybrid): trace/session grouping merged by
+observability, trace/span identifiers are present for only a subset of
+A and (user, agent instance, tool); the strongest baseline, approxi-
+events (tool-dependent; 60-80%by default).We evaluate correlation
+mating current SIEM-style practice.
+baselines under   [5s, 30s, 120s) and use the same  values in
+query benchmarks. When trace context is missing, trace-based
+7.2.3 Ground truth. For each run, ground-truth delegation mem-
+grouping falls back to the coarsest available execution context (e.g.,
+bership and lineage are recorded at the gateway boundary, yielding
+session/task id when present).
+We instantiate both environments across the parameter ranges in
+what is non-identifiable from (E, Rcausal, attr) alone. .
+Table 4, covering steady-state through bursty delegated workloads.
+7.2.4 Reconstruction metrics. Ambiguity. Amb(E) = |P(E)I: the
+The parameter ranges are chosen to expose specific failure regimes:
+number of distinct delegation groupings consistent with observed
+overlaprates above ~20%causeB1/B2 toproduce systematically
+telemetry. Amb(E) = 1 is unambiguous; CIM achieves this by
+ambiguous groupings; spawn fanout above 2 fragments delegation
+construction for covered events. The experiment measures how
+lineage across disjoint traces; retry rates above 3 per step cause
+severely baselines exceed 1 as overlap and fragmentation increase.
+single delegations to span multiple causally disconnected compo-
+nents. CIM's reconstruction is invariant across these regimes by
+Delegation recall. Rec(d) = [E*(d) n E(d)I / [E*(d)l, reported as
+construction for covered events; the experiments quantify how se-
+median and p05 across delegations. The lower tail (p05) captures
+verely baselines degrade. Coverage and bypass ranges model partial
+the severity of missed or mis-attributed events under overlap.
+gateway adoption and out-of-band actions.
+Authority-causality divergence. Comp(d) counts the causal
+components spanned by delegation d in Gexec [E* (d)]. This is method-
+7.2
+Delegation Reconstruction
+7.2.1 Workflows and telemetry. We evaluate on a workflow suite
+indicates regimes where any trace-, session-, or window-based re-
+designed to stress the conditions under which correlation-based
+construction unit is structurally mis-specified; the fraction with
+Comp(d)> 1measures how prevalent this mis-specification is.
+reconstructionfails.Thegoal is nottoverifythat explicitdelegation
+membership yields unambiguous reconstruction-this follows from
+7.3Results
+CIM's binding invariants-but to quantify how severely baselines
+degrade under realistic concurrency and fragmentation regimes.
+R1:Ambiguity under overlap and interleaving.Under B0/B1/B2,
+W1 (cross-system, causally disconnected subtasks) issues par-
+ambiguity increases with concurrency because multiple partitions
+allel reads across multiple tools and produces a final synthesis
+remain consistent with identical observed causal structure and
+action, inducing causally disconnected components within a single
+event-local attributes-the baselines are not merely noisy but un-
+delegation. W2 (multi-agent composition) spawns cooperating
+derdeterminedbythe available evidence.Bo achieves lowmedian
+agents with re-delegation edges, stressing lineage closure (Invari-
+ambiguity on W1 and W3 when trace coverage happens to align
+antI3)and runtime fragmentation.W3 (trial-and-adapt)includes
+with delegation boundaries, but collapses under W2 (multi-agent
+retries and backtracking with interleaved successes and failures,
+fanout) where Amb reaches 10,856 at median-reflecting the struc-
+reflecting LLM agents that iteratively refine tool calls based on
+tural mismatch between trace units and delegation units under
+intermediate observations.
+re-delegation.Under CIM,Amb(E)=1for covered eventsbecause
+delegation membership is bound at execution time rather than
+inferred post hoc (Table 5, left).
+
+
+=== PAGE 9 ===
+Observability for Delegated Execution in Agentic AI Systems
+Metric
+CIM
+Baseline
+delegation context, lineage, and normalized predicates), serialized
+341
+588
++247
+to compact JsON.Gatewaylatencyisthe additionalprocessingtime
+Bytes/event
++0.01 ms
+0.00ms
+0.01 ms
+per tool invocation introduced by delegation binding and event
+Gateway latency (p50)
+Gateway latency (p95)
+0.00ms
+0.29ms
++0.29 ms
+emission (p50/p95). Query runtimes are measured on a workstation
+comparable
+Query runtime (median)
+micro-benchmark with a fixed storage/query configuration and
+repeated runs with warm-up.
+Table 6: Operational overhead at micro-deployment scale.
+CIM adds 247 bytes/event and sub-0.3 ms gateway latency at
+Queries benchmarked. We benchmark a fixed suite of six repre-
+p95.
+sentativedelegation-scoped questions:(i)delegation closurefilter-
+ing, (i) cross-tool sequence detection (e.g., multiple reads followed
+by a write within a delegation), and correlation baselines approxi-
+mating these views via (ii) trace-only grouping, (iv) window corre-
+Query class
+Baseline ops
+CIM ops
+lation (A sweep), and (v) hybrid stitching over trace/session/task
+6-9
+Cross-system reconstruction
+1-2
+identifiers with a window fallback.
+5-8
+Authority propagation / lineage
+1-2
+Results. CIM adds 247 bytes/event and sub-0.3 ms gateway latency
+Drift / envelope expansion
+7-11
+at p95; these figures reflect micro-deployment scale and are ex-
+Exfiltration-style sequences
+8-14
+2-3
+pected to increase under production-scale event volumes (Table 6).
+Table 7: Query construction effort: number of correlation
+Query runtime was comparable between CIM and baseline at this
+and normalization operations required per query class.
+scale; the measurable advantage is in query construction burden:
+tool joins, windowing, per-tool normalization, identity unification),
+whereas CIM reduces each class to 1-3 predicates over stable ac-
+R2: Delegation recall for cross-system reconstruction. Base-
+tion and resource fields (Table 7). As a concrete example, finding
+lines fail in both directions: they under-group causally disconnected
+the agent accessing the most sensitive files under a delegation re-
+sub-tasks and over-group when overlapping delegations share tools
+quires a single filter on delegation_id, grouped by agent_id and
+within the same window. B0 drops to 0.03 at p05 on W1 and W3,
+ranked by sensitivity_label-no cross-tool joins required.For
+reflecting near-complete recall failure when trace boundaries do
+representative threat-detection queries see Appendix E and Table 9.
+not align with delegation boundaries. B2, the strongest baseline,
+achieves median recall of 1 on W1-W3 but its p05 on W1falls
+8 Conclusion
+to 0.79, confirming that the lower tail remains unreliable under
+overlap and fragmentation. The high median recall for W2 across
+Delegated AI agents break a key assumption behind existing audit
+baselines reflects coincidental trace-delegation alignment in the
+and tracing telemetry: the unit of accountability (delegated author-
+synthetic setup, not a principled guarantee-as the divergence anal-
+ity) is structurally orthogonal to the unit of execution (traces/spans).
+ysis in R3 confirms. CIM recall is 1 by construction for covered
+Because the authorization relation Rauth is not encoded in standard
+events (Table 5, center).
+observables, delegation-scoped reconstruction is non-identifiable
+R3: Prevalence of authority-causality divergence. W1 and
+under correlation heuristics when executions overlap, retry/back-
+track, or compose across tools and agents-a gap that grows more
+W3exhibithighComp(d)values(median35and55,p95reach-
+acute as multi-agent deployments scale. We introduced CIM, a mini-
+ing 43 and 64), confirming that parallel subtasks and retry-heavy
+mal delegation-aware telemetry layer that makes authority member-
+workflows routinely span many causally disconnected components
+ship and propagation explicit while remaining transport-agnostic
+under a single delegation. W2 shows Comp(d) = 1 throughout
+(e.g., OpenTelemetry or existing security schemas). By specifying
+because multi-agent composition in this configuration emits a sin-
+the semantic invariants required for delegation-scoped reconstruc-
+gle connected trace per delegation, explaining the higher baseline
+tion and realizing them at a gateway boundary, CIM makes recon-
+recall in R2 for W2; this alignment is structural coincidence, not a
+struction well-posed on covered events and reduces delegation-
+general property of trace-based reconstruction. (Table 5, right).
+scoped forensic queries from multi-step correlation pipelines to
+R4: Query construction burden. Baseline queries require 6-14 op-
+direct predicates over stable fields.
+erations per query class; CIM reduces each to 1-3 direct delegation-
+Limitations. CIM provides attribution for actions traversing in-
+scoped predicates (Table 7). Query runtime at micro-deployment
+strumented boundaries; actions on uninstrumented channels are
+scale was comparable between CIM and baseline; the primary ad-
+unobservable, though their absence is detectable relative to a de-
+vantage is therefore reduction in query construction and mainte-
+clared toolinventory.CIM attributes actions tothe delegation under
+nance burden rather than runtime throughput.
+which they executed regardless of whether they were intended by
+7.4Operational Overhead
+remain orthogonal concerns. The overhead figures reported here
+Measurement setup. We measure overhead at two points: (i) at the
+reflect micro-deployment scale and are expected toincrease in
+gateway boundary when emitting CIM events, and (i) downstream
+production-volume deployments.
+when executing delegation-scoped queries. Bytes/event is com-
+puted by projecting each event into a baseline field set (event-local
+attributes and correlation hints) versus a CIM field set (baseline plus
+
+
+=== PAGE 10 ===
+Abhinav Mishra and Kumar Sharad
+References
+[27] OASIS. 2013. eXtensible Access Control Markup Language (XACML) Version
+[1] Amazon Web Services. 2026. Open Cybersecurity Schema Framework (OCSF)
+3.0: Core Specification. https:/docs.oasis-open.org/xacml/3.0/xacml-3.0-core-
+in AwS Security Lake.https://docs.aws.amazon.com/security-lake/latest/
+spec-os-en.html.
+[28] 
+userguide/open-cybersecurity-schema-framework.html.
+OCSF Community.2026. OCSF Schema Repository. https://github.com/ocsf/ocsf-
+[2] Anthropic. 2025. Agentic Misalignment: How LLMs could be insider threats.
+schema.
+[29] 
+Web page.https://www.anthropic.com/research/agentic-misalignment
+[3] Adam Bates, Dave Tian, Kevin R. B. Butler, Thomas Moyer, et al. 2015. Trust-
+io/docs/concepts/signals/baggage/.
+[30]
+worthy Whole-System Provenance for the Linux Kernel. In Proceedings of the
+OpenTelemetry. 2026. OpenTelemetry Specification. https://opentelemetry.io/
+24th USENIX Security Symposium.
+docs/specs/otel/.
+[31] 
+Mert Cemri, Shu Liu, Cathy Chen, Naman Jain, Kushal Arora, Xiangxi Mo,
+[4]  
+OpenTelemetry. 2026. OpenTelemetry Specification: Baggage API. https://
+Kannan Ramchandran, Ion Stoica, Kurt Keutzer, and Aditya Parameswaran. 2025.
+[32]
+OpenTelemetry. 2026. OpenTelemetry Traces: Concepts. https://opentelemetry.
+Multi-Agent Systems are Brittle: Failure Modes and Robustness of LLM-Based
+Agent Pipelines. arXiv:2503.13657[cs.MA] https://arxiv.0rg/abs/2503.13657
+io/docs/concepts/signals/traces/.
+[33] 
+[5] Peter Christen. 2012. Data Matching: Concepts and Techniques for Record Linkage,
+OWASP Foundation. 2024. OWASP Top 10 for Large Language Model Applica-
+tions (v2025). PDF. https:/owasp.org/www-project-top-10-for-large-language-
+Entity Resolution, and Duplicate Detection. Springer.doi:10.1007/978-3-642-
+31164-2
+model-applications/assets/PDF/OWASP-Top-10-for-LLMs-v2025.pdf
+[34] 
+[6] Cybersecurity and Infrastructure Security Agency (CISA). 2026. Defining In-
+sider Threats.https://www.cisa.gov/topics/physical-security/insider-threat-
+community/attacks/Promptlnjection
+[35] 
+mitigation/defining-insider-threats.
+Joon Sung Park, Joseph C. O'Brien, Carrie J. Cai, Meredith Ringel Morris, Percy
+Ivan P. Fellegi and Alan B. Sunter. 1969. A Theory for Record Linkage. J. Amer.
+[7] 
+Liang, and Michael S. Bernstein. 2023. Generative Agents: Interactive Simulacra
+Statist.Ass0c. 64, 328 (1969), 11831210.doi:10.1080/01621459.1969.10501049
+of Human Behavior. In Proceedings of the ACM Symposium on User Interface
+Rodrigo Fonseca, George Porter, Randy H. Katz, Scott Shenker, and Ion Stoica.
+[8] 
+Software and Technology (UIST).1-22. https://arxiv.0rg/abs/2304.03442
+[36] Thomas Pasquier, Xueyuan Han, Mark Goldstein, Thomas Moyer, David Ey-
+2007. X-Trace: A Pervasive Network Tracing Framework. In Proceedings of the
+4th USENIX Symposium on Networked SystemsDesign and Implementation (NSDI).
+ers, Margo Seltzer, and Jean Bacon. 2017. Practical Whole-System Provenance
+271284.
+Capture. In Proceedings of the ACM Symposium on Cloud Computing (SoCC)
+David Garlan and Mary Shaw. 1994. An Introduction to Software Architecture.
+[6]
+doi:10.1145/3127479.3129249
+Technical Report CMU-CS-94-166. Carnegie Mellon University.
+[37] Judea Pearl. 2009._Causality: Models, Reasoning, and Inference (2nd ed.). Cam-
+[ot]
+Gustavo Gonzalez-Granadillo et al. 2021. Security Information and Event Man-
+bridge University Press.
+[38] 
+agement (SIEM): Analysis, Trends, and Usage in Critical Infrastructures. Sensors
+Fabio Perez and Ian Ribeiro. 2022. Ignore Previous Prompt: Attack Techniques
+21, 14 (2021). doi:10.3390/s21144759
+for Language Models. https://arxiv.0rg/abs/2211.09527.
+[39] 
+[11] 
+Kai Greshake, Sahar Abdelnabi, Shailesh Mishra, Christoph Endres, Thorsten
+Devin J. Pohly, Stephen McLaughlin, Patrick McDaniel, and Kevin Butler. 2012.
+Holz, and Mario Fritz. 2023. Not What You've Signed Up For: Compromising
+Hi-Fi: Collecting High-Fidelity Whole-System Provenance. In Proceedings of the
+Real-World LLM-Integrated Applications with Indirect Prompt Injection. https:
+Annual Computer SecurityApplications Conference (ACSAC).259-268.doi:10.
+//arxiv.0rg/abs/2302.12173.
+1145/2420950.2420989
+[40] 
+[12] Taicheng Guo, Xiuying Chen, Yaqi Wang, Ruidi Chang, Shichao Pei, Nitesh V.
+Yangjun Ruan, Honghua Dong, Andrew Wang, Silviu Pitis, Yongchao Zhou,
+Chawla, Olaf Wiest, and Xiangliang Zhang. 2024. Large Language Model based
+Jimmy Ba, Yann Dubois, Chris J. Maddison, and Tatsunori Hashimoto.
+Multi-Agents: A Survey of Progress and Challenges. arXiv:2402.01680 [cs.Al]
+2024.Identifying the Risks of LM Agents with an LM-Emulated Sandbox.
+arXiv:2309.15817 [cs.Al] https://arxiv.0rg/abs/2309.15817
+https://arxiv.0rg/abs/2402.01680
+[13] Norman Hardy. 1988. The Confused Deputy: (or why capabilities might have
+[41] Ravi Sandhu, Edward Coyne, Hal Feinstein, and Charles Youman. 1996. Role-
+been invented). ACM SIGOPS Operating Systems Review 22, 4 (1988), 3638.
+Based Access Control Models. IEEE Computer 29, 2 (1996), 38-47. doi:10.1109/2.
+doi:10.1145/54289.871709
+485845
+[42] 
+Wajih Ul Hassan, Shengjian Guo, Ding Li, Zhengzhang Chen, Kangkook Jee,
+Timo Schick, Jane Dwivedi-Yu, Roberto Dessi, Roberta Raileanu, Maria Lomeli,
+[14] 
+Zhichun Li, and Adam Bates. 2020. Tactical Provenance Analysis for Endpoint De-
+Luke Zettlemoyer, Nicola Cancedda, and Thomas Scialom. 2023. Toolformer:
+tection and Response Systems. In Proceedings of the IEEE Symposium on Security
+Language Models Can Teach Themselves to Use Tools. In Advances in Neural
+and Privacy (S&P).1172-1189.
+Information Processing Systems (NeurlPS). https:/arxiv.0rg/abs/2302.04761
+Md Nahid Hossain, Sadegh M. Milajerdi, Junao Wang, Birhanu Eshete, Rigel
+[43]  Bruce Schneier and John Kelsey. 1999. Secure Audit Logs to Support Computer
+[15] 
+Gjomemo, R. Sekar, Scott Stoller, and V. N. Venkatakrishnan. 2017. Real-
+Forensics. ACM Transactions on Information and System Security 2, 2 (1999),
+time Attack Scenario Reconstruction from COTS Audit Data. In Proceedings
+159176.doi:10.1145/317087.317089
+[44] 
+Benjamin H. Sigelman, Luiz Andre Barroso, Mike Burrows, Pat Stephenson,
+ofthe 26th USENIX SecuritySymposium.https://www.usenix.org/conference/
+Manoj Plakal, Donald Beaver, Saul Jaspan, and Chandan Shanbhag. 2010. Dapper,
+usenixsecurity17/technical-sessions/presentation/hossain
+[16]  Evan Hubinger et al. 2024. Sleeper Agents: Training Deceptive LLMs that Persist
+a Large-Scale Distributed Systems Tracing Infrastructure. Technical Report Google
+Through Safety Training. arXiv preprint. arXiv:2401.05566 [cs.CR] https:
+Technical Report. Google. https:/research.google/pubs/pub36356/
+[45]
+//arxiv.0rg/abs/2401.05566
+W3C. 2021. Trace Context. https://www.w3.org/TR/trace-context/.
+[46]
+[17] JiamingJi and et al. 2023. AI Alignment: A Comprehensive Survey. arXiv preprint.
+W3C. 2024. Baggage. https://www.w3.org/TR/baggage/.
+[47] 
+Lei Wang, Chen Ma, Xueyang Feng. Zeyu Zhang, Hao Yang, Jingsen Zhang.
+arXiv:2310.19852 [cs.Al] https://arxiv.0rg/abs/2310.19852
+[18] LangChain. 2026. LangSmith Observability Documentation. https://docs.
+Zhiyuan Chen, Jiakai Tang, Xu Chen, Yankai Lin, Wayne Xin Zhao, Zhewei Wei,
+langchain.com/langsmith/observability.
+and Ji-Rong Wen. 2024. A Survey on Large Language Model Based Autonomous
+[19] Langfuse. 2026. Langfuse (GitHub Repository). https://github.com/langfuse/
+Agents. Frontiers of Computer Science 18, 6 (2024).
+[48] 
+langfuse.
+Qingyun Wu et al. 2023. AutoGen: Enabling Next-Gen LLM Applications via
+[20] Langfuse. 2026. Langfuse Observability Overview. https:/langfuse.com/docs/
+Multi-Agent Conversation Framework. arXiv preprint arXiv:2308.08155 (2023).
+observability/overview.
+https://arxiv.0rg/abs/2308.08155
+[49] 
+[21] 
+Xiao Liu et al. 2024. AgentBench: Evaluating LLMs as Agents. In International
+Shunyu Yao, Jeffrey Zhao, Dian Yu, Nan Du, Izhak Shafran, Karthik Narasimhan,
+Conference on Learning Representations (ICLR) https://arxiv.org/abs/2308.03688
+[22] 
+Jonathan Mace, Ryan Roelke, and Rodrigo Fonseca. 2018. Pivot Tracing: Dynamic
+Models. In International Conference on Learning Representations (ICLR). https:
+Causal Monitoring for Distributed Systems. ACM Transactions on Computer
+//arxiv.0rg/abs/2210.03629
+[50] Junjie Ye, Sixian Li, Guanyu Li, Caishuang Huang, Songyang Gao, Yilong Wu, Qi
+Systems 35, 4 (2018), 11:111:28. doi:10.1145/3208104
+Sadegh M. Milajerdi, Rigel Gjomemo, Birhanu Eshete, R. Sekar, and V. N.
+[23]
+Zhang, Tao Gui, and Xuanjing Huang. 2024. ToolSword: Unveiling Safety Issues
+Venkatakrishnan. 2019. HOLMES: Real-Time APT Detection Through Cor-
+of Large Language Models in Tool Learning Across Three Stages. In Proceedings
+relation of Suspicious Information Flows. In Proceedings of the IEEE Symposium
+of the 62nd Annual Meeting of the Association for Computational Linguistics (ACL)
+on Security and Privacy (S&P). 1137-1152.
+https:/arxiv.0rg/abs/2402.10753
+[24] Luc Moreau and Paul Groth. 2013. Provenance: An Introduction to PROV. Morgan
+[51] Qiusi Zhan, Zhixiang Liang, Zifan Ying, and Daniel Kang. 2024. InjecA-
+& Claypool.
+gent: Benchmarking Indirect Prompt Injections in Tool-Calling LLM Agents.
+[25] Luc Moreau, Paul Groth, et al. 2013. PROV-Overview: An Overview of the PROV
+arXiv:2403.02691 [cs.CR] https://arxiv.0rg/abs/2403.02691
+Family of Documents. https://www.w3.org/TR/prov-overview/.
+[26] Luc Moreau, Paolo Missier, Khalid Belhajame, et al. 2013. PROV-DM: The PROV
+Data Model. https://www.w3.org/TR/prov-dm/.
+
+
+=== PAGE 11 ===
+Observability for Delegated Execution in Agentic AI Systems
+Appendix
+Tracing fields (trace.*) are optional: CIM preserves authority-
+flow even when control-flow metadata is absent. Tier-2 qualifiers
+AProof of Proposition 2.1
+(e.g., action.tier2.direction, resource.sensitivity_label)
+PRooF. We make explicit the standard-telemetry assumption
+are optional but enable the normalized cross-tool analyses in $4.
+usedthroughout s2.1:the observed telemetry contains (i)the event
+set E, (ii) a causal structure Rcausal  E x E over events (e.g., trace/s-
+B.2Semantic Action Normalization Taxonomy
+pan parent-child links), and (ii) event-local attributes attr : E → 
+CIM defines a cross-tool action vocabulary to enable consistent
+(actor, action, resource, outcome, timestamps, etc.). Critically, these
+querying across heterogeneous systems. The taxonomy is inten-
+observables do not include delegation membership.
+tionally compact and may be extended. We group actions by intent:
+Let D denote the set of delegations (units of delegated authority),
+and let Rauth C D×E be the (latent) authorization/membership rela-
+Read and discovery.
+tion where (d, e) e Rauth means event e executed under delegation
+ read: retrieve content or metadata (e.g., file read, document
+d. Standard telemetry does not observe Rauth (nor any predicate
+get).
+equivalent to it).
+ search: query or list resources (e.g., search documents, list
+Formally, define an observation function
+repos).
+F(E, Reausal, attr, D, Rauth) = (E, Reausal, attr),
+ enumerate: enumerate principals or permissions (e.g., list
+members, list ACLs).
+which discards Rauth because it is latent in standard telemetry. Non-
+identifiability means that F is not injective in the argument Rauth.
+Write and modification.
+Let E be any event set with [E| ≥ 2, let D = [di, d2), and fix any
+. write: create or modify a resource (e.g., edit document,
+(Rcausal, attr) on E. Choose two distinct nonempty proper subsets
+commit file).
+S CE and S'CEwith S+ S'.Define two authorization relations
+. delete: remove a resource.
+Rauth, Rauth C D × E by:
+: move: change resource location/namespace (e.g., move file/-
+Rauth = ((di,e) : e E S) U ((d2,e) : e EE \S),
+folder).
+Sharing and authorization-relevant actions.
+Since S + S', we have Rauth + R'u
+share: grant access or distribute a resource (e.g., add col-
+auth'
+However, because the observables (E, Rcausal, attr) do not depend
+laborator, create share link).
+on Rauth by construction of F, we obtain
+: revoke: remove access (e.g., remove collaborator, disable
+F(E, Reausal, attr, D, Rauth) = (E, Reausal, attr) = F(E, Reausal, attr, D, Rauth).
+link).
+. invite: invite a principal to a workspace/channel/project.
+Thus two distinct authorization relations induce identical observed
+telemetry, so Rauth cannot be uniquely recovered from (E, Rcausal, attr).
+Execution and delegation.
+. invoke: invoke a tool operation that triggers execution (e.g.
+run job, open PR workflow).
+B CIM Event Schema (Minimal Specification)
+: delegate: create or bind a delegation context (optional
+This appendix provides a minimal, implementable specification of
+explicit event).
+CIM sufficient for reproducing the analyses in s3-s6. The goal is not
+: spawn: create a child agent instance (optional explicit event).
+to standardize a complete enterprise schema, but to define the core
+Mapping guidance.Normalization is performed using tool-native
+event envelope and semantic action taxonomy required to preserve
+metadata (operation/method name, endpoint class, and resource
+both authority-flow and control-flow structure. Implementations
+type), not payload content. For example, operations named get,
+may extend this schema with tool-specific attributes.
+download,readFilemaptoread; operationsupdate,commit,edit
+maptowrite;operationsaddMember,setPermission,createLink
+B.1Core Event Envelope
+map to share. When an operation is ambiguous, implementations
+Each CIM record is a single event describing one tool-relevant
+may emit both tool.operation and action.semantic andrecord
+action (e.g, read, write, share, invoke). Table 8 lists the required
+action.outcome=unknown until disambiguated.
+and optional fields in the minimal envelope, along with types.
+Required fields and reconstructability The minimal set of required
+fields for the core claims in this paper is:
+· time
+.event_id
+delegation_id
+principal.user_id
+agent.agent_id
+. tool.name
+action.semantic
+
+
+=== PAGE 12 ===
+Abhinav Mishra and Kumar Sharad
+Table 8: Minimal CIM event fields. Fields marked Req are required for delegation-aware reconstruction; others are optional but
+recommended when available. Tier-2 qualifiers (e.g., direction, sensitivity) align with the semantic action model used in S4.
+Field
+Req
+Type
+Semantics
+Req
+time
+RFC3339 string
+Event timestamp at capture point (gateway or instrumented boundary).
+Req
+event_id
+string
+Unique identifier for this CIM event (UUID or equivalent).
+Req
+delegation_id
+string
+Durable authorization contextidentifier; defines the delegation partition
+over events (s2).
+do
+delegation_parent_id
+string/null
+Parent delegation identifier if authority is explicitly re-delegated (op-
+tional chaining).
+Req
+principal.user_id
+string
+Human principal that originated the delegated authority (stable ID).
+Req
+string
+agent.agent_id
+Logical agent identity (e.g., “research-agent"); stable across runs.
+ido
+string
+agent.instance_id
+Concrete agent process/session instance (restart-sensitive).
+Req
+tool.name
+string
+Tool family name (e.g., gdocs, github, drive, slack).
+Opt
+string
+tool.operation
+Tool-native operation name (e.g., API endpoint, RPC method).
+Req
+action.semantic
+enum string
+Tier-1 normalized semantic action (sB.2), e.g, read, write, share,
+invoke.
+Opt
+enum string
+action.outcome
+[success, failure, unknown].
+Opt
+action.tier2.direction
+enum string
+Tier-2 qualifier for boundary crossing: (internal, external, unknown).
+Used in $4 queries (e.g., externalization).
+do
+action.tier2.principal
+enum string
+Tier-2 qualifier for the target principal category, e.g., (self, org,
+_scope
+external, unknownj. Used for“shared with external"-style analyses
+in $4.
+Opt
+enum string
+resource.type
+Resource category (e.g., document, repo, channel, ticket). (If you use
+resource_class in s4, treat this field as the same concept.)
+Opt
+resource.id
+string
+Tool-scoped identifier (e.g., doc ID, repo path).
+ido
+string
+resource.uri
+Canonical URI/locator if available (may be redacted).
+resource.sensitivity
+Opt
+enum string
+Tier-2 qualifier for sensitivity (e.g., public, internal, confidential,
+_label
+restricted, unknown).Used in s4 blast-radius style summaries.
+Opt
+string
+target.principal_id
+Recipient/target principal for sharing/invites (e.g., external email).
+Opt
+string
+trace.trace_id
+Tracing identifier if present; encodes control-flow structure.
+ido
+trace.span_id
+string
+Span identifier if present.
+Opt
+trace.parent_span_id
+string/null
+Parent span identifier if present.
+Opt
+string
+workflow.workflow_id
+Optional higher-level workflow correlation ID (may group multiple
+delegations).
+Opt
+labels
+map[string]string
+Free-form labels for deployment-specific tagging.
+B.3
+Worked Example: End-to-End Workflow
+(or descendant delegations), while traces may fragment across tool
+and CIM Events
+adapters and runtimes.
+To make CIM concrete, we provide a minimal end-to-end workflow
+Listing 1:Example CIM events for a single delegated work-
+and example CIM events emitted by the gateway. The workflow is
+flow (four steps across tools).
+representative of common enterprise agentic tasks and is intention-
+ally content-minimal: events capture actors, actions, resources, and
+structure, but not prompts or payload bodies.
+"time":"2026-02-13T10:00:01.120Z",
+A user delegates an agent to:“Summarize Q4 sales performance
+"event_id":"ei",
+and create a memo." The agent performs four steps spanning het-
+"delegation_id":"del_7b3a9c1e",
+erogeneous systems: (i) reads an internal spreadsheet, (i) queries
+"principal":（"user_id":"user_12345"},
+a CRM, (ii) writes a memo document, and (iv) shares the memo
+"agent":{"agent_id":"analysis-agent","instance_id":
+"agentinst_ag"},
+to a restricted channel. All steps occur under a single delegated
+"tool":{"name":"drive","operation":"files.get"},
+authorization context.Listing 1 showsfour example CIM events
+"action":{"semantic":"read","outcome":"success"},
+for this workflow. Note that events can span multiple trace com-
+ponents; they remain bound by delegation_id. For simplicity, we
+file_sales_q4","uri":"drive://file_sales_q4"},
+show a single agent instance (agent_id, instance_id) executing
+"trace":{"trace_id":"T1","span_id":"s1","
+all steps under one delegation; in practice, multi-agent workflows
+parent_span_id":null }
+may emit the same delegation_id across multiple agent instances
+},
+
+
+=== PAGE 13 ===
+Observability for Delegated Execution in Agentic AI Systems
+deterministic cross-toolnormalization into CIMevents.Thegate-
+"time":"2026-02-13T10:00:03.410Z",
+wayisobservational ratherthanpreventative:it capturesstructural
+"event_id":"e2",
+metadata required for delegation-aware reconstruction and does
+"delegation_id":"del_7b3a9c1e",
+not require prompt, payload, or model-internal reasoning inspec-
+"principal":{"user_id":"user_12345"},
+tion.
+"agent":{"agent_id":"analysis-agent","instance_id":
+"agentinst_ag"},
+C.1 Design Principles
+"tool":{"name":"crm","operation":"accounts.search"
+Progressive enhancement. Basic audit capture (timestamps, tool
+"action": {"semantic":"search","outcome":"success" },
+endpoint, operation, outcome) must succeed even when higher-
+level enrichment fails, ensuring graceful degradation rather than
+"resource":{"type":"account","id":"acct_query_q4",
+silent data loss.
+"uri"："crm://accounts?q=q4"},
+Determinism and semantic stability.Normalization from tool-
+"trace":{"trace_id":"T2","span_id":"s7","
+specific operations to CIM semantics is rule-based and deterministic
+parent_span_id":null }
+to support longitudinal comparability and reproducible analyses.
+Defense in depth. The architecture assumes agent code may be
+"time"："2026-02-13T10:00:07.905Z",
+untrusted.Gatewaysmaybeisolatedfrom agentruntimes, enforce
+"event_id":"e3",
+mandatory routing within a declared scope, and apply tamper-
+"delegation_id":"del_7b3a9cle",
+evident protections (e.g-, event signing) to emitted telemetry to
+"principal":{"user_id":"user_12345"},
+strengthen audit integrity.
+"agent":("agent_id":"analysis-agent","instance_id":
+"agentinst_ag"},
+C.2Gateway Contract: Four Logical Functions
+"tool": {"name":"gdocs","operation":"documents.
+Each gateway instance implements four logical functions, indepen-
+create" },
+dent of any particular agent framework:
+"action":{"semantic":"write","outcome":"success"},
+(1) Interception. Capture agent-initiated requests to external sys-
+uri"："gdocs://doc_q4_memo"},
+tems (e.g., proxy/sidecar, SDK wrapper, or in-service hooks) and
+"trace":{"trace_id":"T3","span_id":"s2","
+extract protocol-level metadata such as target system, operation,
+parent_span_id":"s1"}
+stable resource identifiers when available, and outcome.
+(2) Context binding. Attach delegation and actor context to each
+intercepted action by minting or validating delegation_id and,
+"time"："2026-02-13T10:00:10.222Z",
+when applicable, linking to delegation_parent_id to form a del-
+"event_id":"e4",
+egation lineage.
+"delegation_id":"del_7b3a9cle",
+(3) Semantic normalization. Deterministically map tool-specific
+"principal":{"user_id":"user_12345"},
+operations into CIM-normalized action types and resource classes
+"agent":{"agent_id":"analysis-agent","instance_id":
+"agentinst_ag"},
+(e.g., read, write, share, invoke; doc, repo, ticket), without con-
+tent inspection or learned inference.
+postMessage"},
+(4) Event emission. Emit a CIM-compliant record containing the
+"action":{"semantic":"share","outcome":"success"},
+event envelope (timestamp, tool endpoint), actor and delegation
+"resource":{"type":"message","id":"msg_8891","uri":
+identifiers, resource attribution, outcome, and (when propagated)
+"slack://channel/finance-q4/msg_8891"},
+workflow correlation fields such as trace/span identifiers.
+"target": {"principal_id":"slack://channel/finance-q4"
+C.3Field Provenance and Integrity Semantics
+"trace":{"trace_id":"T4","span_id":"sg",
+parent_span_id":null }
+To make assumptions explicit, CIM fields are partitioned into two
+provenance classes.
+Gateway-bound fields. These include authenticated principal
+identity, observed agent instance identity, timestamp, tool end-
+C Gateway Architecture and Deployment
+point, and delegation binding (delegation_id minted/validated at
+the boundary plus lineage linkage). These fields are authoritative
+Contract
+within the declared scope because they are derived from gateway
+Motivation and role. Relying solely on instrumentation inside
+observationandauthenticatedchannels.
+agent runtimes is brittle in heterogeneous deployments and weak
+Agent-provided fields. These are treated as annotations (e.g., task
+labels, optional correlation IDs when originating from the runtime).
+misconfigured, or may be adversarially modified. We therefore in-
+When agent-provided context conflicts with gateway-bound facts
+troduce a gateway as a uniform observability boundary between
+(e.g., principal binding, tool endpoint), the gateway-bound value is
+agents and tools. By mediating tool invocations, the gateway (i)
+authoritative and the inconsistency may be recorded as an integrity
+binds each observed action to a stable delegation_id, (ii) emits
+signal for downstream analysis.
+delegation lineage edges at delegation boundaries, and (ii) applies
+
+
+=== PAGE 14 ===
+Abhinav Mishra and Kumar Sharad
+C.4Layered Gateway Design
+remains possible, but evasion leaves a detectable absence rather
+We realize the contract via four composable layers:
+than a false positive.
+Protocol parsing layer. Understands framework- and protocol-
+Attacker model. We consider a motivated insider: a principal
+specific formats (e.g., MCP, REST, SDKs) and extracts tool names,
+who has legitimate access to the agentic system and delegated
+operations, request identifiers, and outcomes without access to
+authority, but who attempts to use that authority in ways that
+evade delegation-aware observability. This covers both (a) malicious
+prompts or model state.
+Semantic enrichment layer. Applies deterministic rules to map
+insiders who deliberately structure delegations to avoid detection,
+raw operations to normalized CIM semantics, including classifica-
+and (b) negligent insiders whose broadly scoped delegations produce
+tion of action types, identification of resource classes and identifiers,
+harmful composite behaviors without deliberate evasion. We do not
+model external adversaries who have compromised the gateway
+and categorization of tools.
+CIM generation layer. Transforms enriched metadata into CIM-
+itself; tamper-evident storage and gateway hardening (orthogonal
+compliant events, assigning stable identifiers for agent identity
+to CIM semantics) address that surface.
+and delegation context, and emitting lineage edges and workflow
+Evasion class 1: Out-of-band channels. An insider may act
+through tools or services that are not instrumented by the gateway-
+correlation fields when available.
+Log emission layer.Exports CIM events to downstream sinks
+for example, directly calling an API outside the declared tool in-
+(e.g., log analytics platforms, message queues, object storage) with
+ventory, using a personal device, or routing through a shadow
+buffering, retry, and backpressure handling, decoupling capture
+integration. CIM provides no direct signal for actions outside its
+from storage/analysis.
+coverage boundary.
+CIM's residual utility. CIM's explicit absence semantics make
+C.5Deployment Patterns and Coverage Model
+coverage gaps detectable: if a tool appears in a declared inventory
+but emits no CIM events during a delegation window, the absence
+The gateway supports multiple configurations, which may be com-
+is itself a signal. In mandatory-routing deployments, any uninstru-
+posed within a deployment:
+mented egress violates the routing policy and can trigger alerts
+Sidecar proxy. A sidecar intercepts agent traffic at the network
+independently of CIM. In best-effort deployments, investigators can
+boundary. When coupled with network policy, it can enforce manda-
+identify which tools were covered and which were not, bounding
+tory routing and provide strong bypass resistance.
+the unobservable surface explicitly rather than assuming complete
+SDK wrapper. Audited SDKs intercept tool invocations within the
+coverage. The net effect is that out-of-band evasion is possible but
+agent runtime, providing low-friction integration and low latency
+not silent: it requires the insider to actively avoid instrumented
+but typically offering best-effort coverage due to coupling with
+channels, which is itself a detectable behavioral pattern when com-
+agent implementations.
+pared against baseline tool usage.
+In-service instrumentation. Services under organizational con-
+Evasion class 2: Delegation fragmentation.A sophisticated in-
+trol emit CIM events directly as part of request handling. This
+sider may issue many narrow, short-lived delegations rather than
+provides high semantic fidelity and is often combined with sidecar
+one broad one, distributing actions across delegation contexts to
+proxies for broader coverage.
+prevent any single lineage-scoped query from revealing the com-
+Mandatory vs.best-effort routing.Deployments may enforce
+posite behavior. For example, instead of one delegation d that reads
+mandatory routing within a declared scope, making absence of
+ten sensitive documents and shares them externally, the insider
+issues ten delegations d, .. , dio, each reading one document, and
+effort mode where CIM enables reconstruction over covered tools
+a separate delegation di for the share action.
+but completeness claims require explicit coverage accounting.
+CIM's residual utility Lineage closure (R3) still attributes all child
+Coverage accounting. In partial deployments where only some
+delegations to their originating principal via delegation_parent_id,
+tools are mediated, CIM supports delegation-scoped analyses over
+so per-principal aggregation remains intact even when per-delegation
+the covered subset (e.g., blast radius, lineage-based attribution, drift),
+blast radius appears narrow. CIM's normalized action vocabulary
+whileuncoveredchannelsmustbetreatedasunknown.Globalac-
+countability statements therefore require either mandatory routing
+all share actions with direction=external attributed to a princi-
+for the declared scope or explicit mechanisms to detect missing
+pal p within a time window, regardless of how many delegations
+coverage.
+were used. Fragmentation therefore shifts the evasion burden from
+D Threat Model, Scope, and Bypass Detection
+hiding individual actions to hiding the principal relationship, which
+CIM's principal binding (R1, I5) is specifically designed to preserve.
+Scope and positioning. CIM is an observability substrate, not
+Fragmentation also leaves a structural signal: an unusually high
+an enforcement or prevention mechanism.The gateway raises the
+rate of short-lived delegations from a single principal is itself an
+ceiling on what can be observed and reconstructed post hoc; it does
+anomaly detectable from CIM telemetry without payload inspec-
+not block misuse at execution time. This framing is intentional:
+tion.
+CIM's value is structural accountability-making composite behav-
+Evasion class 3:Identifier spoofing.If delegation_idvalues
+iors visible and attributable after the fact-rather than real-time
+are accepted as agent-asserted free-form strings rather than gateway-
+policy enforcement, which is the domain of access-control and
+minted and principal-bound tokens, a compromised or malicious
+authorization systems .As with any audit-based system, evasion
+agent component could inject false delegation identifiers-attributing
+its actions to a benign delegation or to another principal's context.
+
+
+=== PAGE 15 ===
+Observability for Delegated Execution in Agentic AI Systems
+CIM's residual utility. Invariant I5 (binding integrity, S4) directly
+delegation_id,action_tier1,resource_class,sensitivity_label,
+addresses this: delegation_id minting and validation occur at
+andexternalizationattributes suchas action.tier2.principal_scope
+the gateway boundary, binding each identifier to an authenticated
+and action.tier2.direction). These queries typically require
+principal, an issuance timestamp, and a session context. Agent-
+filtering on a delegation (and optionally its descendant closure),
+provided annotations are treated as untrusted hints and are not used
+followed by a small aggregation and predicate. The Without CIM
+as authoritative delegation bindings, field provenance). Consistency
+column summarizes a typical baseline operator plan-not tied to
+check (i) from Appendix D further detects spoofing attempts: if
+a single delegation_id is observed binding to multiple distinct
+egation membership is inferred indirectly.
+principal.user_id values, this is flagged as an integrity violation.
+What “operations" mean (link to Table 7). The operation counts
+Spoofing is therefore defeated within the instrumented channel
+in Table 7 are intended as a proxy for query construction and
+only if the gateway itself is compromised, which is addressed by
+plans, including (i) cross-source joins, (i) schema mappings and per-
+tamper-evident storage and gateway isolation.
+source normalization/lookups (e.g-, metadata labels and resource
+Residual utility under partial evasion. A key property of CIM
+attributes), (i) identity-unification joins, (iv) windowed correla-
+is that it degrades gracefully: partial evasion narrows the observ-
+tion (At) to approximate task boundaries, and (v) heuristic post-
+able surface rather than collapsing observability entirely. Formally,
+processing to handle retries/backtracking and overlap (split/merge
+letT  Toolsbethe set of instrumented tools.CIM guarantees
+decisions). Beyond runtime, each operation is additional logic that
+delegation-scoped reconstruction for all actions traversing T; ac-
+must be written, tested, tuned, and kept consistent as sources
+tions on Tools \ T are unobservable but their absence is detectable
+change. CIM reduces or eliminates these reconstruction steps by
+relative to the declared inventory. An insider who evades CIM on
+providing a stable delegation-scoped join key and lineage closure.
+k tools still leaves a fully reconstructable record for all remaining
+tool interactions, and the evasion itself-the gap between expected
+Thresholds and deployment policy. Thresholds in Table 9 (e.g.,
+and observed tool coverage-is a structural signal. This is strictly
+count_distinct(-)≥k, fail_count ≥ N, and correlation window
+better than baseline telemetry, under which the same partial record
+At) are deployment-configurable and are shown only to illustrate
+cannot be reliably attributed to a delegation context even for the
+query shape.
+covered tools.
+Coverage and limitations. These examples assume events are cap-
+Assumptions within declared scope. Security-grade conclusions
+tured through the CIM emission path (e.g, a gateway/middleware).
+rely on (i) an authenticated channel that binds principals and agent
+Out-of-band actions that bypass this path are not directly observ-
+instances at the gateway boundary, (i) either mandatory routing or
+able. CIM's contribution is that, for covered events, delegation-
+a mechanism to detect missing coverage, and (ii) gateway-minted
+scopedreconstruction is well-posed and does not require heuristic
+delegation identifiers with principal binding (I5). Tamper-evident
+task inference, reducing correlation complexity-and thus query
+storage and gateway isolation strengthen evidentiary guarantees
+construction burden-in downstream analyses.
+against compromised infrastructure but are orthogonal to CIM
+semantics and are expected to be provided by the deployment envi-
+ronment.
+EThreat-Detection Query Examples (CIM vs.
+Baselines)
+Table 9 highlights the query-effort gap. The key point is opera-
+tional rather than micro-performance: in many real deployments,
+the dominant cost is not millisecond-level query latency but the
+effort required to author, validate, and maintain queries that re-
+constructdelegation-scoped behaviorfromheterogeneousevent
+sources. When delegation membership is not directly observable,
+even simple questions typically expand into pipelines of joins, per-
+sourcenormalization/lookups,identityreconciliation,time-window
+correlation, and heuristic post-processing for retries and overlap.
+These steps are expensive to build correctly, brittle under concur-
+rency, and costly to maintain as tool schemas evolve. CIM makes del-
+egation membership explicit at execution time for covered events,
+converting correlation-heavy pipelines into delegation-scoped pred-
+icates and thereby reducing query construction and maintenance
+burden.
+How to read the table. Each row is a representative delegation-
+scoped question shown in two forms. The CIM query column
+expresses the question as a predicate over normalized fields (e.g.,
+
+
+=== PAGE 16 ===
+Abhinav Mishra and Kumar Sharad
+Threat
+CIM query (delegation-scoped)
+Without CIM (baseline correlation)
+(or
+Sensitive cross-tool aggregation: one
+Filter
+delegation_id
+Join tool logs (Docs/Drive/CRM/etc.); map tool-specific
+delegated task touches multiple high-
+Desc(d);
+by
+delegation_id;
+com-
+group
+IDs/actions/resources to a common schema; join sensi-
+sensitivity resources across tools (e.g.,
+count_distinct(resource_class)
+ pute
+tivity labels per tool (lookups); unify identities (directory
+HR + finance + CRM).
+max(sensitivity_label);
+and
+alert
+if
+join); correlate by (principal, agent instance) + time win-
+max(sensitivity_label)
+High
+and
+dow △t; dedupe retries/backtracking; split/merge con-
+count_distinct(resource_class) ≥ k.
+current tasks; alert on cross-tool co-occurrence (often
+ambiguous under overlap).
+Within
+(or
+alert
+High-sensitivity read → external-
+descendants),
+if
+Detect sensitive reads per tool (tool-specific fields + label
+3(action_tier1
+ization: read High/Restricted then
+read ^ sensitivity_label
+lookups); detectexternalizationpertool (share/export/-
+High)
+and
+3(action_tier1
+share/export/post/upload to an external
+post/upload with external targets); unify identities across
+principal/destination under the same
+(share,export,post,upload)
+delegated task.
+external)
+action.tier2.principal_scope
+relation At (and traces when available); dedupe retries;
+(optionally also action.tier2.direction = egress).
+disambiguate overlapping tasks; join the two predicates
+within the inferred session/window (FP/FNcommon)
+Cross-toolfailureburst→success
+Filter to delegation_id = d; count failures where
+Collect failure/deny events from heterogeneous tools;
+(credential/permission abuse): many
+result E (denied, failed) and action_tier1
+normalize result semantics (fail/deny/success) across sys-
+denied/failed actions across tools fol-
+invoke with resource_classE(identity,auth);
+tems; unify identities; correlate attempts into campaigns
+lowed by success under the same task.
+alert if fail_count ≥ N and 3(result = success)
+via time windows △t (or partial traces); dedupe retries;
+within the same delegation (optionally per target re-
+split concurrent tasks; then alert on burst→success pat-
+source).
+tern (noisy when tasks overlap or traces fragment).
+Multi-agent descendant abuse: pri-
+Apply lineage closure: alert if (e : delegation_id e
+Reconstruct multi-agent relationships from traces/mes-
+Desc(d)^sensitivity_label≥High
+mary delegation spawns sub-agents;
+sages (often partial); infer parent/child linkage; join across
+action_tier1 (read, share, export, upload)).
+a descendant performs restricted ac-
+tool logs; use time-window correlation to approximate
+cess/externalization to evade"same
+a “delegation tree"; dedupe retries; apply heuristics to
+trace” rules.
+attribute descendant actions to the originating task (high
+ambiguity when delegation boundaries are not explicit).
+Table 9: Worked threat-detection examples showing how CiM replaces heuristic cross-tool joins and time-window correlation
+with delegation-scoped predicates. Thresholds (e.g., k, N, At) are deployment-configurable; shown forms are representative of
+the benchmarked query shapes.
+
+
