@@ -4,7 +4,7 @@ Enforces that every agent tool invocation is intercepted, normalized,
 and attributed to an active delegation context.
 """
 
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Tuple, Optional
 from backend.schemas.events import (
     ActionSemantic, ResourceClass, SensitivityLabel, Direction, PrincipalScope, CIMEvent
 )

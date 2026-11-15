@@ -46,8 +46,6 @@ class WorkflowRunner:
         conv_id = f"conv_{uuid.uuid4().hex[:8]}"
         
         selected_mode = mode or WorkflowMode.DETERMINISTIC_DEMO
-        if selected_mode == WorkflowMode.LIVE_OLLAMA and not is_ollama_available():
-            selected_mode = WorkflowMode.DETERMINISTIC_DEMO
 
         active_capture_level = capture_level or self.gateway.capture_level
         self.gateway.set_capture_level(active_capture_level)

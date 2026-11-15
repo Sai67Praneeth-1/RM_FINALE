@@ -21,11 +21,10 @@ if %ERRORLEVEL% NEQ 0 (
 echo [1/4] Checking Python environment...
 python -c "import sys; print('Using Python:', sys.version.split()[0], 'at', sys.executable)"
 
-REM 2. Check Node & Hugging Face Router
+REM 2. Check Node & LLM Engine
 echo.
 echo [2/4] Checking LLM Engine & Frontend runtime...
-echo [INFO] Primary LLM Engine: Hugging Face Router (router.huggingface.co/v1)
-echo [INFO] Active Models: meta-llama/Llama-3.1-8B-Instruct & Qwen/Qwen2.5-7B-Instruct
+echo [INFO] Primary LLM Engine: Cloud API (OpenAI / Groq / Router via .env)
 where npm >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
     echo [WARNING] npm is not found in PATH. Please install Node.js for React frontend.

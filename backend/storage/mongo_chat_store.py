@@ -34,9 +34,9 @@ class MongoChatStore:
         try:
             self._client = MongoClient(
                 self.uri,
-                serverSelectionTimeoutMS=8000,
-                connectTimeoutMS=8000,
-                socketTimeoutMS=15000,
+                serverSelectionTimeoutMS=2000,
+                connectTimeoutMS=2000,
+                socketTimeoutMS=4000,
                 retryWrites=True,
                 maxPoolSize=20
             )
@@ -66,20 +66,20 @@ class MongoChatStore:
         return cls._instance
 
     def is_connected(self) -> bool:
-        for attempt in range(2):
-            if self._collection is None or self._client is None:
-                if self._connect():
-                    return True
-                continue
+        if self._collection is not None and self._client is not None:
             try:
                 self._client.admin.command("ping")
                 return True
             except Exception:
                 self._client = None
                 self._collection = None
-                if self._connect():
-                    return True
-        return False
+
+        import time
+        now = time.time()
+        if hasattr(self, "_last_connect_attempt") and (now - self._last_connect_attempt < 30.0):
+            return False
+        self._last_connect_attempt = now
+        return self._connect()
 
     def generate_smart_title(self, text: str) -> str:
         """

@@ -12,6 +12,7 @@ from backend.schemas.events import SensitivityLabel, CaptureLevel
 
 
 class WorkflowMode(str, Enum):
+    LIVE_API = "live_api"
     LIVE_HUGGINGFACE = "live_huggingface"
     LIVE_OLLAMA = "live_ollama"
     DETERMINISTIC_DEMO = "deterministic_demo"

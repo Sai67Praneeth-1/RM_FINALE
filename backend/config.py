@@ -24,27 +24,24 @@ class Settings(BaseModel):
     # Redaction configuration for privacy Level 3
     REDACT_PII: bool = Field(default=True)
     
-    # Hugging Face Router settings
-    HF_ROUTER_BASE_URL: str = Field(
-        default=os.getenv("HF_ROUTER_BASE_URL", "https://router.huggingface.co/v1")
+    # Google Gemini API settings (Primary LLM Engine — Free Tier)
+    GEMINI_API_KEY: str = Field(
+        default=os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or ""
     )
-    HF_API_KEY: str = Field(
-        default=os.getenv("HF_TOKEN") or os.getenv("HF_API_KEY") or ""
-    )
-    HF_COORDINATOR_MODEL: str = Field(
-        default=os.getenv("HF_COORDINATOR_MODEL", "meta-llama/Llama-3.1-8B-Instruct")
-    )
-    HF_EXECUTOR_MODEL: str = Field(
-        default=os.getenv("HF_EXECUTOR_MODEL", "Qwen/Qwen2.5-7B-Instruct")
+    GEMINI_MODEL: str = Field(
+        default=os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
     )
 
-    # Ollama settings (fallback / legacy)
-    OLLAMA_BASE_URL: str = Field(
-        default=os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
-    )
-    OLLAMA_MODEL: str = Field(
-        default=os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
-    )
+    # Legacy settings kept for backwards compatibility
+    LLM_API_KEY: str = Field(default=os.getenv("LLM_API_KEY") or "")
+    LLM_BASE_URL: str = Field(default=os.getenv("LLM_BASE_URL") or "")
+    LLM_MODEL: str = Field(default=os.getenv("LLM_MODEL") or "")
+    HF_ROUTER_BASE_URL: str = Field(default=os.getenv("HF_ROUTER_BASE_URL", ""))
+    HF_API_KEY: str = Field(default=os.getenv("HF_TOKEN") or os.getenv("HF_API_KEY") or "")
+    HF_COORDINATOR_MODEL: str = Field(default=os.getenv("HF_COORDINATOR_MODEL", "gemini-3.5-flash-lite"))
+    HF_EXECUTOR_MODEL: str = Field(default=os.getenv("HF_EXECUTOR_MODEL", "gemini-3.5-flash-lite"))
+    OLLAMA_BASE_URL: str = Field(default=os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434"))
+    OLLAMA_MODEL: str = Field(default=os.getenv("OLLAMA_MODEL", "qwen2.5:3b"))
     
     # MongoDB Storage for Chat History & Sessions
     MONGODB_URI: str = Field(
@@ -78,4 +75,3 @@ settings = Settings()
 
 # Ensure generated directory exists
 os.makedirs(Path(settings.DATABASE_PATH).parent, exist_ok=True)
-

@@ -1137,7 +1137,7 @@ export default function App() {
                   <div className="msg-wrapper">
                     <div className="avatar avatar-assistant"><Bot size={20} /></div>
                     <div className="msg-body assistant" style={{ color: "#94a3b8" }}>
-                      🤖 Coordinating investigation across Researcher, Analyst, and Reporter agents...
+                      ✨ Thinking...
                     </div>
                   </div>
                 )}
@@ -1706,9 +1706,9 @@ export default function App() {
                       onChange={(e) => setRunMode(e.target.value)}
                       style={{ width: "100%", padding: "10px", background: "#0b0f19", border: "1px solid #334155", borderRadius: 6, color: "#fff" }}
                     >
+                      <option value="live_api">🌐 Live Cloud API (OpenAI / Groq / Router)</option>
                       <option value="live_huggingface">🤗 Hugging Face Router</option>
                       <option value="deterministic_demo">Deterministic Demo</option>
-                      <option value="live_ollama">Local Ollama</option>
                     </select>
                   </div>
 

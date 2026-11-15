@@ -5,8 +5,6 @@ langgraph>=0.2.0
 langchain>=0.3.0
 langchain-core>=0.3.0
 langchain-community>=0.3.0
-langchain-ollama>=0.2.0
-ollama>=0.3.0
 streamlit>=1.38.0
 networkx>=3.2
 plotly>=5.24.0
@@ -17,5 +15,5 @@ rapidocr-onnxruntime>=1.2.0
 PyMuPDF>=1.24.0
 openai>=1.0.0
 python-dotenv>=1.0.0
-
-
+pymongo>=4.6.0
+google-genai

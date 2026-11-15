@@ -7,7 +7,7 @@ between agents, and between agents and external tools.
 import time
 import uuid
 from datetime import datetime, timezone
-from typing import Dict, Any, List, Optional, Callable
+from typing import Dict, Any, List, Optional, Callable, Tuple
 from backend.schemas.events import (
     CIMEvent, ActionSemantic, ActionOutcome, Direction,
     PrincipalScope, ResourceClass, SensitivityLabel,

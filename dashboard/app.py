@@ -140,17 +140,10 @@ st.sidebar.markdown("---")
 st.sidebar.subheader("System Status")
 
 st.sidebar.markdown(
-    f"**🤗 Hugging Face Router: Active**\n\n"
-    f"- **Coordinator**: `{settings.HF_COORDINATOR_MODEL}`\n"
-    f"- **Executor**: `{settings.HF_EXECUTOR_MODEL}`\n"
-    f"- **Endpoint**: `router.huggingface.co/v1`"
+    f"**🌐 LLM Cloud API: Active**\n\n"
+    f"- **Model**: `{settings.LLM_MODEL}`\n"
+    f"- **Endpoint**: `{settings.LLM_BASE_URL}`"
 )
-
-ollama_active = is_ollama_available()
-if ollama_active:
-    st.sidebar.caption(f"⚪ Local Ollama: Online ({settings.OLLAMA_MODEL})")
-else:
-    st.sidebar.caption("⚪ Local Ollama: Standby (HF Router Primary)")
 
 st.sidebar.caption(f"Capture Level: **Level {settings.DEFAULT_CAPTURE_LEVEL}**")
 st.sidebar.caption(f"DB: `{Path(settings.DATABASE_PATH).name}`")
@@ -635,10 +628,10 @@ elif page == "4. 📋 Agent Workspace (Task Runner)":
         )
         mode_choice = st.radio(
             "Inference Mode",
-            ["live_huggingface", "deterministic_demo", "live_ollama"],
+            ["live_api", "deterministic_demo"],
             index=0,
-            format_func=lambda x: "🤗 Hugging Face Router (meta-llama & Qwen)" if x == "live_huggingface" else "Deterministic Demo (Zero-Dependency)" if x == "deterministic_demo" else "Local Ollama",
-            help="Live Hugging Face Router mode executes multi-agent inference via router.huggingface.co/v1."
+            format_func=lambda x: f"🌐 Live LLM Cloud API ({settings.LLM_MODEL})" if x == "live_api" else "Deterministic Demo (Zero-Dependency)",
+            help="Live API mode executes multi-agent inference via configured API (OpenAI, Groq, Router)."
         )
         capture_level_choice = st.selectbox(
             "Capture Level",
@@ -649,10 +642,8 @@ elif page == "4. 📋 Agent Workspace (Task Runner)":
 
     if st.button("🚀 Execute Multi-Agent Workflow", type="primary"):
         with st.spinner(f"LangGraph orchestrating workflow ({workflow_type_choice})..."):
-            if mode_choice == "live_huggingface":
-                run_mode = WorkflowMode.LIVE_HUGGINGFACE
-            elif mode_choice == "live_ollama":
-                run_mode = WorkflowMode.LIVE_OLLAMA
+            if mode_choice == "live_api":
+                run_mode = WorkflowMode.LIVE_API
             else:
                 run_mode = WorkflowMode.DETERMINISTIC_DEMO
             cap_enum = CaptureLevel(capture_level_choice)

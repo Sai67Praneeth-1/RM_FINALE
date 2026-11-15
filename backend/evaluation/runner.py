@@ -8,7 +8,7 @@ import json
 import csv
 import time
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from backend.evaluation.synthetic_generator import SyntheticWorkloadGenerator
 from backend.evaluation.baselines import ReconstructionBaselines
 from backend.evaluation.metrics import EvaluationMetrics

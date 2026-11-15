@@ -18,7 +18,7 @@ from backend.orchestration.workflow_runner import WorkflowRunner
 from backend.schemas.workflow import WorkflowMode
 from backend.schemas.events import CaptureLevel
 from backend.tools.file_tools import list_sample_datasets
-from backend.agents.llm_client import is_ollama_available, list_installed_ollama_models
+from backend.agents.llm_client import is_gemini_available, query_gemini, query_gemini_chat
 from backend.orchestration.hf_simulation import run_huggingface_transparency_simulation
 from backend.graphs.three_graphs import ThreeGraphCoordinator
 from backend.provenance.tracker import ProvenanceTracker
@@ -75,8 +75,7 @@ class StartWorkflowRequest(BaseModel):
 
 @router.get("/status")
 def get_system_status():
-    ollama_ok = is_ollama_available()
-    models = list_installed_ollama_models() if ollama_ok else []
+    gemini_ok = is_gemini_available()
     metrics = store.get_metrics_summary()
     mongo_ok = mongo_chat_store.is_connected()
     return {
@@ -84,15 +83,15 @@ def get_system_status():
         "database_path": settings.DATABASE_PATH,
         "capture_level": settings.DEFAULT_CAPTURE_LEVEL,
         "mongodb_connected": mongo_ok,
-        "mongodb_db": settings.MONGODB_DB_NAME,
+        "mongodb_db": getattr(settings, "MONGODB_DB_NAME", "research"),
         "huggingface_router_url": settings.HF_ROUTER_BASE_URL,
         "huggingface_coordinator_model": settings.HF_COORDINATOR_MODEL,
         "huggingface_executor_model": settings.HF_EXECUTOR_MODEL,
         "huggingface_available": True,
-        "ollama_available": ollama_ok,
-        "ollama_base_url": settings.OLLAMA_BASE_URL,
-        "ollama_model": settings.OLLAMA_MODEL,
-        "installed_models": models,
+        "ollama_available": False,
+        "llm_engine": "Google Gemini",
+        "llm_model": settings.GEMINI_MODEL,
+        "llm_available": gemini_ok,
         "metrics_summary": metrics
     }
 
@@ -154,10 +153,8 @@ def get_datasets():
 
 @router.post("/workflow/start")
 def start_workflow(req: StartWorkflowRequest):
-    if req.mode == "live_huggingface":
-        mode = WorkflowMode.LIVE_HUGGINGFACE
-    elif req.mode == "live_ollama":
-        mode = WorkflowMode.LIVE_OLLAMA
+    if req.mode in ["live_api", "live_huggingface", "live_ollama"]:
+        mode = WorkflowMode.LIVE_API
     else:
         mode = WorkflowMode.DETERMINISTIC_DEMO
     cap_level = CaptureLevel(req.capture_level) if req.capture_level in (1, 2, 3) else CaptureLevel.METADATA_SUMMARY
@@ -285,7 +282,7 @@ class ChatRequest(BaseModel):
     message: str
     conversation_id: Optional[str] = None
     dataset_name: Optional[str] = "customer_complaints.csv"
-    mode: Optional[str] = "deterministic_demo"
+    mode: Optional[str] = "live_api"
     capture_level: Optional[int] = 2
 
 @router.get("/chats")
@@ -359,38 +356,56 @@ def delete_chat_session(chat_id: str):
         raise HTTPException(status_code=404, detail="Chat not found or deletion failed")
     return {"status": "success", "deleted_chat_id": chat_id}
 
+# Specific keywords that indicate the user wants a multi-agent data audit/investigation
+_WORKFLOW_INDICATORS = [
+    "complaint", "customer", "ticket", "access log", "system log", "security log",
+    "unauthorized", "breach", "audit log", "dataset", "three-graph", "three graph",
+    "delegation graph", "multi-agent", "provenance", "sentiment score", "severity category"
+]
+_WORKFLOW_VERBS = ["audit", "investigate"]
+
 @router.post("/chat")
 def chat_with_coordinator(req: ChatRequest):
     """
-    Interactive conversational endpoint with Agent A (Coordinator).
-    Accepts goals, tasks, or questions, coordinates with the multi-agent team,
-    stores content in MongoDB, and returns conversational responses with full goal-based transparency.
+    Interactive conversational chatbot endpoint with Agent A (Coordinator).
+    - Manages conversation persistence in MongoDB for the full chat sidebar history.
+    - For general questions (math, science, coding, general chat, etc.) -> answers via Gemini LLM like ChatGPT.
+    - For data audit/investigation tasks -> runs the full multi-agent workflow, generates interaction graphs, and synthesizes report with LLM.
     """
+    msg = req.message.strip()
+    msg_lower = msg.lower()
+
     # 1. Ensure conversation exists in MongoDB
     conversation_id = req.conversation_id or str(uuid.uuid4())
-
-    # Store user query into MongoDB
     user_doc = mongo_chat_store.append_message(
         chat_id=conversation_id,
         role="user",
-        content=req.message
+        content=msg
     )
-    conv_title = user_doc.get("title", "New Investigation")
+    conv_title = user_doc.get("title", "New Investigation") if user_doc else "New Investigation"
 
-    # 2. Evaluate direct conversational answer & relevance gate
-    direct_ans, should_run_workflow = answer_user_query_directly(req.message)
-    if not should_run_workflow:
-        default_graph = {
-            "nodes": [
-                {"id": "agent_coordinator", "label": "Coordinator", "node_type": "agent", "role": "Lead Orchestrator"}
-            ],
-            "edges": []
-        }
-        # Store assistant direct answer in MongoDB
+    default_graph = {
+        "nodes": [
+            {"id": "agent_coordinator", "label": "Coordinator", "node_type": "agent", "role": "Lead Orchestrator"}
+        ],
+        "edges": []
+    }
+
+    # 2. Check if this is an introductory greeting / identity query
+    is_greeting = any(w in msg_lower for w in ["who are you", "who r u", "what is your name", "introduce yourself"]) or (
+        msg_lower in ["hello", "hi", "hey", "help"]
+    )
+    if is_greeting:
+        greeting_text = (
+            "Hello! I am **Agent A (Coordinator)**, an intelligent AI assistant and lead orchestrator of our multi-agent platform.\n\n"
+            "I can answer any general questions (just like ChatGPT) or coordinate my specialized agent team to audit datasets, "
+            "inspect logs, and track authority delegations.\n\n"
+            "How can I help you today?"
+        )
         asst_doc = mongo_chat_store.append_message(
             chat_id=conversation_id,
             role="assistant",
-            content=direct_ans,
+            content=greeting_text,
             metadata={
                 "interaction_graph": default_graph,
                 "workflow_run": None,
@@ -400,31 +415,99 @@ def chat_with_coordinator(req: ChatRequest):
             }
         )
         return {
-            "response": direct_ans,
+            "response": greeting_text,
             "conversation_id": conversation_id,
-            "conversation_title": asst_doc.get("title", conv_title),
+            "conversation_title": asst_doc.get("title", conv_title) if asst_doc else conv_title,
             "workflow_run": None,
             "goal_flow_dot": None,
+            "langgraph_topology_dot": None,
             "goal_traceability": [],
             "interaction_graph": default_graph,
-            "interactions": []
+            "interactions": [],
+            "final_output": None
         }
 
-    # Automatically select dataset if mentioned in prompt or inferred dynamically
+    # 3. Determine if this is a data-related task that should trigger the multi-agent workflow
+    is_workflow_task = (
+        any(w in msg_lower for w in _WORKFLOW_INDICATORS)
+        or any(msg_lower.startswith(v) for v in _WORKFLOW_VERBS)
+        or ("audit" in msg_lower and any(w in msg_lower for w in ["log", "ticket", "system", "file", "security", "customer", "data"]))
+    )
+
+    # ---------------------------------------------------------------------------
+    # CASE 1: General chatbot question (NOT a data workflow task)
+    # Answer directly using Gemini like ChatGPT
+    # ---------------------------------------------------------------------------
+    if not is_workflow_task:
+        system_prompt = (
+            "You are a helpful, intelligent AI assistant. "
+            "Answer the user's question clearly, accurately, and conversationally. "
+            "You can answer questions about anything: math, science, coding, history, "
+            "general knowledge, explanations, creative writing, and more. "
+            "Use markdown formatting where appropriate. "
+            "Be concise but thorough."
+        )
+
+        llm_response = query_gemini(
+            prompt=msg,
+            system_prompt=system_prompt,
+            temperature=0.7,
+            max_tokens=2048
+        )
+
+        if not llm_response:
+            direct_ans, _ = answer_user_query_directly(msg)
+            llm_response = direct_ans or (
+                "⚠️ **LLM API is not configured or unreachable.**\n\n"
+                "Please set your `GEMINI_API_KEY` in the `.env` file.\n\n"
+                "Meanwhile, you can still use data audit commands like:\n"
+                "- *'Audit customer complaints for critical severity tickets'*\n"
+                "- *'Check system access logs for unauthorized sharing'*"
+            )
+
+        asst_doc = mongo_chat_store.append_message(
+            chat_id=conversation_id,
+            role="assistant",
+            content=llm_response,
+            metadata={
+                "interaction_graph": default_graph,
+                "workflow_run": None,
+                "goal_flow_dot": None,
+                "goal_traceability": [],
+                "interactions": []
+            }
+        )
+
+        return {
+            "response": llm_response,
+            "conversation_id": conversation_id,
+            "conversation_title": asst_doc.get("title", conv_title) if asst_doc else conv_title,
+            "workflow_run": None,
+            "goal_flow_dot": None,
+            "langgraph_topology_dot": None,
+            "goal_traceability": [],
+            "interaction_graph": default_graph,
+            "interactions": [],
+            "final_output": None
+        }
+
+    # ---------------------------------------------------------------------------
+    # CASE 2: Data audit / investigation task -> Run multi-agent workflow
+    # ---------------------------------------------------------------------------
     query_info = analyze_dynamic_query(req.message)
     target_dataset = req.dataset_name or query_info.get("target_dataset", "customer_complaints.csv")
+    if any(kw in msg_lower for kw in ["access", "security", "log", "unauthorized", "breach"]):
+        target_dataset = "system_access_logs.csv"
+    elif any(kw in msg_lower for kw in ["note", "research", "architecture"]) and not any(kw in msg_lower for kw in ["customer", "complaint"]):
+        target_dataset = "sample_research_notes.txt"
 
-    # Execute workflow under user delegation
-    if req.mode == "live_huggingface":
-        run_mode = WorkflowMode.LIVE_HUGGINGFACE
-    elif req.mode == "live_ollama":
-        run_mode = WorkflowMode.LIVE_OLLAMA
-    else:
-        run_mode = WorkflowMode.DETERMINISTIC_DEMO
+    run_mode = WorkflowMode.DETERMINISTIC_DEMO
+    if req.mode in ["live_api", "live_gemini", "live_huggingface", "live_ollama"]:
+        run_mode = WorkflowMode.LIVE_API
     cap_enum = CaptureLevel(req.capture_level or 2)
-    
+
     run = runner.execute_workflow(
-        task_description=req.message,
+        task_description=msg,
         dataset_name=target_dataset,
         principal_id="user_chat_principal",
         mode=run_mode,
@@ -453,19 +536,38 @@ def chat_with_coordinator(req: ChatRequest):
 
     statemachine_dot = generate_langgraph_statemachine_dot()
 
-    reply = format_direct_task_findings(req.message, target_dataset, run)
     graphs = three_graphs.get_graphs_for_workflow(run.workflow_id)
-
     interaction_graph_serialized = serialize_nx(graphs["interaction_graph"])
     execution_graph_serialized = serialize_nx(graphs["execution_graph"])
     authority_graph_serialized = serialize_nx(graphs["authority_graph"])
     interactions_serialized = [i.model_dump() for i in interactions]
 
+    # Generate a natural response using Gemini (enhanced with workflow data)
+    workflow_context = run.final_output or ""
+    llm_system = (
+        "You are an intelligent AI assistant that also leads a team of 4 autonomous data analysis agents. "
+        "The user asked a question related to data analysis. Your agents just completed the investigation. "
+        "Below is the raw analytical report from your agent team. "
+        "Rewrite it as a clear, natural, conversational answer to the user's question. "
+        "Include key findings, numbers, and recommendations. Use markdown formatting."
+    )
+    llm_prompt = f"User's question: {msg}\n\nAgent team's raw report:\n{workflow_context[:3000]}"
+
+    llm_response = query_gemini(
+        prompt=llm_prompt,
+        system_prompt=llm_system,
+        temperature=0.5,
+        max_tokens=2048
+    )
+
+    if not llm_response:
+        llm_response = format_direct_task_findings(msg, target_dataset, run)
+
     # Store assistant full multi-agent response into MongoDB
     asst_doc = mongo_chat_store.append_message(
         chat_id=conversation_id,
         role="assistant",
-        content=reply,
+        content=llm_response,
         metadata={
             "workflow_id": run.workflow_id,
             "workflow_run": run.model_dump(),
@@ -481,9 +583,9 @@ def chat_with_coordinator(req: ChatRequest):
     )
 
     return {
-        "response": reply,
+        "response": llm_response,
         "conversation_id": conversation_id,
-        "conversation_title": asst_doc.get("title", conv_title),
+        "conversation_title": asst_doc.get("title", conv_title) if asst_doc else conv_title,
         "workflow_id": run.workflow_id,
         "workflow_run": run.model_dump(),
         "goal_flow_dot": goal_dot,
