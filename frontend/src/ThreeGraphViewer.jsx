@@ -21,16 +21,26 @@ import {
 } from "lucide-react";
 import AgentInteractionGraph from "./AgentInteractionGraph";
 
-// Known Agent Styles
+// Obsidian Research Palette Node Colors
+export const OBSIDIAN_NODE_COLORS = {
+  agent: { color: "#60a5fa", border: "#60a5fa", bg: "rgba(96, 165, 250, 0.15)", text: "#93c5fd" },
+  principal: { color: "#e8a44a", border: "#e8a44a", bg: "rgba(232, 164, 74, 0.15)", text: "#fde68a" },
+  delegation: { color: "#34d399", border: "#34d399", bg: "rgba(52, 211, 153, 0.15)", text: "#a7f3d0" },
+  execution_event: { color: "#f59e0b", border: "#f59e0b", bg: "rgba(245, 158, 11, 0.15)", text: "#fde68a" },
+  resource: { color: "#2dd4bf", border: "#2dd4bf", bg: "rgba(45, 212, 191, 0.15)", text: "#99f6e4" },
+  artifact: { color: "#a78bfa", border: "#a78bfa", bg: "rgba(167, 139, 250, 0.15)", text: "#ddd6fe" },
+};
+
+// Known Agent Styles (Mapped to Obsidian Research Palette: Agent #60a5fa)
 const AGENT_COLORS = {
-  agent_coordinator: { border: "#60a5fa", bg: "rgba(59, 130, 246, 0.15)", text: "#93c5fd", label: "Agent A: Coordinator" },
-  Coordinator_Agent: { border: "#60a5fa", bg: "rgba(59, 130, 246, 0.15)", text: "#93c5fd", label: "Coordinator Agent" },
-  agent_researcher: { border: "#34d399", bg: "rgba(16, 185, 129, 0.15)", text: "#6ee7b7", label: "Agent B: Researcher" },
-  Executor_Agent: { border: "#34d399", bg: "rgba(16, 185, 129, 0.15)", text: "#6ee7b7", label: "Executor Agent" },
-  agent_analyst: { border: "#fbbf24", bg: "rgba(245, 158, 11, 0.15)", text: "#fde68a", label: "Agent C: Analyst" },
-  Critic_Agent: { border: "#fbbf24", bg: "rgba(245, 158, 11, 0.15)", text: "#fde68a", label: "Critic Agent" },
-  agent_reporter: { border: "#f472b6", bg: "rgba(236, 72, 153, 0.15)", text: "#fbcfe8", label: "Agent D: Reporter" },
-  Synthesizer_Agent: { border: "#f472b6", bg: "rgba(236, 72, 153, 0.15)", text: "#fbcfe8", label: "Synthesizer Agent" },
+  agent_coordinator: { border: "#60a5fa", bg: "rgba(96, 165, 250, 0.15)", text: "#93c5fd", label: "Agent A: Coordinator" },
+  Coordinator_Agent: { border: "#60a5fa", bg: "rgba(96, 165, 250, 0.15)", text: "#93c5fd", label: "Coordinator Agent" },
+  agent_researcher: { border: "#60a5fa", bg: "rgba(96, 165, 250, 0.15)", text: "#93c5fd", label: "Agent B: Researcher" },
+  Executor_Agent: { border: "#60a5fa", bg: "rgba(96, 165, 250, 0.15)", text: "#93c5fd", label: "Executor Agent" },
+  agent_analyst: { border: "#60a5fa", bg: "rgba(96, 165, 250, 0.15)", text: "#93c5fd", label: "Agent C: Analyst" },
+  Critic_Agent: { border: "#60a5fa", bg: "rgba(96, 165, 250, 0.15)", text: "#93c5fd", label: "Critic Agent" },
+  agent_reporter: { border: "#60a5fa", bg: "rgba(96, 165, 250, 0.15)", text: "#93c5fd", label: "Agent D: Reporter" },
+  Synthesizer_Agent: { border: "#60a5fa", bg: "rgba(96, 165, 250, 0.15)", text: "#93c5fd", label: "Synthesizer Agent" },
 };
 
 export default function ThreeGraphViewer({
@@ -423,14 +433,14 @@ export default function ThreeGraphViewer({
               {selectedEntity.agent_id && (
                 <div>
                   <div style={{ color: "#64748b", fontSize: 11 }}>Executing Agent:</div>
-                  <div style={{ color: "#38bdf8", fontWeight: 600 }}>{selectedEntity.agent_id}</div>
+                  <div style={{ color: "#60a5fa", fontWeight: 600 }}>{selectedEntity.agent_id}</div>
                 </div>
               )}
 
               {selectedEntity.tool_name && (
                 <div>
                   <div style={{ color: "#64748b", fontSize: 11 }}>CIM Tool Invocated:</div>
-                  <div style={{ color: "#34d399", fontWeight: 600 }}>
+                  <div style={{ color: "#f59e0b", fontWeight: 600 }}>
                     <code>{selectedEntity.tool_name}</code> &bull; <em>{selectedEntity.tool_operation || selectedEntity.action_semantic}</em>
                   </div>
                 </div>
@@ -439,14 +449,14 @@ export default function ThreeGraphViewer({
               {selectedEntity.resource_id && (
                 <div>
                   <div style={{ color: "#64748b", fontSize: 11 }}>Target Resource:</div>
-                  <div style={{ color: "#e2e8f0" }}><code>{selectedEntity.resource_id}</code></div>
+                  <div style={{ color: "#2dd4bf" }}><code>{selectedEntity.resource_id}</code></div>
                 </div>
               )}
 
               {selectedEntity.delegation_id && (
                 <div>
                   <div style={{ color: "#64748b", fontSize: 11 }}>Authority Delegation Token:</div>
-                  <div style={{ color: "#c084fc", fontWeight: 600 }}><code>{selectedEntity.delegation_id}</code></div>
+                  <div style={{ color: "#34d399", fontWeight: 600 }}><code>{selectedEntity.delegation_id}</code></div>
                 </div>
               )}
 
@@ -540,7 +550,7 @@ function ExecutionGraphTopology({ nodes = [], edges = [], onSelectNode, onSelect
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {nodes.map((node, idx) => {
           const agentKey = node.agent_id || "agent_researcher";
-          const agentMeta = AGENT_COLORS[agentKey] || { border: "#34d399", bg: "rgba(16, 185, 129, 0.15)", text: "#6ee7b7", label: agentKey };
+          const agentMeta = AGENT_COLORS[agentKey] || { border: "#60a5fa", bg: "rgba(96, 165, 250, 0.15)", text: "#93c5fd", label: agentKey };
           const isSuccess = node.outcome === "success" || !node.outcome;
 
           return (
@@ -549,7 +559,7 @@ function ExecutionGraphTopology({ nodes = [], edges = [], onSelectNode, onSelect
                 onClick={() => onSelectNode && onSelectNode(node)}
                 style={{
                   background: "#0b0f19",
-                  border: `1px solid ${agentMeta.border}`,
+                  border: `1px solid #f59e0b`,
                   borderRadius: 8,
                   padding: "12px 16px",
                   display: "flex",
@@ -566,14 +576,14 @@ function ExecutionGraphTopology({ nodes = [], edges = [], onSelectNode, onSelect
                       width: 28,
                       height: 28,
                       borderRadius: "50%",
-                      background: agentMeta.bg,
-                      border: `1px solid ${agentMeta.border}`,
+                      background: "rgba(245, 158, 11, 0.15)",
+                      border: `1px solid #f59e0b`,
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       fontSize: 12,
                       fontWeight: 700,
-                      color: agentMeta.text,
+                      color: "#fbbf24",
                     }}
                   >
                     {idx + 1}
@@ -584,14 +594,14 @@ function ExecutionGraphTopology({ nodes = [], edges = [], onSelectNode, onSelect
                       <span style={{ fontSize: 13, fontWeight: 700, color: "#f8fafc" }}>
                         {node.tool_name || "Tool Call"}: <code>{node.tool_operation || node.action_semantic || "operation"}</code>
                       </span>
-                      <span style={{ fontSize: 11, padding: "1px 6px", borderRadius: 4, background: agentMeta.bg, color: agentMeta.text }}>
+                      <span style={{ fontSize: 11, padding: "1px 6px", borderRadius: 4, background: agentMeta.bg, color: agentMeta.text, border: `1px solid ${agentMeta.border}` }}>
                         {agentMeta.label}
                       </span>
                     </div>
 
                     <div style={{ fontSize: 11.5, color: "#94a3b8", marginTop: 4, display: "flex", gap: 12 }}>
-                      <span>Target: <code style={{ color: "#38bdf8" }}>{node.resource_id || "resource"}</code></span>
-                      <span>Delegation Token: <code style={{ color: "#c084fc" }}>{(node.delegation_id || "").substring(0, 14)}...</code></span>
+                      <span>Target: <code style={{ color: "#2dd4bf" }}>{node.resource_id || "resource"}</code></span>
+                      <span>Delegation Token: <code style={{ color: "#34d399" }}>{(node.delegation_id || "").substring(0, 14)}...</code></span>
                       {node.time && <span>Time: {new Date(node.time).toLocaleTimeString()}</span>}
                     </div>
                   </div>
@@ -668,8 +678,8 @@ function AuthorityGraphTopology({ nodes = [], edges = [], onSelectNode, onSelect
                 key={p.id || idx}
                 onClick={() => onSelectNode && onSelectNode(p)}
                 style={{
-                  background: "#1e1b4b",
-                  border: "1px solid #6366f1",
+                  background: "rgba(232, 164, 74, 0.12)",
+                  border: "1px solid #e8a44a",
                   borderRadius: 8,
                   padding: "10px 16px",
                   cursor: "pointer",
@@ -678,12 +688,12 @@ function AuthorityGraphTopology({ nodes = [], edges = [], onSelectNode, onSelect
                   gap: 10,
                 }}
               >
-                <Shield size={18} color="#818cf8" />
+                <Shield size={18} color="#e8a44a" />
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#c7d2fe" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#e8a44a" }}>
                     Principal: {p.entity_id || p.label || "Human User"}
                   </div>
-                  <div style={{ fontSize: 11, color: "#a5b4fc" }}>Root Authority Signer</div>
+                  <div style={{ fontSize: 11, color: "#fde68a" }}>Root Authority Signer</div>
                 </div>
               </div>
             ))}
@@ -709,7 +719,7 @@ function AuthorityGraphTopology({ nodes = [], edges = [], onSelectNode, onSelect
                 onClick={() => onSelectNode && onSelectNode(d)}
                 style={{
                   background: "#0b0f19",
-                  border: "1px solid #7c3aed",
+                  border: "1px solid #34d399",
                   borderRadius: 6,
                   padding: "10px 14px",
                   cursor: "pointer",
@@ -719,7 +729,7 @@ function AuthorityGraphTopology({ nodes = [], edges = [], onSelectNode, onSelect
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <Key size={14} color="#c084fc" />
+                  <Key size={14} color="#34d399" />
                   <div>
                     <div style={{ fontSize: 12, fontWeight: 700, color: "#e2e8f0" }}>
                       <code>{(d.id || d.label || "").substring(0, 16)}</code>
@@ -727,7 +737,7 @@ function AuthorityGraphTopology({ nodes = [], edges = [], onSelectNode, onSelect
                     <div style={{ fontSize: 11, color: "#94a3b8" }}>Scope: {d.scope || "Tool Execution Granted"}</div>
                   </div>
                 </div>
-                <span style={{ fontSize: 10, background: "rgba(124, 58, 237, 0.2)", color: "#c084fc", padding: "2px 5px", borderRadius: 4 }}>
+                <span style={{ fontSize: 10, background: "rgba(52, 211, 153, 0.2)", color: "#34d399", padding: "2px 5px", borderRadius: 4 }}>
                   Valid
                 </span>
               </div>
@@ -743,7 +753,7 @@ function AuthorityGraphTopology({ nodes = [], edges = [], onSelectNode, onSelect
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
             {agents.map((a, idx) => {
               const agentKey = a.entity_id || a.agent_id || a.id?.replace("agent_", "") || "agent_coordinator";
-              const meta = AGENT_COLORS[agentKey] || { border: "#3b82f6", bg: "rgba(59, 130, 246, 0.15)", text: "#93c5fd", label: a.label || agentKey };
+              const meta = AGENT_COLORS[agentKey] || { border: "#60a5fa", bg: "rgba(96, 165, 250, 0.15)", text: "#93c5fd", label: a.label || agentKey };
 
               return (
                 <div
@@ -751,7 +761,7 @@ function AuthorityGraphTopology({ nodes = [], edges = [], onSelectNode, onSelect
                   onClick={() => onSelectNode && onSelectNode(a)}
                   style={{
                     background: "#0b0f19",
-                    border: `1px solid ${meta.border}`,
+                    border: `1px solid #60a5fa`,
                     borderRadius: 6,
                     padding: "10px 14px",
                     cursor: "pointer",
@@ -760,10 +770,10 @@ function AuthorityGraphTopology({ nodes = [], edges = [], onSelectNode, onSelect
                     gap: 10,
                   }}
                 >
-                  <Bot size={18} color={meta.text} />
+                  <Bot size={18} color="#60a5fa" />
                   <div>
                     <div style={{ fontSize: 12.5, fontWeight: 700, color: "#f8fafc" }}>{meta.label}</div>
-                    <div style={{ fontSize: 11, color: meta.text }}>Authorized Delegatee</div>
+                    <div style={{ fontSize: 11, color: "#60a5fa" }}>Authorized Delegatee</div>
                   </div>
                 </div>
               );
@@ -820,7 +830,7 @@ function UnifiedThreeGraphView({ execNodes = [], authNodes = [], itrEdges = [], 
 
         {/* Column 2: Authority Lineage (GA) */}
         <div style={{ background: "#0b0f19", border: "1px solid #1f2937", borderRadius: 8, padding: 14 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#a78bfa", fontWeight: 700, fontSize: 13, marginBottom: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#34d399", fontWeight: 700, fontSize: 13, marginBottom: 12 }}>
             <Key size={16} />
             <span>2. Authority Scope (GA)</span>
           </div>
@@ -832,14 +842,14 @@ function UnifiedThreeGraphView({ execNodes = [], authNodes = [], itrEdges = [], 
                 onClick={() => onSelectNode && onSelectNode(n, "Authority Node")}
                 style={{
                   background: "#111827",
-                  border: "1px solid #4c1d95",
+                  border: "1px solid #34d399",
                   borderRadius: 6,
                   padding: "8px 10px",
                   fontSize: 11.5,
                   cursor: "pointer",
                 }}
               >
-                <div style={{ color: "#c084fc", fontWeight: 600 }}><code>{(n.id || "").substring(0, 20)}</code></div>
+                <div style={{ color: "#34d399", fontWeight: 600 }}><code>{(n.id || "").substring(0, 20)}</code></div>
                 <div style={{ color: "#94a3b8", fontSize: 11, marginTop: 2 }}>Type: {n.node_type || "Delegation Token"}</div>
               </div>
             ))}
@@ -848,7 +858,7 @@ function UnifiedThreeGraphView({ execNodes = [], authNodes = [], itrEdges = [], 
 
         {/* Column 3: Tool Execution (GE) */}
         <div style={{ background: "#0b0f19", border: "1px solid #1f2937", borderRadius: 8, padding: 14 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#34d399", fontWeight: 700, fontSize: 13, marginBottom: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#f59e0b", fontWeight: 700, fontSize: 13, marginBottom: 12 }}>
             <Activity size={16} />
             <span>3. Tool Execution (GE)</span>
           </div>
@@ -860,7 +870,7 @@ function UnifiedThreeGraphView({ execNodes = [], authNodes = [], itrEdges = [], 
                 onClick={() => onSelectNode && onSelectNode(ev, "Execution Event")}
                 style={{
                   background: "#111827",
-                  border: "1px solid #065f46",
+                  border: "1px solid #f59e0b",
                   borderRadius: 6,
                   padding: "8px 10px",
                   fontSize: 11.5,
