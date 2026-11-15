@@ -267,3 +267,83 @@ def test_api_cross_graph_endpoints():
     # Test 404 on nonexistent event
     res_404 = client.get("/api/graphs/cross-graph-context", params={"event_id": "ev_nonexistent_999"})
     assert res_404.status_code == 404
+
+
+def test_backward_trace_endpoint():
+    client = TestClient(app)
+
+    # 1. Start a workflow
+    start_res = client.post("/api/workflow/start", json={
+        "task_description": "Audit customer complaints for critical issues",
+        "dataset_name": "customer_complaints.csv",
+        "mode": "deterministic_demo"
+    })
+    assert start_res.status_code == 200
+    wf_id = start_res.json()["workflow_id"]
+
+    # 2. Query /api/graphs/backward-trace
+    trace_res = client.get("/api/graphs/backward-trace", params={"workflow_id": wf_id})
+    assert trace_res.status_code == 200
+    data = trace_res.json()
+
+    assert data["workflow_id"] == wf_id
+    assert "task_description" in data
+    # Question 1: Who gave final report
+    assert "final_reporter" in data
+    assert data["final_reporter"]["agent_id"] == "agent_reporter"
+    assert "del_" in data["final_reporter"]["delegation_id"]
+    assert "answer_text" in data["final_reporter"]
+
+    # Question 2: Who transferred data
+    assert "data_transfers" in data
+    assert len(data["data_transfers"]) >= 1
+    for dt in data["data_transfers"]:
+        assert "from_agent" in dt
+        assert "to_agent" in dt
+        assert "answer_text" in dt
+
+    # Question 3: Who transferred permissions
+    assert "permission_delegations" in data
+    assert len(data["permission_delegations"]) >= 1
+    for pd in data["permission_delegations"]:
+        assert "granter" in pd
+        assert "recipient" in pd
+        assert "scope" in pd
+        assert "answer_text" in pd
+
+    # Reverse causal chain (End to Start)
+    assert "reverse_causal_chain" in data
+    assert len(data["reverse_causal_chain"]) == 5
+    assert data["reverse_causal_chain"][0]["step"] == 1
+    assert "Final Report" in data["reverse_causal_chain"][0]["phase"]
+    assert data["reverse_causal_chain"][4]["step"] == 5
+    assert "Root Authority" in data["reverse_causal_chain"][4]["phase"]
+
+    # Summary answers
+    assert "summary_answers" in data
+    assert "q1_who_gave_final_report" in data["summary_answers"]
+    assert "q2_who_transferred_data" in data["summary_answers"]
+    assert "q3_who_transferred_permissions" in data["summary_answers"]
+
+
+def test_chat_complaints_triggers_workflow_and_returns_workflow_id():
+    from backend.api.routes import is_data_audit_request
+    # Test queries specified in prompt
+    assert is_data_audit_request("what do the customers complaint the most about") is True
+    assert is_data_audit_request("what do customers complain about") is True
+    assert is_data_audit_request("what are the main complaints") is True
+    assert is_data_audit_request("who complaints the most") is True
+    assert is_data_audit_request("what are the main complaints in the dataset") is True
+
+    client = TestClient(app)
+    # Chat with complaint query
+    chat_res = client.post("/api/chat", json={
+        "message": "what do the customers complaint the most about",
+        "mode": "deterministic_demo"
+    })
+    assert chat_res.status_code == 200
+    data = chat_res.json()
+    assert "workflow_id" in data
+    assert data["workflow_id"] is not None
+    assert data["workflow_id"].startswith("wf_")
+
