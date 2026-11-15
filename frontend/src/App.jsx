@@ -47,23 +47,42 @@ import {
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import AgentInteractionGraph from "./AgentInteractionGraph";
 import ThreeGraphViewer from "./ThreeGraphViewer";
+import ProvenanceDAG from "./components/ProvenanceDAG";
+import ProvenanceDrawer from "./components/ProvenanceDrawer";
 
 const API_BASE = "http://127.0.0.1:8000/api";
 
-const NAV_ITEMS = [
-  { id: "chat", path: "/chat", label: "1. 💬 Chat with Lead Agent", icon: MessageSquare },
-  { id: "hf_simulation", path: "/simulation", label: "2. 🚀 Hugging Face Simulation", icon: Sparkles },
-  { id: "gateway", path: "/gateway", label: "3. 🛡️ Observability Gateway", icon: ShieldCheck },
-  { id: "topologies", path: "/topologies", label: "4. 🌐 LangGraph Topologies", icon: Network },
-  { id: "workspace", path: "/workspace", label: "5. 📋 Agent Workspace", icon: PlayCircle },
-  { id: "telemetry", path: "/telemetry", label: "6. 📊 Overview & Telemetry", icon: Activity },
-  { id: "timeline", path: "/timeline", label: "7. ⏱️ Communication Timeline", icon: Clock },
-  { id: "graphs", path: "/graphs", label: "8. 🕸️ Three-Graph Explorer", icon: Share2 },
-  { id: "provenance", path: "/provenance", label: "9. 🧬 Provenance Explorer", icon: Dna },
-  { id: "events", path: "/events", label: "10. 🔍 Event Inspector", icon: Search },
-  { id: "benchmarks", path: "/benchmarks", label: "11. 🧪 Research Evaluation", icon: FlaskConical },
-  { id: "docs", path: "/docs", label: "12. 📖 Architecture & Docs", icon: BookOpen },
+const NAV_SECTIONS = [
+  {
+    title: "Workspace",
+    items: [
+      { id: "chat", path: "/chat", label: "AI Chat Assistant", icon: MessageSquare },
+      { id: "workspace", path: "/workspace", label: "Multi-Agent Workspace", icon: PlayCircle },
+      { id: "hf_simulation", path: "/simulation", label: "Agent Simulation", icon: Sparkles },
+    ],
+  },
+  {
+    title: "Observability",
+    items: [
+      { id: "gateway", path: "/gateway", label: "Observability Gateway", icon: ShieldCheck },
+      { id: "telemetry", path: "/telemetry", label: "System Telemetry", icon: Activity },
+      { id: "timeline", path: "/timeline", label: "Communication Timeline", icon: Clock },
+      { id: "graphs", path: "/graphs", label: "Three-Graph Explorer", icon: Share2 },
+      { id: "provenance", path: "/provenance", label: "Provenance & Lineage", icon: Dna },
+      { id: "topologies", path: "/topologies", label: "Multi-Agent Topologies", icon: Network },
+      { id: "events", path: "/events", label: "Raw Event Inspector", icon: Search },
+    ],
+  },
+  {
+    title: "Research & Specs",
+    items: [
+      { id: "benchmarks", path: "/benchmarks", label: "Benchmark Evaluation", icon: FlaskConical },
+      { id: "docs", path: "/docs", label: "Architecture & Guide", icon: BookOpen },
+    ],
+  },
 ];
+
+const NAV_ITEMS = NAV_SECTIONS.flatMap((s) => s.items);
 
 const AGENT_META = {
   agent_coordinator: { name: "Coordinator", label: "Agent A (Coordinator)", color: "#38bdf8", bg: "rgba(56, 189, 248, 0.12)", border: "#0284c7" },
@@ -226,6 +245,11 @@ export default function App() {
 
   // Tab 7: Provenance State
   const [provenanceDetails, setProvenanceDetails] = useState(null);
+  const [provenanceNodes, setProvenanceNodes] = useState([]);
+  const [provenanceEdges, setProvenanceEdges] = useState([]);
+  const [selectedProvNode, setSelectedProvNode] = useState(null);
+  const [lineagePath, setLineagePath] = useState([]);
+  const [provCompleteness, setProvCompleteness] = useState(1.0);
 
   // Tab 8: Event Inspector State
   const [eventsList, setEventsList] = useState([]);
@@ -408,6 +432,7 @@ export default function App() {
       const targetWf = wfParam || selectedWorkflowId;
       if (targetWf) fetchGraphData(targetWf);
     } else if (currentTab === "provenance") {
+      fetchRecentWorkflows();
       const targetWf = wfParam || selectedWorkflowId;
       if (targetWf) fetchProvenance(targetWf);
     } else if (currentTab === "events") {
@@ -654,12 +679,192 @@ export default function App() {
     }
   };
 
-  const fetchProvenance = async (wfId) => {
+  const fetchRecentWorkflows = async () => {
     try {
-      const res = await fetch(`${API_BASE}/provenance/${wfId}/details`);
-      if (res.ok) setProvenanceDetails(await res.json());
+      const res = await fetch(`${API_BASE}/telemetry/overview?workflow_limit=25&event_limit=1`);
+      if (res.ok) {
+        const data = await res.json();
+        const recents = data.recent_workflows || data.workflows || [];
+        if (recents.length > 0) {
+          setWorkflows((prev) => {
+            const map = new Map();
+            prev.forEach((w) => map.set(w.workflow_id, w));
+            recents.forEach((w) => map.set(w.workflow_id, w));
+            return Array.from(map.values());
+          });
+        }
+      }
+    } catch (err) {
+      console.warn("fetchRecentWorkflows error:", err);
+    }
+  };
+
+  const fetchProvenance = async (wfId) => {
+    if (!wfId) return;
+    try {
+      let provData = null;
+      let edges = [];
+      let nodes = [];
+      let completeness = 1.0;
+
+      // 1. Primary: GET /api/provenance?workflow_id=selected
+      try {
+        const resPrimary = await fetch(`${API_BASE}/provenance?workflow_id=${encodeURIComponent(wfId)}`);
+        if (resPrimary.ok) {
+          const data = await resPrimary.json();
+          provData = data;
+          if (Array.isArray(data)) {
+            edges = data;
+          } else if (data && typeof data === "object") {
+            edges = data.edges || [];
+            nodes = data.nodes || [];
+            if (data.provenance_completeness !== undefined) {
+              completeness = data.provenance_completeness;
+            } else if (data.completeness !== undefined) {
+              completeness = data.completeness;
+            }
+          }
+        }
+      } catch (err1) {
+        console.warn("Primary /provenance fetch error:", err1);
+      }
+
+      // 2. Fallback: GET /api/provenance/{wfId}/details
+      if (edges.length === 0 && nodes.length === 0) {
+        try {
+          const resFallback = await fetch(`${API_BASE}/provenance/${encodeURIComponent(wfId)}/details`);
+          if (resFallback.ok) {
+            const data = await resFallback.json();
+            provData = data;
+            edges = data.edges || [];
+            nodes = data.nodes || [];
+            if (data.provenance_completeness !== undefined) {
+              completeness = data.provenance_completeness;
+            } else if (data.completeness !== undefined) {
+              completeness = data.completeness;
+            }
+          }
+        } catch (err2) {
+          console.warn("Fallback /details error:", err2);
+        }
+      }
+
+      setProvenanceDetails(provData);
+      setProvenanceEdges(edges);
+      setProvenanceNodes(nodes);
+      setProvCompleteness(Number(completeness ?? 1.0));
     } catch (e) {
-      console.error(e);
+      console.error("fetchProvenance general error:", e);
+    }
+  };
+
+  const handleProvNodeClick = async (nodeData) => {
+    setSelectedProvNode(nodeData);
+
+    const targetId = nodeData?.id || nodeData?.entity_id || "";
+    if (!targetId) return;
+
+    try {
+      const res = await fetch(
+        `${API_BASE}/provenance/lineage?target_id=${encodeURIComponent(targetId)}&workflow_id=${encodeURIComponent(selectedWorkflowId)}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        const path = Array.isArray(data) ? data : data.lineage_path || data.path || [];
+        setLineagePath(path);
+        return;
+      }
+    } catch (err) {
+      console.warn("Lineage API failed, deriving backward lineage locally:", err);
+    }
+
+    // Local backward lineage fallback from provenanceEdges
+    const localLineage = [];
+    const visited = new Set();
+    const queue = [targetId];
+
+    while (queue.length > 0) {
+      const curr = queue.shift();
+      if (visited.has(curr)) continue;
+      visited.add(curr);
+
+      provenanceEdges.forEach((e) => {
+        const src = String(e.source || e.source_id || "");
+        const tgt = String(e.target || e.target_id || "");
+        if (tgt === curr) {
+          localLineage.push({
+            source: src,
+            source_label: e.source_label || (src.includes("/") ? src.split("/").pop() : src),
+            source_prov: e.source_type || "prov:Entity",
+            relation: e.relation || e.relation_type || "wasDerivedFrom",
+            confidence: e.confidence ?? 1.0,
+            target: tgt,
+            target_label: e.target_label || (tgt.includes("/") ? tgt.split("/").pop() : tgt),
+            target_prov: e.target_type || "prov:Activity",
+          });
+          if (!visited.has(src)) queue.push(src);
+        }
+      });
+    }
+    setLineagePath(localLineage);
+  };
+
+  const handleExportProvJson = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/provenance/export/json?workflow_id=${encodeURIComponent(selectedWorkflowId)}`);
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `prov_${selectedWorkflowId}.json`;
+        a.click();
+        return;
+      }
+    } catch (err) {
+      console.warn("Export json API failed, falling back to local download:", err);
+    }
+
+    if (provenanceDetails?.prov_json) {
+      downloadFile(
+        JSON.stringify(provenanceDetails.prov_json, null, 2),
+        `prov_${selectedWorkflowId}.json`,
+        "application/json"
+      );
+    } else {
+      const exportData = {
+        workflow_id: selectedWorkflowId,
+        nodes: provenanceNodes,
+        edges: provenanceEdges,
+      };
+      downloadFile(
+        JSON.stringify(exportData, null, 2),
+        `prov_${selectedWorkflowId}.json`,
+        "application/json"
+      );
+    }
+  };
+
+  const handleExportProvN = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/provenance/export/n3?workflow_id=${encodeURIComponent(selectedWorkflowId)}`);
+      if (res.ok) {
+        const text = await res.text();
+        downloadFile(text, `prov_${selectedWorkflowId}.provn`, "text/plain");
+        return;
+      }
+    } catch (err) {
+      console.warn("Export N3 API failed, falling back to local download:", err);
+    }
+
+    if (provenanceDetails?.prov_n) {
+      downloadFile(provenanceDetails.prov_n, `prov_${selectedWorkflowId}.provn`, "text/plain");
+    } else {
+      downloadFile(
+        `document\n  prefix prov <http://www.w3.org/ns/prov#>\n  // workflow: ${selectedWorkflowId}\nendDocument`,
+        `prov_${selectedWorkflowId}.provn`,
+        "text/plain"
+      );
     }
   };
 
@@ -1010,7 +1215,7 @@ export default function App() {
             </div>
             <div className="brand-text">
               <div className="brand-title">Agentic AI Platform</div>
-              <div className="brand-sub">12 Research Interfaces</div>
+              <div className="brand-sub">Autonomous Investigation</div>
             </div>
             <button
               className="sidebar-toggle-btn close-btn"
@@ -1023,19 +1228,26 @@ export default function App() {
           </div>
 
           <nav className="nav-menu">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.id}
-                  className={`nav-item ${activeTab === item.id ? "active" : ""}`}
-                  onClick={() => handleTabChange(item.id)}
-                >
-                  <Icon size={17} />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
+            {NAV_SECTIONS.map((section) => (
+              <div key={section.title} className="nav-section">
+                <div className="nav-section-title">{section.title}</div>
+                <div className="nav-section-items">
+                  {section.items.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.id}
+                        className={`nav-item ${activeTab === item.id ? "active" : ""}`}
+                        onClick={() => handleTabChange(item.id)}
+                      >
+                        <Icon size={16} />
+                        <span>{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
 
           {/* ChatGPT-Style Chat History Section (Under Options) */}
@@ -1132,29 +1344,51 @@ export default function App() {
           </div>
 
           <div className="sidebar-status">
-            <div className="status-indicator">
-              <div className="status-dot" />
-              <span>FastAPI Server Online</span>
+            <div style={{
+              background: "#0b0f19",
+              padding: "10px 12px",
+              borderRadius: 8,
+              border: "1px solid #1f2937",
+              display: "flex",
+              flexDirection: "column",
+              gap: 6
+            }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#38bdf8", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                  System Health
+                </span>
+                <span style={{
+                  fontSize: 10,
+                  padding: "1px 6px",
+                  borderRadius: 4,
+                  background: "rgba(16, 185, 129, 0.15)",
+                  color: "#34d399",
+                  border: "1px solid rgba(16, 185, 129, 0.3)"
+                }}>
+                  Online
+                </span>
+              </div>
+              <div className="status-indicator">
+                <div className="status-dot" />
+                <span style={{ fontSize: 11.5 }}>Backend API Ready</span>
+              </div>
+              <div className="status-indicator">
+                <div
+                  className="status-dot"
+                  style={{
+                    background: status?.mongodb_connected ? "#10b981" : "#f59e0b",
+                    boxShadow: status?.mongodb_connected ? "0 0 8px rgba(16, 185, 129, 0.4)" : "none",
+                  }}
+                />
+                <span style={{ color: status?.mongodb_connected ? "#34d399" : "#fbbf24", fontSize: 11.5 }}>
+                  {status?.mongodb_connected ? "MongoDB Atlas Synced" : "Resilient Cache Mode"}
+                </span>
+              </div>
+              <div style={{ borderTop: "1px solid #1e293b", paddingTop: 6, marginTop: 2, display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 11, color: "#94a3b8" }}>
+                <span>Engine:</span>
+                <span style={{ color: "#f8fafc", fontWeight: 600 }}>Gemini 3.5 Flash</span>
+              </div>
             </div>
-            <div className="status-indicator" style={{ marginTop: 2 }}>
-              <div
-                className="status-dot"
-                style={{
-                  background: status?.mongodb_connected ? "#10b981" : "#f59e0b",
-                  boxShadow: status?.mongodb_connected ? "0 0 8px rgba(16, 185, 129, 0.4)" : "none",
-                }}
-              />
-              <span style={{ color: status?.mongodb_connected ? "#34d399" : "#fbbf24", fontSize: 11.5 }}>
-                MongoDB {status?.mongodb_connected ? "Atlas Online" : "Connecting..."}
-              </span>
-            </div>
-            <div style={{ padding: "8px 10px", background: "#0b0f19", borderRadius: 6, border: "1px solid #1f2937", marginTop: 4 }}>
-              <div style={{ color: "#38bdf8", fontWeight: 600, fontSize: 11, marginBottom: 3 }}>🤗 Hugging Face Router</div>
-              <div style={{ fontSize: 11, color: "#94a3b8" }}>Coord: <code>Llama-3.1-8B</code></div>
-              <div style={{ fontSize: 11, color: "#94a3b8" }}>Exec: <code>Qwen2.5-7B</code></div>
-            </div>
-            <div style={{ marginTop: 4 }}>Capture: <strong>Level {status?.capture_level || 2}</strong></div>
-            <div style={{ fontSize: 11, color: "#64748b" }}>Endpoint: <code style={{ fontSize: 10 }}>router.huggingface.co</code></div>
           </div>
         </div>
       </aside>
@@ -1175,30 +1409,40 @@ export default function App() {
             )}
             <div className="top-title" style={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span>{NAV_ITEMS.find((n) => n.id === activeTab)?.label}</span>
-                <span style={{ fontSize: 11, padding: "1px 6px", borderRadius: 4, background: "rgba(56, 189, 248, 0.15)", color: "#38bdf8", border: "1px solid rgba(56, 189, 248, 0.3)" }}>
-                  Verified Gov URL
+                <span style={{ fontSize: 16, fontWeight: 700, color: "#f8fafc" }}>
+                  {NAV_ITEMS.find((n) => n.id === activeTab)?.label}
+                </span>
+                <span style={{
+                  fontSize: 11,
+                  padding: "2px 8px",
+                  borderRadius: 12,
+                  background: "rgba(56, 189, 248, 0.15)",
+                  color: "#38bdf8",
+                  border: "1px solid rgba(56, 189, 248, 0.3)",
+                  fontWeight: 600
+                }}>
+                  Lead Orchestrator
                 </span>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#64748b", fontFamily: "monospace" }}>
-                <Globe size={11} color="#10b981" />
-                <span>agency.gov/transparency</span>
-                <span style={{ color: "#38bdf8", fontWeight: 600 }}>{location.pathname}{location.search}</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: "#64748b" }}>
+                <span>Autonomous Multi-Agent Investigation</span>
+                <span>&bull;</span>
+                <span style={{ color: "#94a3b8" }}>Google Gemini 3.5 Flash</span>
               </div>
             </div>
           </div>
           <div className="top-badges">
-            <div className="pill-badge" style={{ background: "rgba(16, 185, 129, 0.12)", color: "#34d399", borderColor: "rgba(16, 185, 129, 0.3)" }}>
-              <ShieldCheck size={14} />
-              <span>NIST SP 800-53 / FedRAMP Audited URI</span>
+            <div className="pill-badge" style={{ background: "rgba(56, 189, 248, 0.1)", color: "#38bdf8", borderColor: "rgba(56, 189, 248, 0.25)" }}>
+              <Bot size={13} />
+              <span>4 Agents Active</span>
             </div>
-            <div className="pill-badge active">
-              <ShieldCheck size={14} />
-              <span>W3C PROV Verified</span>
+            <div className="pill-badge active" style={{ background: "rgba(16, 185, 129, 0.12)", color: "#34d399", borderColor: "rgba(16, 185, 129, 0.3)" }}>
+              <ShieldCheck size={13} />
+              <span>W3C PROV Audited</span>
             </div>
             <div className="pill-badge">
-              <Database size={14} />
-              <span>Total Events: {status?.metrics_summary?.total_events || 0}</span>
+              <Database size={13} />
+              <span>{status?.metrics_summary?.total_events || 0} Telemetry Events</span>
             </div>
           </div>
         </header>
@@ -1241,16 +1485,13 @@ export default function App() {
 
               <div className="suggestion-pills">
                 <button className="pill-btn" onClick={() => sendChatMessage("What are the customers mostly complaining of?")}>
-                  💬 Top Complaints Audit
+                  💬 What are customers mostly complaining of?
                 </button>
-                <button className="pill-btn" onClick={() => sendChatMessage("Collaborate with your agent team to audit customer complaints and delegate subtasks")}>
-                  🤖 Multi-Agent Task Delegation
-                </button>
-                <button className="pill-btn" onClick={() => sendChatMessage("Demonstrate inter-agent communication and task delegation across Researcher, Analyst, and Reporter")}>
-                  📡 Inter-Agent Communication
+                <button className="pill-btn" onClick={() => sendChatMessage("Who are our enterprise customers and what issues are they facing?")}>
+                  🚨 Status of Enterprise accounts?
                 </button>
                 <button className="pill-btn" onClick={() => sendChatMessage("Check system access logs for unauthorized root escalation and file sharing")}>
-                  🛡️ Audit System Logs
+                  🛡️ Audit system logs for violations
                 </button>
                 <button
                   className="pill-btn"
@@ -1279,7 +1520,8 @@ export default function App() {
                           interactions={msg.interactions}
                           workflowId={msg.workflow_run?.workflow_id}
                           compact={true}
-                          title="Inter-Agent Interaction Graph (How Agents Communicated)"
+                          defaultCollapsed={true}
+                          title="Inter-Agent Interaction Graph"
                         />
                       )}
 
@@ -1318,8 +1560,8 @@ export default function App() {
                               Inspect Events for this prompt →
                             </button>
                           )}
-                          <span style={{ fontSize: "11px", color: "#64748b" }}>
-                            Detailed multi-agent trace available in <strong>Tab 5 (Timeline)</strong> & <strong>Tab 7 (Provenance)</strong>
+                          <span style={{ fontSize: "11.5px", color: "#64748b" }}>
+                            Detailed multi-agent trace available in <strong>Communication Timeline</strong> &amp; <strong>Three-Graph Explorer</strong>
                           </span>
                         </div>
                       )}
@@ -3472,74 +3714,201 @@ export default function App() {
 
         {/* View 7: Provenance Explorer */}
         {activeTab === "provenance" && (
-          <div className="content-panel">
-            <div style={{ display: "flex", gap: 14, marginBottom: 16, alignItems: "center" }}>
-              <select
-                value={selectedWorkflowId}
-                onChange={(e) => {
-                  const wf = e.target.value;
-                  setSelectedWorkflowId(wf);
-                  navigate(`/provenance?workflow_id=${encodeURIComponent(wf)}`, { replace: true });
-                  fetchProvenance(wf);
-                }}
-                style={{ padding: "8px 12px", background: "#111827", border: "1px solid #334155", borderRadius: 6, color: "#fff" }}
-              >
-                {workflows.map((w) => (
-                  <option key={w.workflow_id} value={w.workflow_id}>
-                    {w.workflow_id}
-                  </option>
-                ))}
-              </select>
+          <div className="content-panel" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+            {/* Top Bar with Workflow Selector & Completeness Progress */}
+            <div
+              className="stat-card"
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 16,
+                padding: "14px 18px",
+                background: "var(--bg-surface, #1a1d21)",
+                border: "1px solid var(--border-subtle, #2a2f38)",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <Dna size={18} color="var(--accent-primary, #e8a44a)" />
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary, #f0f2f5)" }}>
+                    Target Workflow:
+                  </span>
+                </div>
+                <select
+                  value={selectedWorkflowId}
+                  onChange={(e) => {
+                    const wf = e.target.value;
+                    setSelectedWorkflowId(wf);
+                    navigate(`/provenance?workflow_id=${encodeURIComponent(wf)}`, { replace: true });
+                    fetchProvenance(wf);
+                  }}
+                  style={{
+                    padding: "8px 14px",
+                    background: "var(--bg-base, #111214)",
+                    border: "1px solid var(--border-subtle, #2a2f38)",
+                    borderRadius: "var(--radius-md, 8px)",
+                    color: "var(--text-primary, #f0f2f5)",
+                    fontSize: 13,
+                    fontFamily: "monospace",
+                    cursor: "pointer",
+                  }}
+                >
+                  {workflows.map((w) => (
+                    <option key={w.workflow_id} value={w.workflow_id}>
+                      {w.workflow_id}
+                    </option>
+                  ))}
+                </select>
 
-              <div className="pill-badge active">
-                Completeness: {provenanceDetails ? `${(provenanceDetails.completeness * 100).toFixed(0)}%` : "100%"}
+                <button
+                  className="pill-btn"
+                  onClick={() => {
+                    fetchRecentWorkflows();
+                    fetchProvenance(selectedWorkflowId);
+                  }}
+                  title="Refresh Provenance"
+                  style={{ display: "flex", alignItems: "center", gap: 6 }}
+                >
+                  <RefreshCw size={13} />
+                  <span>Sync</span>
+                </button>
               </div>
 
-              {provenanceDetails?.prov_json && (
-                <button
-                  className="pill-btn"
-                  onClick={() => downloadFile(JSON.stringify(provenanceDetails.prov_json, null, 2), `prov_${selectedWorkflowId}.json`, "application/json")}
+              {/* Provenance Completeness Progress Bar */}
+              <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 260 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5 }}>
+                    <span style={{ color: "var(--text-secondary, #9ba3b0)", fontWeight: 500 }}>
+                      Provenance Completeness
+                    </span>
+                    <span style={{ color: "var(--accent-primary, #e8a44a)", fontWeight: 700 }}>
+                      {(provCompleteness * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      width: "100%",
+                      height: 6,
+                      background: "var(--bg-base, #111214)",
+                      borderRadius: 3,
+                      overflow: "hidden",
+                      border: "1px solid var(--border-subtle, #2a2f38)",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${Math.min(100, Math.max(0, provCompleteness * 100))}%`,
+                        height: "100%",
+                        background:
+                          provCompleteness >= 0.8
+                            ? "var(--color-success, #34d399)"
+                            : provCompleteness >= 0.5
+                            ? "var(--color-warning, #fbbf24)"
+                            : "var(--color-error, #f87171)",
+                        borderRadius: 3,
+                        transition: "width 0.4s ease",
+                      }}
+                    />
+                  </div>
+                </div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    padding: "3px 8px",
+                    borderRadius: 4,
+                    background:
+                      provCompleteness >= 0.8
+                        ? "rgba(52, 211, 153, 0.15)"
+                        : "rgba(251, 191, 36, 0.15)",
+                    color:
+                      provCompleteness >= 0.8
+                        ? "var(--color-success, #34d399)"
+                        : "var(--color-warning, #fbbf24)",
+                    fontWeight: 700,
+                  }}
                 >
-                  <Download size={13} style={{ display: "inline", marginRight: 4 }} />
-                  Download PROV-JSON
-                </button>
-              )}
-              {provenanceDetails?.prov_n && (
-                <button
-                  className="pill-btn"
-                  onClick={() => downloadFile(provenanceDetails.prov_n, `prov_${selectedWorkflowId}.provn`, "text/plain")}
-                >
-                  <Download size={13} style={{ display: "inline", marginRight: 4 }} />
-                  Download PROV-N
-                </button>
-              )}
+                  {provCompleteness >= 0.8 ? "VERIFIED" : "PARTIAL"}
+                </div>
+              </div>
             </div>
 
-            <div className="stat-card">
-              <h4 style={{ color: "#60a5fa", marginBottom: 12 }}>W3C PROV Lineage Relations</h4>
-              <div style={{ maxHeight: 400, overflowY: "auto" }}>
-                <table style={{ width: "100%", fontSize: 13 }}>
-                  <thead>
-                    <tr>
-                      <th>Relation</th>
-                      <th>Source Node</th>
-                      <th>Target Node</th>
-                      <th>Edge Type</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {provenanceDetails?.edges?.map((e, idx) => (
-                      <tr key={idx}>
-                        <td><code>{e.relation_type}</code></td>
-                        <td>{e.source_id}</td>
-                        <td>{e.target_id}</td>
-                        <td><span style={{ color: "#38bdf8" }}>{e.edge_type || "derivation"}</span></td>
-                      </tr>
-                    )) || (
-                      <tr><td colSpan={4}>Select a workflow to trace W3C PROV elements.</td></tr>
-                    )}
-                  </tbody>
-                </table>
+            {/* Visual Provenance DAG React Flow Canvas */}
+            <div className="stat-card" style={{ padding: 0, overflow: "hidden" }}>
+              <ProvenanceDAG
+                nodes={provenanceNodes}
+                edges={provenanceEdges}
+                onNodeClick={handleProvNodeClick}
+              />
+            </div>
+
+            {/* Slide-In Provenance Lineage Drawer */}
+            <ProvenanceDrawer
+              node={selectedProvNode}
+              lineagePath={lineagePath}
+              onClose={() => setSelectedProvNode(null)}
+            />
+
+            {/* Bottom Export Section */}
+            <div
+              className="stat-card"
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 14,
+                padding: "14px 18px",
+                background: "var(--bg-surface, #1a1d21)",
+                border: "1px solid var(--border-subtle, #2a2f38)",
+              }}
+            >
+              <div>
+                <h5 style={{ margin: "0 0 3px 0", color: "var(--text-primary, #f0f2f5)", fontSize: 13.5 }}>
+                  W3C PROV Export & Interoperability
+                </h5>
+                <p style={{ margin: 0, color: "var(--text-secondary, #9ba3b0)", fontSize: 12 }}>
+                  Download formal lineage proofs formatted in W3C PROV-JSON and PROV-N notation.
+                </p>
+              </div>
+
+              <div style={{ display: "flex", gap: 10 }}>
+                <button
+                  className="pill-btn"
+                  onClick={handleExportProvJson}
+                  style={{
+                    background: "rgba(232, 164, 74, 0.12)",
+                    borderColor: "var(--accent-primary, #e8a44a)",
+                    color: "var(--accent-primary, #e8a44a)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontWeight: 600,
+                    padding: "7px 14px",
+                  }}
+                >
+                  <Download size={14} />
+                  <span>Export PROV-JSON</span>
+                </button>
+
+                <button
+                  className="pill-btn"
+                  onClick={handleExportProvN}
+                  style={{
+                    background: "rgba(45, 212, 191, 0.12)",
+                    borderColor: "var(--accent-secondary, #2dd4bf)",
+                    color: "var(--accent-secondary, #2dd4bf)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontWeight: 600,
+                    padding: "7px 14px",
+                  }}
+                >
+                  <Download size={14} />
+                  <span>Export PROV-N</span>
+                </button>
               </div>
             </div>
           </div>
@@ -4583,58 +4952,6 @@ export default function App() {
         {/* View 10: Architecture & Docs */}
         {activeTab === "docs" && (
           <div className="content-panel">
-            <div className="stat-card" style={{ marginBottom: 20 }}>
-              <h3 style={{ color: "#38bdf8", marginBottom: 14, fontSize: 18, fontWeight: 700 }}>
-                Core Architecture: Three Fundamental Agentic Pillars
-              </h3>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
-                <div style={{ background: "#0b1329", border: "1px solid #1e293b", borderRadius: 8, padding: 16 }}>
-                  <div style={{ color: "#60a5fa", fontWeight: 700, fontSize: 15, marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
-                    🤖 1. Multi-Agent System
-                  </div>
-                  <p style={{ color: "#94a3b8", fontSize: 13, lineHeight: 1.6, marginBottom: 8 }}>
-                    Specialized autonomous agents collaborating seamlessly using <strong>Google Gemini</strong>:
-                  </p>
-                  <ul style={{ color: "#cbd5e1", fontSize: 12.5, lineHeight: 1.7, paddingLeft: 18 }}>
-                    <li><strong style={{ color: "#38bdf8" }}>Agent A (Coordinator):</strong> Decomposes complex directives and directs the team.</li>
-                    <li><strong style={{ color: "#34d399" }}>Agent B (Researcher):</strong> Extracts verified records from enterprise datasets.</li>
-                    <li><strong style={{ color: "#fbbf24" }}>Agent C (Analyst):</strong> Computes quantitative metrics, sentiment, and audits.</li>
-                    <li><strong style={{ color: "#f472b6" }}>Agent D (Reporter):</strong> Formulates final executive consensus reports.</li>
-                  </ul>
-                </div>
-
-                <div style={{ background: "#0b1329", border: "1px solid #1e293b", borderRadius: 8, padding: 16 }}>
-                  <div style={{ color: "#34d399", fontWeight: 700, fontSize: 15, marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
-                    📋 2. Task Delegation
-                  </div>
-                  <p style={{ color: "#94a3b8", fontSize: 13, lineHeight: 1.6, marginBottom: 8 }}>
-                    One agent assigns scoped subtasks to other agents with cryptographic delegation tokens:
-                  </p>
-                  <ul style={{ color: "#cbd5e1", fontSize: 12.5, lineHeight: 1.7, paddingLeft: 18 }}>
-                    <li><strong>Root Delegation:</strong> User Principal grants Root Token to Coordinator.</li>
-                    <li><strong>Scoped Sub-Delegations:</strong> Coordinator mints child tokens for Researcher, Analyst, and Reporter.</li>
-                    <li><strong>Authority Lineage (G_auth):</strong> Unforgeable hierarchy tracking who authorized which action.</li>
-                    <li><strong>W3C PROV:</strong> Durable <code>prov:actedOnBehalfOf</code> provenance chains.</li>
-                  </ul>
-                </div>
-
-                <div style={{ background: "#0b1329", border: "1px solid #1e293b", borderRadius: 8, padding: 16 }}>
-                  <div style={{ color: "#ec4899", fontWeight: 700, fontSize: 15, marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
-                    📡 3. Inter-Agent Communication
-                  </div>
-                  <p style={{ color: "#94a3b8", fontSize: 13, lineHeight: 1.6, marginBottom: 8 }}>
-                    Structured messages exchanged through the Observability Gateway Channel:
-                  </p>
-                  <ul style={{ color: "#cbd5e1", fontSize: 12.5, lineHeight: 1.7, paddingLeft: 18 }}>
-                    <li><span className="telemetry-badge-type" style={{ color: "#60a5fa" }}>DELEGATION</span> Subtask assignments.</li>
-                    <li><span className="telemetry-badge-type" style={{ color: "#c084fc" }}>INFO_TRANSFER</span> Structured findings pass.</li>
-                    <li><span className="telemetry-badge-type" style={{ color: "#fbbf24" }}>CLARIFICATION</span> Ambiguity resolution.</li>
-                    <li><span className="telemetry-badge-type" style={{ color: "#34d399" }}>RESULT / HANDOFF</span> Verified outputs & closure.</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
             <div className="stat-card" style={{ marginBottom: 20 }}>
               <h3 style={{ color: "#60a5fa", marginBottom: 12 }}>Common Information Model (CIM) Invariants</h3>
               <div style={{ color: "#cbd5e1", lineHeight: 1.8, fontSize: 14 }}>

@@ -22,7 +22,7 @@ const AGENT_META = {
   agent_coordinator: {
     label: "Agent A: Coordinator",
     role: "Lead Orchestrator & Delegator",
-    model: "meta-llama/Llama-3.1-8B",
+    model: "Google Gemini 3.5 Flash",
     color: "#3b82f6",
     fillColor: "rgba(59, 130, 246, 0.15)",
     borderColor: "#60a5fa",
@@ -32,7 +32,7 @@ const AGENT_META = {
   Coordinator_Agent: {
     label: "Coordinator Agent",
     role: "Lead Orchestrator & Delegator",
-    model: "meta-llama/Llama-3.1-8B",
+    model: "Google Gemini 3.5 Flash",
     color: "#3b82f6",
     fillColor: "rgba(59, 130, 246, 0.15)",
     borderColor: "#60a5fa",
@@ -42,7 +42,7 @@ const AGENT_META = {
   agent_researcher: {
     label: "Agent B: Researcher",
     role: "Dataset Extraction & CIM Tools",
-    model: "Qwen/Qwen2.5-7B",
+    model: "Google Gemini 3.5 Flash",
     color: "#10b981",
     fillColor: "rgba(16, 185, 129, 0.15)",
     borderColor: "#34d399",
@@ -52,7 +52,7 @@ const AGENT_META = {
   Executor_Agent: {
     label: "Executor Agent",
     role: "Technical Execution & Tools",
-    model: "Qwen/Qwen2.5-7B",
+    model: "Google Gemini 3.5 Flash",
     color: "#10b981",
     fillColor: "rgba(16, 185, 129, 0.15)",
     borderColor: "#34d399",
@@ -62,7 +62,7 @@ const AGENT_META = {
   agent_analyst: {
     label: "Agent C: Analyst",
     role: "Anomaly & Statistical Evaluation",
-    model: "mistralai/Mistral-7B",
+    model: "Google Gemini 3.5 Flash",
     color: "#f59e0b",
     fillColor: "rgba(245, 158, 11, 0.15)",
     borderColor: "#fbbf24",
@@ -72,7 +72,7 @@ const AGENT_META = {
   Critic_Agent: {
     label: "Critic Agent",
     role: "Vulnerability & Reasoning Audit",
-    model: "mistralai/Mistral-7B",
+    model: "Google Gemini 3.5 Flash",
     color: "#f59e0b",
     fillColor: "rgba(245, 158, 11, 0.15)",
     borderColor: "#fbbf24",
@@ -82,7 +82,7 @@ const AGENT_META = {
   agent_reporter: {
     label: "Agent D: Reporter",
     role: "Consensus Formulation & Output",
-    model: "google/gemma-2-9b",
+    model: "Google Gemini 3.5 Flash",
     color: "#ec4899",
     fillColor: "rgba(236, 72, 153, 0.15)",
     borderColor: "#f472b6",
@@ -92,7 +92,7 @@ const AGENT_META = {
   Synthesizer_Agent: {
     label: "Synthesizer Agent",
     role: "Consensus Formulation & Output",
-    model: "google/gemma-2-9b",
+    model: "Google Gemini 3.5 Flash",
     color: "#ec4899",
     fillColor: "rgba(236, 72, 153, 0.15)",
     borderColor: "#f472b6",
@@ -104,7 +104,7 @@ const AGENT_META = {
 const DEFAULT_META = {
   label: "Agent Node",
   role: "Autonomous Agent",
-  model: "Neural LLM",
+  model: "Google Gemini 3.5 Flash",
   color: "#8b5cf6",
   fillColor: "rgba(139, 92, 246, 0.15)",
   borderColor: "#a78bfa",
@@ -116,12 +116,13 @@ export default function AgentInteractionGraph({
   workflowId,
   title = "Agent Interaction Graph (How Agents Communicated)",
   compact = false,
+  defaultCollapsed = false,
 }) {
   const [selectedEdge, setSelectedEdge] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [activeStepIdx, setActiveStepIdx] = useState(null);
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
 
   // Parse nodes & edges safely
   const nodes = graph?.nodes || [];
@@ -252,103 +253,132 @@ export default function AgentInteractionGraph({
       {/* Header bar */}
       <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
           marginBottom: isCollapsed ? 0 : 12,
           paddingBottom: isCollapsed ? 0 : 10,
-          borderBottom: isCollapsed ? "none" : "1px solid #1e293b",
+          borderBottom: isCollapsed ? 'none' : '1px solid #1e293b',
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', userSelect: 'none' }}
+          title={isCollapsed ? 'Click to expand interaction graph' : 'Click to collapse interaction graph'}
+        >
           <div
             style={{
               width: 28,
               height: 28,
-              borderRadius: "50%",
-              background: "linear-gradient(135deg, #3b82f6, #8b5cf6)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#fff",
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#fff',
+              flexShrink: 0,
             }}
           >
-            <Share2 size={16} />
+            <Share2 size={15} />
           </div>
           <div>
-            <h4
-              style={{
-                margin: 0,
-                fontSize: compact ? 13.5 : 15,
-                fontWeight: 700,
-                color: "#60a5fa",
-                letterSpacing: "0.2px",
-              }}
-            >
-              {title}
-            </h4>
-            <span style={{ fontSize: 11, color: "#94a3b8" }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <h4
+                style={{
+                  margin: 0,
+                  fontSize: compact ? 13.5 : 15,
+                  fontWeight: 700,
+                  color: '#60a5fa',
+                  letterSpacing: '0.2px',
+                }}
+              >
+                {title}
+              </h4>
+              <span
+                style={{
+                  fontSize: 10.5,
+                  padding: '1px 6px',
+                  borderRadius: 4,
+                  background: isCollapsed ? 'rgba(56, 189, 248, 0.15)' : 'rgba(148, 163, 184, 0.12)',
+                  color: isCollapsed ? '#38bdf8' : '#94a3b8',
+                  border: isCollapsed ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid rgba(148, 163, 184, 0.2)',
+                  fontWeight: 600,
+                }}
+              >
+                {isCollapsed ? 'Click to Expand Graph ▼' : 'Active View ▲'}
+              </span>
+            </div>
+            <span style={{ fontSize: 11, color: '#94a3b8' }}>
               {nodes.length} Agent Nodes &bull; {edges.length} Observed Communication Messages &bull; Verified CIM Invariants
             </span>
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {edges.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {!isCollapsed && edges.length > 0 && (
             <button
               onClick={() => setIsPlaying(!isPlaying)}
               style={{
-                display: "flex",
-                alignItems: "center",
+                display: 'flex',
+                alignItems: 'center',
                 gap: 5,
-                padding: "4px 10px",
-                background: isPlaying ? "#059669" : "#1e293b",
-                border: "1px solid rgba(255,255,255,0.15)",
+                padding: '4px 10px',
+                background: isPlaying ? '#059669' : '#1e293b',
+                border: '1px solid rgba(255,255,255,0.15)',
                 borderRadius: 6,
-                color: "#fff",
+                color: '#fff',
                 fontSize: 11,
                 fontWeight: 600,
-                cursor: "pointer",
+                cursor: 'pointer',
               }}
-              title={isPlaying ? "Pause Flow Replay" : "Replay Agent-to-Agent Communication Flow"}
+              title={isPlaying ? 'Pause Flow Replay' : 'Replay Agent-to-Agent Communication Flow'}
             >
               {isPlaying ? <Pause size={12} /> : <Play size={12} />}
-              <span>{isPlaying ? "Pause Flow" : "Replay Flow"}</span>
+              <span>{isPlaying ? 'Pause Flow' : 'Replay Flow'}</span>
+            </button>
+          )}
+
+          {!isCollapsed && (
+            <button
+              onClick={() => {
+                setActiveStepIdx(null);
+                setSelectedEdge(null);
+                setSelectedNode(null);
+                setIsPlaying(false);
+              }}
+              style={{
+                padding: '4px 8px',
+                background: '#1e293b',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 6,
+                color: '#94a3b8',
+                fontSize: 11,
+                cursor: 'pointer',
+              }}
+              title='Reset Graph Selection'
+            >
+              <RotateCcw size={12} />
             </button>
           )}
 
           <button
-            onClick={() => {
-              setActiveStepIdx(null);
-              setSelectedEdge(null);
-              setSelectedNode(null);
-              setIsPlaying(false);
-            }}
-            style={{
-              padding: "4px 8px",
-              background: "#1e293b",
-              border: "1px solid rgba(255,255,255,0.1)",
-              borderRadius: 6,
-              color: "#94a3b8",
-              fontSize: 11,
-              cursor: "pointer",
-            }}
-            title="Reset Graph Selection"
-          >
-            <RotateCcw size={12} />
-          </button>
-
-          <button
             onClick={() => setIsCollapsed(!isCollapsed)}
             style={{
-              padding: "4px 8px",
-              background: "#1e293b",
-              border: "1px solid rgba(255,255,255,0.1)",
+              padding: '4px 10px',
+              background: isCollapsed ? 'rgba(59, 130, 246, 0.15)' : '#1e293b',
+              border: isCollapsed ? '1px solid #3b82f6' : '1px solid rgba(255,255,255,0.1)',
               borderRadius: 6,
-              color: "#94a3b8",
-              cursor: "pointer",
+              color: isCollapsed ? '#93c5fd' : '#94a3b8',
+              fontSize: 11.5,
+              fontWeight: 600,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 5,
             }}
+            title={isCollapsed ? 'Expand Graph' : 'Collapse Graph'}
           >
+            <span>{isCollapsed ? 'Expand' : 'Collapse'}</span>
             {isCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
           </button>
         </div>
