@@ -85,6 +85,12 @@ st.markdown("""
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
     }
+    [data-testid="stSidebar"] {
+        overflow-y: auto !important;
+    }
+    [data-testid="stSidebar"] > div:first-child {
+        overflow-y: auto !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
