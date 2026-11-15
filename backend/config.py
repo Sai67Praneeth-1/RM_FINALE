@@ -46,6 +46,14 @@ class Settings(BaseModel):
         default=os.getenv("OLLAMA_MODEL", "qwen2.5:3b")
     )
     
+    # MongoDB Storage for Chat History & Sessions
+    MONGODB_URI: str = Field(
+        default=os.getenv("MONGODB_URI", "")
+    )
+    MONGODB_DB_NAME: str = Field(
+        default=os.getenv("MONGODB_DB_NAME", "transparency_platform")
+    )
+
     # Server settings
     API_HOST: str = Field(default=os.getenv("API_HOST", "127.0.0.1"))
     API_PORT: int = Field(default=int(os.getenv("API_PORT", "8000")))
