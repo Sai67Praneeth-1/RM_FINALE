@@ -9,9 +9,14 @@ import uuid
 import logging
 from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
-from pymongo import MongoClient
-from pymongo.collection import Collection
-from pymongo.database import Database
+try:
+    from pymongo import MongoClient
+    from pymongo.collection import Collection
+    from pymongo.database import Database
+except ImportError:
+    MongoClient = None
+    Collection = None
+    Database = None
 from backend.config import settings
 
 logger = logging.getLogger(__name__)
@@ -30,6 +35,9 @@ class MongoChatStore:
         self._connect()
 
     def _connect(self) -> bool:
+        if MongoClient is None:
+            logger.warning("[MongoChatStore] pymongo library is not installed. Using in-memory store.")
+            return False
         if not self.uri:
             logger.warning("[MongoChatStore] No MONGODB_URI provided in configuration.")
             return False
