@@ -59,7 +59,7 @@ class ResearchAgent(BaseAgent):
         )
         summary = f"Transferred {row_count} extracted records from {dataset_name} to Analysis Agent."
 
-        if mode in ["live_huggingface", "live_ollama"] and isinstance(extracted_data, list):
+        if mode in ["live_api", "live_gemini", "live_huggingface", "live_ollama"] and isinstance(extracted_data, list):
             sample_slice = str(extracted_data[:3])
             llm_summary = query_agent_llm(
                 prompt=f"Summarize these initial sample records for an analyst: {sample_slice}",

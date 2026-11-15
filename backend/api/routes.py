@@ -499,10 +499,19 @@ def is_data_audit_request(prompt: str) -> bool:
         return True
     if any(p in p_lower for p in ["check system access logs", "check system logs", "check access logs", "check security logs"]):
         return True
+    if any(p in p_lower for p in [
+        "demonstrate inter-agent communication", "demonstrate inter agent communication",
+        "show inter-agent communication", "show inter agent communication",
+        "show multi-agent task delegation", "show multi agent task delegation",
+        "collaborate with your agent team", "collaborate with your agents",
+        "run multi-agent collaboration", "run multi agent collaboration"
+    ]):
+        return True
 
     # 2. Explicit audit/investigation commands directed at data, complaints, logs, or tickets
     has_audit_verb = any(p_lower.startswith(v) or f" {v}" in p_lower for v in [
-        "audit", "investigate", "run audit", "run workflow", "analyze the dataset", "audit the dataset", "inspect dataset"
+        "audit", "investigate", "run audit", "run workflow", "analyze the dataset",
+        "audit the dataset", "inspect dataset", "delegate", "collaborate"
     ])
     has_audit_target = any(w in p_lower for w in [
         "complaint", "ticket", "access log", "security log", "system log", "audit log", "cfpb"

@@ -1161,13 +1161,16 @@ export default function App() {
 
               <div className="suggestion-pills">
                 <button className="pill-btn" onClick={() => sendChatMessage("What are the customers mostly complaining of?")}>
-                  💬 What are customers mostly complaining of?
+                  💬 Top Complaints Audit
                 </button>
-                <button className="pill-btn" onClick={() => sendChatMessage("Who are our enterprise customers and what issues are they facing?")}>
-                  🚨 Status of Enterprise accounts?
+                <button className="pill-btn" onClick={() => sendChatMessage("Collaborate with your agent team to audit customer complaints and delegate subtasks")}>
+                  🤖 Multi-Agent Task Delegation
+                </button>
+                <button className="pill-btn" onClick={() => sendChatMessage("Demonstrate inter-agent communication and task delegation across Researcher, Analyst, and Reporter")}>
+                  📡 Inter-Agent Communication
                 </button>
                 <button className="pill-btn" onClick={() => sendChatMessage("Check system access logs for unauthorized root escalation and file sharing")}>
-                  🛡️ Audit system logs for violations
+                  🛡️ Audit System Logs
                 </button>
                 <button
                   className="pill-btn"
@@ -3929,6 +3932,58 @@ export default function App() {
         {/* View 10: Architecture & Docs */}
         {activeTab === "docs" && (
           <div className="content-panel">
+            <div className="stat-card" style={{ marginBottom: 20 }}>
+              <h3 style={{ color: "#38bdf8", marginBottom: 14, fontSize: 18, fontWeight: 700 }}>
+                Core Architecture: Three Fundamental Agentic Pillars
+              </h3>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
+                <div style={{ background: "#0b1329", border: "1px solid #1e293b", borderRadius: 8, padding: 16 }}>
+                  <div style={{ color: "#60a5fa", fontWeight: 700, fontSize: 15, marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
+                    🤖 1. Multi-Agent System
+                  </div>
+                  <p style={{ color: "#94a3b8", fontSize: 13, lineHeight: 1.6, marginBottom: 8 }}>
+                    Specialized autonomous agents collaborating seamlessly using <strong>Google Gemini</strong>:
+                  </p>
+                  <ul style={{ color: "#cbd5e1", fontSize: 12.5, lineHeight: 1.7, paddingLeft: 18 }}>
+                    <li><strong style={{ color: "#38bdf8" }}>Agent A (Coordinator):</strong> Decomposes complex directives and directs the team.</li>
+                    <li><strong style={{ color: "#34d399" }}>Agent B (Researcher):</strong> Extracts verified records from enterprise datasets.</li>
+                    <li><strong style={{ color: "#fbbf24" }}>Agent C (Analyst):</strong> Computes quantitative metrics, sentiment, and audits.</li>
+                    <li><strong style={{ color: "#f472b6" }}>Agent D (Reporter):</strong> Formulates final executive consensus reports.</li>
+                  </ul>
+                </div>
+
+                <div style={{ background: "#0b1329", border: "1px solid #1e293b", borderRadius: 8, padding: 16 }}>
+                  <div style={{ color: "#34d399", fontWeight: 700, fontSize: 15, marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
+                    📋 2. Task Delegation
+                  </div>
+                  <p style={{ color: "#94a3b8", fontSize: 13, lineHeight: 1.6, marginBottom: 8 }}>
+                    One agent assigns scoped subtasks to other agents with cryptographic delegation tokens:
+                  </p>
+                  <ul style={{ color: "#cbd5e1", fontSize: 12.5, lineHeight: 1.7, paddingLeft: 18 }}>
+                    <li><strong>Root Delegation:</strong> User Principal grants Root Token to Coordinator.</li>
+                    <li><strong>Scoped Sub-Delegations:</strong> Coordinator mints child tokens for Researcher, Analyst, and Reporter.</li>
+                    <li><strong>Authority Lineage (G_auth):</strong> Unforgeable hierarchy tracking who authorized which action.</li>
+                    <li><strong>W3C PROV:</strong> Durable <code>prov:actedOnBehalfOf</code> provenance chains.</li>
+                  </ul>
+                </div>
+
+                <div style={{ background: "#0b1329", border: "1px solid #1e293b", borderRadius: 8, padding: 16 }}>
+                  <div style={{ color: "#ec4899", fontWeight: 700, fontSize: 15, marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
+                    📡 3. Inter-Agent Communication
+                  </div>
+                  <p style={{ color: "#94a3b8", fontSize: 13, lineHeight: 1.6, marginBottom: 8 }}>
+                    Structured messages exchanged through the Observability Gateway Channel:
+                  </p>
+                  <ul style={{ color: "#cbd5e1", fontSize: 12.5, lineHeight: 1.7, paddingLeft: 18 }}>
+                    <li><span className="telemetry-badge-type" style={{ color: "#60a5fa" }}>DELEGATION</span> Subtask assignments.</li>
+                    <li><span className="telemetry-badge-type" style={{ color: "#c084fc" }}>INFO_TRANSFER</span> Structured findings pass.</li>
+                    <li><span className="telemetry-badge-type" style={{ color: "#fbbf24" }}>CLARIFICATION</span> Ambiguity resolution.</li>
+                    <li><span className="telemetry-badge-type" style={{ color: "#34d399" }}>RESULT / HANDOFF</span> Verified outputs & closure.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
             <div className="stat-card" style={{ marginBottom: 20 }}>
               <h3 style={{ color: "#60a5fa", marginBottom: 12 }}>Common Information Model (CIM) Invariants</h3>
               <div style={{ color: "#cbd5e1", lineHeight: 1.8, fontSize: 14 }}>

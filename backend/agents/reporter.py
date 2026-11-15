@@ -117,7 +117,7 @@ class ReportAgent(BaseAgent):
             f"interaction://agent_researcher_to_agent_analyst"
         ]
 
-        if mode in ["live_huggingface", "live_ollama"]:
+        if mode in ["live_api", "live_gemini", "live_huggingface", "live_ollama"]:
             llm_report_enhancement = query_agent_llm(
                 prompt=f"Enhance this executive summary for task '{task_description}' based on: {analysis_out}",
                 system_prompt=self.system_prompt,

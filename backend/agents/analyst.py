@@ -93,7 +93,7 @@ class AnalysisAgent(BaseAgent):
                 f"{high_sev} tickets classified as High/Critical severity."
             )
 
-        if mode in ["live_huggingface", "live_ollama"]:
+        if mode in ["live_api", "live_gemini", "live_huggingface", "live_ollama"]:
             llm_insight = query_agent_llm(
                 prompt=f"Provide an analytical takeaway for executive decision makers from these metrics: {analysis_output}",
                 system_prompt=self.system_prompt,

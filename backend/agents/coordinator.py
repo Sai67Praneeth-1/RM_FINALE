@@ -122,7 +122,7 @@ class CoordinatorAgent(BaseAgent):
             "and compute sentiment impact across Enterprise tier accounts."
         )
         
-        if mode in ["live_huggingface", "live_ollama"]:
+        if mode in ["live_api", "live_gemini", "live_huggingface", "live_ollama"]:
             llm_reply = query_agent_llm(
                 prompt=f"The sub-agent asked: '{question}'. Provide concise clarification for our complaint analysis task.",
                 system_prompt=self.system_prompt,
