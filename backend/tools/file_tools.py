@@ -8,23 +8,29 @@ import csv
 from pathlib import Path
 from typing import Dict, Any, List
 from backend.config import settings
+from backend.tools.dataset_manager import ensure_cfpb_datasets
 
 def get_allowed_samples_dir() -> Path:
     return Path(settings.SAMPLES_DIR).resolve()
 
 def list_sample_datasets() -> List[Dict[str, Any]]:
     """Lists allowlisted dataset files available in data/samples/."""
+    ensure_cfpb_datasets()
     samples_dir = get_allowed_samples_dir()
     if not samples_dir.exists():
         return []
     
     files = []
     for f in samples_dir.glob("*.*"):
-        files.append({
+        meta = {
             "name": f.name,
             "size_bytes": f.stat().st_size,
             "path": str(f)
-        })
+        }
+        if "complaint" in f.name.lower():
+            meta["source_url"] = settings.CFPB_COMPLAINTS_URL
+            meta["kaggle_ref"] = settings.KAGGLE_CFPB_DATASET
+        files.append(meta)
     return files
 
 def read_sample_dataset(file_name: str) -> Dict[str, Any]:

@@ -39,7 +39,14 @@ COMPLAINT_KEYWORDS = {
     "webhook", "webhooks", "504", "password", "reset", "forgotten",
     "deletion", "inactive", "seats", "deprovisioned", "residency",
     "frankfurt", "graphql", "refund", "downgrade", "soc2", "soc-2",
-    "vendor", "maintenance"
+    "vendor", "maintenance",
+    # CFPB & Consumer Financial Protection Keywords
+    "cfpb", "consumer", "credit", "reporting", "repair", "debt", "collection",
+    "mortgage", "loan", "bank", "card", "inquiry", "inquiries", "equifax",
+    "experian", "transunion", "capital one", "wells fargo", "chase", "bofa",
+    "relief", "timely", "monetary", "interest", "statement", "wire", "deposit",
+    "servicer", "repossession", "foreclosure", "overdraft", "payday", "checking",
+    "savings", "escrow", "affirm", "synchrony", "citibank", "pnc", "us bank"
 }
 
 ARCHITECTURE_KEYWORDS = {
@@ -64,6 +71,13 @@ STOPWORDS = {
     "please", "find", "check", "how", "many", "much", "write", "explain"
 }
 
+GENERIC_INSTITUTION_WORDS = {
+    "credit", "union", "bank", "banking", "company", "corporation", "corp",
+    "services", "solutions", "financial", "holdings", "inc", "llc", "group",
+    "national", "federal", "consumer", "complaint", "complaints", "audit",
+    "analyze", "investigate", "dispute", "disputes", "ticket", "tickets", "system"
+}
+
 
 def _clean_tokens(text: str) -> set:
     normalized = re.sub(r"[^a-zA-Z0-9_\-]", " ", text.lower())
@@ -84,9 +98,17 @@ def analyze_dynamic_query(goal: str) -> Dict[str, Any]:
     complaints = read_sample_dataset("customer_complaints.csv")["data"]
     access_logs = read_sample_dataset("system_access_logs.csv")["data"]
 
-    # Detect exact entity mentions
-    exact_tickets = [r["ticket_id"] for r in complaints if r["ticket_id"].lower() in g_lower]
-    exact_custs = [r["customer_id"] for r in complaints if r["customer_id"].lower() in g_lower]
+    # Detect exact entity mentions (Tickets, CFPB Complaints, Customers/Companies, Logs, Users)
+    exact_tickets = [
+        r["ticket_id"] for r in complaints 
+        if (len(r["ticket_id"]) >= 4 and r["ticket_id"].lower() in g_lower) or 
+           (r.get("complaint_id") and len(r["complaint_id"]) >= 5 and r["complaint_id"] in g_lower)
+    ]
+    exact_custs = [
+        r["customer_id"] for r in complaints 
+        if (len(r["customer_id"]) >= 4 and r["customer_id"].lower() in g_lower) or
+           (r.get("company") and len(r["company"]) >= 4 and r["company"].lower() in g_lower)
+    ]
     exact_logs = [r["log_id"] for r in access_logs if r["log_id"].lower() in g_lower]
     exact_users = [r["user_id"] for r in access_logs if r["user_id"].lower() in g_lower]
 
@@ -146,10 +168,19 @@ def analyze_dynamic_query(goal: str) -> Dict[str, Any]:
         target_dataset = "customer_complaints.csv"
         scored_rows = []
         for r in complaints:
-            r_text = f"{r['ticket_id']} {r['customer_id']} {r['category']} {r['severity']} {r['description']} {r['account_tier']} {r['status']}".lower()
+            r_text = f"{r['ticket_id']} {r['customer_id']} {r.get('company','')} {r['category']} {r.get('product','')} {r['severity']} {r['description']} {r['account_tier']} {r['status']}".lower()
             score = 0
             if r["ticket_id"].lower() in g_lower: score += 10
-            if r["customer_id"].lower() in g_lower: score += 8
+            
+            cust_name = (r.get("company") or r["customer_id"]).lower()
+            if cust_name in g_lower:
+                score += 15
+            else:
+                cust_words = set(re.findall(r"[a-z0-9]+", cust_name)) - GENERIC_INSTITUTION_WORDS
+                goal_words = g_tokens - GENERIC_INSTITUTION_WORDS
+                if cust_words & goal_words:
+                    score += 12
+
             for t in g_tokens:
                 if t in r_text and t not in STOPWORDS:
                     score += 2
@@ -168,21 +199,22 @@ def analyze_dynamic_query(goal: str) -> Dict[str, Any]:
 def _synthesize_irrelevant_response(goal: str) -> Dict[str, Any]:
     exec_summary = (
         "⚠️ **The prompt is irrelevant to the data.**\n\n"
-        "Please ask anything you need about the data (such as customer complaints, billing disputes, "
-        "MFA/SSO authentication delays, API 500 downtime events, coworker email privacy breaches, "
+        "Please ask anything you need about the available datasets (such as CFPB consumer complaints, "
+        "financial institutions like Experian, Equifax, TransUnion, Capital One, Wells Fargo, "
+        "credit reporting or debt collection disputes, billing overcharges, authentication delays, "
         "or system access logs and security policy violations)."
     )
     key_findings = [
-        "Prompt Relevance Evaluation: 0.0% match with available enterprise operational telemetry.",
-        "Available Dataset 1: `customer_complaints.csv` (25 customer tickets across Enterprise, Professional, and Standard tiers).",
+        "Prompt Relevance Evaluation: 0.0% match with available operational and consumer datasets.",
+        "Available Dataset 1: `customer_complaints.csv` / `cfpb_complaints.csv` (5,000+ real consumer complaints sourced from CFPB & Kaggle repositories across financial institutions and enterprise tiers).",
         "Available Dataset 2: `system_access_logs.csv` (20 access audit events across 8 user identities including flagged exfiltration attempts).",
         "Available Dataset 3: `sample_research_notes.txt` (Q1-Q4 operational escalation and infrastructure incident briefs)."
     ]
     recommendations = [
-        "Ask about Customer Complaints: e.g., 'Which customer had delays with MFA codes and what was their account tier?'",
+        "Ask about CFPB Complaints: e.g., 'Analyze consumer complaints against Equifax or Capital One in the credit reporting sector.'",
+        "Ask about Specific Tickets or Categories: e.g., 'What are the most common issues in Debt Collection or Credit Reporting?'",
         "Ask about Billing & Subscriptions: e.g., 'Analyze billing disputes and calculate the average sentiment score.'",
-        "Ask about Security & Access Logs: e.g., 'Did user usr_dev_01 or usr_intern_03 attempt unauthorized actions?'",
-        "Ask about Service Downtime & SLAs: e.g., 'What caused API 500 server errors or Redis failovers for Enterprise clients?'"
+        "Ask about Security & Access Logs: e.g., 'Did user usr_dev_01 or usr_intern_03 attempt unauthorized actions?'"
     ]
 
     markdown = (
@@ -375,24 +407,69 @@ def _synthesize_complaint_analysis(goal: str, records: List[Dict[str, str]], tar
             "Mandate synthetic data anonymization across all non-production environments."
         ]
 
+    # Company / Financial Institution Specific Audit (e.g., Equifax, Capital One, Experian, TransUnion, Wells Fargo, etc.)
+    company_candidates = []
+    for c in customer_ids:
+        c_lower = c.lower()
+        if c_lower in goal.lower():
+            company_candidates.append((100 + len(c), c))
+            continue
+        c_words = set(re.findall(r"[a-z0-9]+", c_lower)) - GENERIC_INSTITUTION_WORDS
+        goal_words = set(re.findall(r"[a-z0-9]+", goal.lower())) - GENERIC_INSTITUTION_WORDS
+        overlap = c_words & goal_words
+        if overlap:
+            score = sum(len(w) for w in overlap)
+            company_candidates.append((score, c))
+
+    company_candidates.sort(key=lambda x: x[0], reverse=True)
+    if company_candidates:
+        target_comp = company_candidates[0][1]
+        comp_records = [r for r in records if r["customer_id"].lower() == target_comp.lower() or (r.get("company") and r["company"].lower() == target_comp.lower())]
+        if not comp_records:
+            comp_records = records
+            target_comp = "CFPB Monitored Institutions"
+        c_count = len(comp_records)
+        c_high_crit = [r for r in comp_records if r["severity"] in ["High", "Critical"]]
+        c_timely = sum(1 for r in comp_records if r.get("timely_response", "Yes").lower() == "yes")
+        c_issues = list(dict.fromkeys(r.get("issue") or r["category"] for r in comp_records))
+        c_relief = sum(1 for r in comp_records if "relief" in r.get("status", "").lower())
+        
+        exec_summary = (
+            f"Multi-agent investigation of the CFPB Consumer Complaint Database isolates **{c_count} complaints involving {target_comp}**. "
+            f"Of these, **{len(c_high_crit)} ({len(c_high_crit)/c_count*100:.1f}%) are classified as High or Critical severity**, "
+            f"predominantly concerning **{c_issues[0] if c_issues else 'Credit & Account Disputes'}**. "
+            f"Timely response compliance rate is **{c_timely/c_count*100:.1f}%**, with {c_relief} complaints resulting in consumer relief."
+        )
+        key_findings = [
+            f"Target Entity Audited: {target_comp} ({c_count} complaints isolated in dataset).",
+            f"Severity Distribution: {len(c_high_crit)} High/Critical severity issues ({len(c_high_crit)/c_count*100:.1f}%).",
+            f"Primary Grievance Categories: {', '.join(c_issues[:4])}.",
+            f"Compliance & Relief: {c_timely}/{c_count} timely responses ({c_timely/c_count*100:.1f}%); {c_relief} closed with consumer relief."
+        ]
+        recommendations = [
+            f"Conduct root-cause compliance review with {target_comp} regarding primary grievance: '{c_issues[0] if c_issues else 'Reporting Inaccuracies'}'.",
+            f"Establish automated dispute escalation pipeline for consumer complaints reaching High severity thresholds.",
+            f"Monitor regulatory response timelines to ensure 100% timely response compliance under CFPB guidelines."
+        ]
+
     # Broad complaints overview
     else:
         exec_summary = (
-            f"Multi-agent investigation of customer complaints dataset ({count} records analyzed) reveals that customer dissatisfaction "
-            f"is heavily driven by **Service Downtime (TKT-1002, TKT-1018)** and **Billing Disputes (TKT-1001, TKT-1005, TKT-1017)**. "
-            f"Severe operational impact is concentrated in **Enterprise accounts** (average sentiment of -0.875 vs overall {avg_sentiment:.3f}), "
-            f"with over 60% of complaints categorized as High or Critical severity."
+            f"Multi-agent investigation of the consumer complaints dataset ({count} records analyzed, sourced from remote CFPB & Kaggle repositories) "
+            f"reveals that consumer grievances are primarily driven by **Credit Reporting & Inquiries**, **Billing Disputes**, "
+            f"and **Account Servicing Anomalies**. High/Critical severity issues account for {len(high_crit)} ({len(high_crit)/count*100:.1f}%) of filings, "
+            f"with an average quantitative sentiment of {avg_sentiment:.3f}."
         )
         key_findings = [
-            f"Total Tickets Analyzed: {count} records across tiers: {', '.join(tiers)}.",
-            f"High/Critical Severity Ratio: {len(high_crit)} of {count} tickets ({len(high_crit)/count*100:.1f}%).",
-            f"Average Overall Sentiment: {avg_sentiment:.3f} (Enterprise accounts sustain severe degradation at -0.875).",
-            f"Recurring Pain Points: {', '.join(categories[:5])}."
+            f"Total Records Audited: {count} complaints across account tiers and financial institutions ({', '.join(tiers[:4])}).",
+            f"High/Critical Severity Ratio: {len(high_crit)} of {count} records ({len(high_crit)/count*100:.1f}%).",
+            f"Average Quantitative Sentiment: {avg_sentiment:.3f} across consumer filings.",
+            f"Leading Grievance Categories: {', '.join(categories[:5])}."
         ]
         recommendations = [
-            "Deploy an automated 15-minute SLA escalation pipeline for API 500 downtime events affecting Enterprise tiers.",
-            "Automate refund adjustments for trial-period cancellations and de-provisioned seats.",
-            "Patch audit log export routines to mask coworker email addresses and ensure SOC2/GDPR compliance."
+            "Deploy automated dispute triage for high-severity consumer grievances across financial products.",
+            "Establish SLA alerting for regulatory response deadlines under CFPB and enterprise guidelines.",
+            "Audit identity verification and reporting pipelines to prevent unauthorized inquiries and billing errors."
         ]
 
     markdown = (

@@ -51,6 +51,17 @@ class Settings(BaseModel):
     API_PORT: int = Field(default=int(os.getenv("API_PORT", "8000")))
     DASHBOARD_PORT: int = Field(default=int(os.getenv("DASHBOARD_PORT", "8501")))
     
+    # Dataset URLs (CFPB & Kaggle from .env)
+    CFPB_COMPLAINTS_URL: str = Field(
+        default=os.getenv("CFPB_COMPLAINTS_URL", "https://files.consumerfinance.gov/ccdb/complaints.csv.zip")
+    )
+    KAGGLE_CFPB_DATASET: str = Field(
+        default=os.getenv("KAGGLE_CFPB_DATASET", "selener/consumer-complaint-database")
+    )
+    MAX_DATASET_RECORDS: int = Field(
+        default=int(os.getenv("MAX_DATASET_RECORDS", "10000"))
+    )
+    
     # Paths
     SAMPLES_DIR: str = Field(default=str(PROJECT_ROOT / "data" / "samples"))
     GENERATED_DIR: str = Field(default=str(PROJECT_ROOT / "data" / "generated"))
