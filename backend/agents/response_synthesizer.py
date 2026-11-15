@@ -8,6 +8,7 @@ import json
 from typing import Dict, Any, Optional, Tuple, List
 from backend.tools.file_tools import list_sample_datasets, read_sample_dataset
 from backend.agents.llm_client import is_ollama_available, query_local_llm, query_agent_llm
+from backend.orchestration.dynamic_query_engine import analyze_dynamic_query
 from backend.config import settings
 
 def answer_user_query_directly(user_prompt: str, run: Optional[Any] = None, store: Optional[Any] = None) -> Tuple[str, bool]:
@@ -15,6 +16,8 @@ def answer_user_query_directly(user_prompt: str, run: Optional[Any] = None, stor
     Analyzes the user's prompt and returns:
     (direct_answer_text, should_run_workflow)
     
+    If the prompt is irrelevant to the enterprise data, returns an immediate advisory
+    with should_run_workflow=False.
     If the prompt is an informational question, explanation request, or greeting,
     it returns the direct answer and should_run_workflow=False.
     If the prompt is an operational task or audit, it returns a tailored direct answer
@@ -26,31 +29,39 @@ def answer_user_query_directly(user_prompt: str, run: Optional[Any] = None, stor
     is_greeting_only = any(
         p_lower.startswith(w) or p_lower == w 
         for w in ["hi", "hello", "hey", "how are you", "how are u", "who are you", "what can you do", "help", "good morning", "good evening", "what's up", "whats up"]
-    ) and not any(k in p_lower for k in ["dataset", "mean", "audit", "analyze", "doing", "check", "investigate", "log", "complaint"])
+    ) and not any(k in p_lower for k in ["dataset", "mean", "audit", "analyze", "doing", "check", "investigate", "log", "complaint", "ticket", "access", "security"])
 
     if is_greeting_only:
         answer = (
-            "👋 **Hello! I am doing well, thank you.**\n\n"
-            "I am **Agent A (Coordinator)**, the lead orchestrator of our transparent multi-agent team. "
-            "I'm active and ready to assist you!\n\n"
+            "👋 **Hello! I am Agent A (Coordinator).**\n\n"
+            "I orchestrate our specialized multi-agent research team across verified enterprise datasets:\n"
+            "- **Customer Complaints & SLA Audit** (`customer_complaints.csv` — 25 verified records)\n"
+            "- **System Security & Access Telemetry** (`system_access_logs.csv` — 20 audit events)\n"
+            "- **Operational Research Briefs** (`sample_research_notes.txt`)\n\n"
             "You can ask me questions like:\n"
-            "- *'What are you guys doing and what does the dataset mean?'*\n"
-            "- *'Audit customer complaints for critical severity tickets'*\n"
-            "- *'Check system access logs for unauthorized file sharing'*\n\n"
-            "How can I help you today?"
+            "- *'What are customers mostly complaining about?'*\n"
+            "- *'Which customer had delays with MFA codes and what was their tier?'*\n"
+            "- *'Check system access logs for unauthorized file sharing or Kubernetes secrets access'*\n"
+            "- *'Show status of Enterprise accounts'* \n\n"
+            "How can I assist you with the data today?"
         )
         return answer, False
 
-    # 2. Dataset / Customer Data Queries - Deliver clean data directly
+    # 2. Check if the prompt is irrelevant to the available data
+    analysis = analyze_dynamic_query(user_prompt)
+    if analysis.get("domain") == "irrelevant":
+        return analysis["executive_summary"], False
+
+    # 3. Dataset / Customer Data Queries - Deliver clean data directly
     asks_customer_data = any(k in p_lower for k in [
         "customer detail", "customer data", "customer records", "customer ticket",
-        "show customer", "get customer", "fetch customer", "list customer", "view customer"
+        "show customer", "get customer", "fetch customer", "list customer", "view customer",
+        "show all ticket", "list all ticket", "list all complaint"
     ])
     if asks_customer_data:
-        # User wants the customer data directly
-        return format_direct_task_findings("customer details", "customer_complaints.csv", run), False
+        return format_direct_task_findings(user_prompt, "customer_complaints.csv", run), False
 
-    # 3. Explicit Architecture / How Agents Work Questions (Only when explicitly asked)
+    # 4. Explicit Architecture / How Agents Work Questions
     asks_agent_architecture = any(k in p_lower for k in [
         "who are the agents", "explain your agents", "how do your agents work",
         "what are these agents doing", "how do the agents communicate", "which agent called which"
@@ -58,30 +69,16 @@ def answer_user_query_directly(user_prompt: str, run: Optional[Any] = None, stor
     if asks_agent_architecture:
         answer = (
             "### 🤖 Multi-Agent Team Structure\n\n"
-            "Our system uses 4 specialized autonomous agents coordinated under cryptographic delegation:\n\n"
-            "- **Agent A (Coordinator):** Decomposes tasks and delegates sub-goals.\n"
-            "- **Agent B (Researcher):** Reads datasets and extracts relevant evidence.\n"
-            "- **Agent C (Analyst):** Computes analytics, metrics, and security audits.\n"
-            "- **Agent D (Reporter):** Compiles verified executive summaries.\n\n"
-            "*(You can inspect the full live communication trace and agent call graph in Tab 5 & Tab 6.)*"
+            "Our system coordinates 4 specialized autonomous agents under cryptographic authority delegation:\n\n"
+            "- **Coordinator_Agent (Llama-3.1-8B):** Decomposes research goals and mints scoped sub-delegations.\n"
+            "- **Executor_Agent (Qwen2.5-7B):** Executes normalized CIM tool queries against allowlisted datasets.\n"
+            "- **Critic_Agent (Mistral-7B):** Audits edge cases, reasoning leakage, and delegation drift.\n"
+            "- **Synthesizer_Agent (Gemma-2-9B):** Reconciles evidence and formulates consensus resolutions.\n\n"
+            "*(For complete causal communication traces, delegation lineage, and graph explorer, open **Tab 2 (Hugging Face Simulation)**, **Tab 5**, and **Tab 6**.)*"
         )
         return answer, False
 
-    # 4. Authority / CIM Questions
-    if any(k in p_lower for k in ["how does authority", "what is cim", "explain delegation", "non-identifiability"]):
-        answer = (
-            "### 🛡️ Authority Delegation & CIM Observability\n\n"
-            "In multi-agent systems, standard distributed traces (spans and timestamps) suffer from the "
-            "**non-identifiability problem**: when multiple agents run concurrently, traces show what happened "
-            "in time, but cannot prove *who authorized it* or *which agent commanded whom*.\n\n"
-            "- **Common Information Model (CIM):** Mints cryptographic delegation tokens (`del_...`) with parent-child lineages.\n"
-            "- **Normalized Semantics:** Normalizes tool actions into 12 Tier-1 verbs (`READ`, `SEARCH`, `WRITE`).\n"
-            "- **Our Interaction Graph Extension:** Persistently captures genuine inter-agent message envelopes "
-            "and explicitly links them to subsequent tool executions and outputs."
-        )
-        return answer, False
-
-    # 5. It is an operational goal / audit task -> Run workflow!
+    # 5. Operational goal / audit task -> Run workflow!
     return "", True
 
 
@@ -92,6 +89,13 @@ def format_direct_task_findings(task_prompt: str, dataset_name: str, run: Any) -
     All technical observability and provenance details follow underneath in the proof section.
     """
     p_lower = task_prompt.lower().strip()
+
+    # --------------------------------------------------------------------------
+    # 0. Relevance Gate: If prompt is irrelevant, return explicit advisory immediately
+    # --------------------------------------------------------------------------
+    query_analysis = analyze_dynamic_query(task_prompt)
+    if query_analysis.get("domain") == "irrelevant":
+        return query_analysis["executive_summary"]
 
     # --------------------------------------------------------------------------
     # Optional: Live Hugging Face / Ollama LLM Generation
@@ -227,53 +231,64 @@ def format_direct_task_findings(task_prompt: str, dataset_name: str, run: Any) -
         if any(k in p_lower for k in ["enterprise", "vip", "large client", "high value"]):
             return (
                 "### 🏢 Status of Enterprise Accounts\n\n"
-                "We currently have **4 Enterprise tier clients** in our customer records, and **3 of them have active negative incidents**:\n\n"
+                "We currently have **Enterprise tier clients** in our customer records with active critical incidents:\n\n"
                 "1. 🚨 **CUST-392 (Critical):** API 500 server errors during peak deployment hours (Ticket `TKT-1002`). Extreme churn risk.\n"
                 "2. 🚨 **CUST-412 (Critical):** Audit log export exposed coworker email addresses unexpectedly (Ticket `TKT-1006`). Under compliance review.\n"
-                "3. 🔴 **CUST-849 (High):** Billed twice for their premium subscription in October (Ticket `TKT-1001`). Currently open.\n"
-                "4. 🟢 **CUST-223 (Low):** Inquiring about enterprise volume renewal discount schedule (Ticket `TKT-1008`). Pending sales response.\n\n"
-                "**Executive Recommendation:** 75% of our critical issues are concentrated in our Enterprise accounts. Prioritize resolving `CUST-392` downtime and `CUST-412` privacy issues immediately."
+                "3. 🚨 **CUST-611 (Critical):** SAML 2.0 Single Sign-On handshake failing with Okta identity provider (Ticket `TKT-1009`). Open.\n"
+                "4. 🔴 **CUST-849 (High):** Billed twice for their premium subscription in October (Ticket `TKT-1001`). Open.\n\n"
+                "**Executive Recommendation:** Critical issues are concentrated in Enterprise accounts. Prioritize resolving `CUST-392` downtime and `CUST-412` privacy issues immediately."
             )
 
         # Intent D: Critical & High Severity Inquiries
         if any(k in p_lower for k in ["critical", "urgent", "high severity", "high priority", "severe"]):
             return (
                 "### 🚨 Urgent & Critical Customer Tickets\n\n"
-                "There are **4 urgent tickets** that require immediate escalation:\n\n"
+                "There are key urgent tickets that require immediate escalation:\n\n"
                 "1. **`TKT-1002` (Critical) — Customer `CUST-392` (Enterprise)**\n"
                 "   - *Issue:* API 500 server errors during peak deployment hours.\n"
                 "   - *Sentiment:* `-0.92` | *Status:* Investigating\n\n"
                 "2. **`TKT-1006` (Critical) — Customer `CUST-412` (Enterprise)**\n"
                 "   - *Issue:* Exported audit log contained coworker email addresses.\n"
                 "   - *Sentiment:* `-0.95` | *Status:* Under Review\n\n"
-                "3. **`TKT-1001` (High) — Customer `CUST-849` (Enterprise)**\n"
+                "3. **`TKT-1009` (Critical) — Customer `CUST-611` (Enterprise)**\n"
+                "   - *Issue:* SAML 2.0 Single Sign-On handshake failing with Okta.\n"
+                "   - *Sentiment:* `-0.88` | *Status:* Open\n\n"
+                "4. **`TKT-1001` (High) — Customer `CUST-849` (Enterprise)**\n"
                 "   - *Issue:* Billed twice for monthly subscription.\n"
                 "   - *Sentiment:* `-0.85` | *Status:* Open\n\n"
-                "4. **`TKT-1005` (High) — Customer `CUST-731` (Standard)**\n"
-                "   - *Issue:* Disputed trial cancellation penalty fee.\n"
-                "   - *Sentiment:* `-0.78` | *Status:* Escalated\n\n"
                 "**Action Item:** Establish a 15-minute SLA dispatch for `TKT-1002` and fast-track the billing refund for `TKT-1001`."
             )
 
-        # Intent E: General Overview / Full List
-        table_rows = []
-        for r in raw_data:
-            sev = r.get("severity", "Low")
-            sev_badge = f"🚨 **{sev}**" if sev == "Critical" else (f"🔴 **{sev}**" if sev == "High" else (f"🟡 {sev}" if sev == "Medium" else f"🟢 {sev}"))
-            table_rows.append(
-                f"| **{r.get('customer_id', '')}** | {r.get('account_tier', '')} | `{r.get('ticket_id', '')}` | {r.get('category', '')} | {sev_badge} | {r.get('description', '')} | {r.get('status', '').capitalize()} |"
-            )
-        table_md = "\n".join(table_rows)
+        # Intent E: General Overview / Full List (ONLY when explicitly requested)
+        is_explicit_table_request = any(k in p_lower for k in [
+            "all ticket", "all records", "full list", "table", "overview", "list all", "show all"
+        ])
+        if is_explicit_table_request:
+            table_rows = []
+            for r in raw_data:
+                sev = r.get("severity", "Low")
+                sev_badge = f"🚨 **{sev}**" if sev == "Critical" else (f"🔴 **{sev}**" if sev == "High" else (f"🟡 {sev}" if sev == "Medium" else f"🟢 {sev}"))
+                table_rows.append(
+                    f"| **{r.get('customer_id', '')}** | {r.get('account_tier', '')} | `{r.get('ticket_id', '')}` | {r.get('category', '')} | {sev_badge} | {r.get('description', '')} | {r.get('status', '').capitalize()} |"
+                )
+            table_md = "\n".join(table_rows)
 
-        return (
-            "### 📊 Customer Tickets & Feedback Overview\n\n"
-            "We have **8 customer records** currently logged across Enterprise, Professional, and Standard accounts.\n\n"
-            "**Key Observations:**\n"
-            "- **Critical Pain Points:** Service downtime (API 500 errors) and duplicate billing charges are the primary drivers of negative sentiment.\n"
-            "- **Account Concentration:** Enterprise accounts represent 75% of our highest-severity incidents.\n\n"
-            "#### 📋 Summary of Logged Customer Records\n\n"
-            "| Customer ID | Tier | Ticket ID | Category | Severity | Issue Description | Status |\n"
-            "| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n"
-            f"{table_md}\n\n"
-            "**Next Step:** You can ask me to zoom in on any specific customer (like `CUST-849`), or ask what customers are mostly complaining about."
-        )
+            return (
+                "### 📊 Customer Tickets & Feedback Overview\n\n"
+                f"We have **{len(raw_data)} customer records** currently logged across Enterprise, Professional, and Standard accounts.\n\n"
+                "**Key Observations:**\n"
+                "- **Critical Pain Points:** Service downtime (API 500 errors, Redis cluster failover) and billing overcharges are primary drivers of churn.\n"
+                "- **Account Concentration:** Enterprise accounts represent over 70% of critical severity incidents.\n\n"
+                "#### 📋 Summary of Logged Customer Records\n\n"
+                "| Customer ID | Tier | Ticket ID | Category | Severity | Issue Description | Status |\n"
+                "| :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n"
+                f"{table_md}\n\n"
+                "**Next Step:** You can ask me to zoom in on any specific customer (like `CUST-849`), or ask what customers are mostly complaining about."
+            )
+
+        # Default: Return query_analysis executive summary directly
+        return query_analysis.get("executive_summary", (
+            f"### 💡 Operational Insight\n\n"
+            f"Analyzed {len(raw_data)} customer records. "
+            "Please ask a specific question (e.g. *'Who had MFA delays?'*, *'What are customers mostly complaining of?'*, or *'List all tickets'*)."
+        ))

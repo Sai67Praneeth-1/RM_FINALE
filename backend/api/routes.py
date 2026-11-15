@@ -21,6 +21,7 @@ from backend.graphs.three_graphs import ThreeGraphCoordinator
 from backend.provenance.tracker import ProvenanceTracker
 from backend.evaluation.runner import BenchmarkRunner
 from backend.agents.response_synthesizer import format_direct_task_findings, answer_user_query_directly
+from backend.orchestration.dynamic_query_engine import analyze_dynamic_query
 from backend.orchestration.langgraph_workflow import (
     get_langgraph_mermaid,
     get_langgraph_topology_dot,
@@ -224,39 +225,19 @@ def chat_with_coordinator(req: ChatRequest):
     """
     msg_lower = req.message.lower().strip()
     
-    # Check if this is an informational / greeting query
-    is_greeting = any(w in msg_lower for w in ["hello", "hi", "hey", "how are you", "who are you", "what can you do"]) and not any(w in msg_lower for w in ["analyze", "audit", "find", "check", "run", "investigate", "execute", "log", "complaint"])
-    is_general_query = any(w in msg_lower for w in ["what data", "datasets", "how does authority", "what is cim"]) and not any(w in msg_lower for w in ["analyze", "audit", "run", "investigate", "execute"])
-
-    if is_greeting:
+    # 1. First evaluate direct conversational answer & relevance gate
+    direct_ans, should_run_workflow = answer_user_query_directly(req.message)
+    if not should_run_workflow:
         return {
-            "response": "Hello! I am doing well, thank you. I am **Agent A (Coordinator)**, the lead orchestrator of our transparent multi-agent team. "
-                        "You can assign me analytical goals or security tasks, for example: 'Audit customer complaints for critical severity tickets' "
-                        "or 'Audit system access logs for unauthorized file sharing'. I will coordinate with **Agent B (Researcher)**, "
-                        "**Agent C (Analyst)**, and **Agent D (Reporter)** with full transparency.",
-            "workflow_run": None,
-            "goal_flow_dot": None,
-            "goal_traceability": []
-        }
-    
-    if is_general_query:
-        datasets = list_sample_datasets()
-        ds_names = [d["name"] for d in datasets]
-        return {
-            "response": f"I have access to verified datasets: {', '.join(ds_names)}. "
-                        "You can ask me to run an investigation, for example: 'Analyze customer complaints for critical severity tickets' "
-                        "or 'Audit system access logs for unauthorized file sharing'.",
+            "response": direct_ans,
             "workflow_run": None,
             "goal_flow_dot": None,
             "goal_traceability": []
         }
 
-    # Automatically select dataset if mentioned in prompt
-    target_dataset = req.dataset_name or "customer_complaints.csv"
-    if "access" in msg_lower or "security" in msg_lower or "log" in msg_lower:
-        target_dataset = "system_access_logs.csv"
-    elif "complaint" in msg_lower or "customer" in msg_lower:
-        target_dataset = "customer_complaints.csv"
+    # Automatically select dataset if mentioned in prompt or inferred dynamically
+    query_info = analyze_dynamic_query(req.message)
+    target_dataset = req.dataset_name or query_info.get("target_dataset", "customer_complaints.csv")
 
     # Execute workflow under user delegation
     if req.mode == "live_huggingface":
