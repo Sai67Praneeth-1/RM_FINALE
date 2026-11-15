@@ -7,7 +7,7 @@ Based on PPT Slides 10, 11, 12, 14.
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timezone
 import uuid
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 
 from backend.schemas.events import InteractionType, SensitivityLabel, CaptureLevel
 
@@ -77,4 +77,16 @@ class InteractionRecord(BaseModel):
         description="Capture level active when this record was persisted"
     )
     metadata: Dict[str, Any] = Field(default_factory=dict)
+
+    @computed_field
+    @property
+    def sender_id(self) -> str:
+        """Backward-compatible alias for sender_agent_id."""
+        return self.sender_agent_id
+
+    @computed_field
+    @property
+    def recipient_id(self) -> str:
+        """Backward-compatible alias for receiver_agent_id."""
+        return self.receiver_agent_id
 

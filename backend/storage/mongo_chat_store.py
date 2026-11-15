@@ -34,18 +34,22 @@ class MongoChatStore:
         try:
             self._client = MongoClient(
                 self.uri,
-                serverSelectionTimeoutMS=10000,
-                connectTimeoutMS=10000,
-                socketTimeoutMS=20000,
+                serverSelectionTimeoutMS=8000,
+                connectTimeoutMS=8000,
+                socketTimeoutMS=15000,
+                retryWrites=True,
                 maxPoolSize=20
             )
             # Ping database to verify connection
             self._client.admin.command("ping")
             self._db = self._client.get_database(self.db_name)
             self._collection = self._db.get_collection("conversations")
-            # Create indexes for fast lookup and chronological sorting
-            self._collection.create_index("id", unique=True)
-            self._collection.create_index([("updated_at", -1)])
+            try:
+                # Create indexes for fast lookup and chronological sorting
+                self._collection.create_index("id", unique=True)
+                self._collection.create_index([("updated_at", -1)])
+            except Exception:
+                pass
             logger.info(f"[MongoChatStore] Successfully connected to MongoDB database: {self.db_name}")
             return True
         except Exception as e:
@@ -62,13 +66,20 @@ class MongoChatStore:
         return cls._instance
 
     def is_connected(self) -> bool:
-        if self._collection is None:
-            return self._connect()
-        try:
-            self._client.admin.command("ping")
-            return True
-        except Exception:
-            return self._connect()
+        for attempt in range(2):
+            if self._collection is None or self._client is None:
+                if self._connect():
+                    return True
+                continue
+            try:
+                self._client.admin.command("ping")
+                return True
+            except Exception:
+                self._client = None
+                self._collection = None
+                if self._connect():
+                    return True
+        return False
 
     def generate_smart_title(self, text: str) -> str:
         """

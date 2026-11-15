@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException, Query, Body
 from typing import Optional, List, Dict, Any
 import json
 import uuid
+from datetime import datetime, timezone
 from pydantic import BaseModel
 
 from backend.config import settings
@@ -93,6 +94,58 @@ def get_system_status():
         "ollama_model": settings.OLLAMA_MODEL,
         "installed_models": models,
         "metrics_summary": metrics
+    }
+
+@router.get("/telemetry/overview")
+def get_telemetry_overview(
+    workflow_limit: int = Query(default=10, ge=1, le=50),
+    event_limit: int = Query(default=30, ge=1, le=100)
+):
+    """
+    Unified Observability Telemetry Endpoint for Overview & Telemetry control plane.
+    Aggregates multi-agent coordination metrics, live workflow streams, real-time CIM event feeds,
+    agent workload distribution, interaction type breakdown, and MongoDB chat persistence metrics.
+    """
+    telemetry_data = store.get_telemetry_feed(limit_workflows=workflow_limit, limit_events=event_limit)
+    mongo_summary = mongo_chat_store.get_chat_telemetry_summary()
+    datasets = list_sample_datasets()
+    
+    # Merge MongoDB stats into top-level metrics
+    metrics = telemetry_data["metrics"]
+    metrics["mongodb_chats_count"] = mongo_summary.get("total_chats", 0)
+    metrics["mongodb_messages_count"] = mongo_summary.get("total_messages", 0)
+    
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "metrics": metrics,
+        "agent_breakdown": telemetry_data["agent_breakdown"],
+        "interaction_breakdown": telemetry_data["interaction_breakdown"],
+        "recent_workflows": telemetry_data["recent_workflows"],
+        "live_event_stream": telemetry_data["live_event_stream"],
+        "mongodb_telemetry": mongo_summary,
+        "storage": telemetry_data["storage"],
+        "datasets": datasets,
+        "infrastructure": {
+            "api_server": "FastAPI (Uvicorn)",
+            "api_host": settings.API_HOST,
+            "api_port": settings.API_PORT,
+            "capture_level": settings.DEFAULT_CAPTURE_LEVEL,
+            "redact_pii": settings.REDACT_PII,
+            "huggingface_router": {
+                "base_url": settings.HF_ROUTER_BASE_URL,
+                "coordinator_model": settings.HF_COORDINATOR_MODEL,
+                "executor_model": settings.HF_EXECUTOR_MODEL,
+                "status": "connected"
+            },
+            "mongodb": {
+                "connected": mongo_summary.get("mongodb_connected", False),
+                "database": mongo_summary.get("database", settings.MONGODB_DB_NAME),
+                "chats_saved": mongo_summary.get("total_chats", 0),
+                "messages_saved": mongo_summary.get("total_messages", 0),
+                "status": "online" if mongo_summary.get("mongodb_connected") else "offline"
+            }
+        }
     }
 
 @router.get("/datasets")
