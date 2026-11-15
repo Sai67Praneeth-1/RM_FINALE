@@ -7,7 +7,8 @@ extracting relevant records, and transferring structured findings to peer agents
 from typing import Dict, Any, List
 from backend.agents.base import BaseAgent
 from backend.schemas.events import InteractionType, SensitivityLabel
-from backend.agents.llm_client import query_local_llm
+from backend.agents.llm_client import query_agent_llm, query_local_llm
+from backend.config import settings
 
 RESEARCHER_SYSTEM_PROMPT = """You are Agent B (Research Agent).
 Your mandate is to inspect approved local datasets, extract relevant fields and rows,
@@ -58,11 +59,13 @@ class ResearchAgent(BaseAgent):
         )
         summary = f"Transferred {row_count} extracted records from {dataset_name} to Analysis Agent."
 
-        if mode == "live_ollama" and isinstance(extracted_data, list):
+        if mode in ["live_huggingface", "live_ollama"] and isinstance(extracted_data, list):
             sample_slice = str(extracted_data[:3])
-            llm_summary = query_local_llm(
+            llm_summary = query_agent_llm(
                 prompt=f"Summarize these initial sample records for an analyst: {sample_slice}",
-                system_prompt=self.system_prompt
+                system_prompt=self.system_prompt,
+                model_name=settings.HF_EXECUTOR_MODEL,
+                mode=mode
             )
             if llm_summary:
                 transfer_body += f"\nInitial Research Notes: {llm_summary}"

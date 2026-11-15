@@ -4,9 +4,11 @@ Configuration settings for the Multi-Agent Transparency & Observability Platform
 
 import os
 from pathlib import Path
+from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+load_dotenv(PROJECT_ROOT / ".env")
 
 class Settings(BaseModel):
     # Storage settings
@@ -22,7 +24,21 @@ class Settings(BaseModel):
     # Redaction configuration for privacy Level 3
     REDACT_PII: bool = Field(default=True)
     
-    # Ollama settings
+    # Hugging Face Router settings
+    HF_ROUTER_BASE_URL: str = Field(
+        default=os.getenv("HF_ROUTER_BASE_URL", "https://router.huggingface.co/v1")
+    )
+    HF_API_KEY: str = Field(
+        default=os.getenv("HF_TOKEN") or os.getenv("HF_API_KEY") or ""
+    )
+    HF_COORDINATOR_MODEL: str = Field(
+        default=os.getenv("HF_COORDINATOR_MODEL", "meta-llama/Llama-3.1-8B-Instruct")
+    )
+    HF_EXECUTOR_MODEL: str = Field(
+        default=os.getenv("HF_EXECUTOR_MODEL", "Qwen/Qwen2.5-7B-Instruct")
+    )
+
+    # Ollama settings (fallback / legacy)
     OLLAMA_BASE_URL: str = Field(
         default=os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
     )

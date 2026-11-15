@@ -2,9 +2,10 @@
 ### Capturing Inter-Agent Communication, Execution Context, and Delegation
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![LangGraph](https://img.shields.io/badge/Orchestration-LangGraph-orange.svg)](https://github.com/langchain-ai/langgraph)
+[![React](https://img.shields.io/badge/Frontend-React%2019%20%2B%20Vite-blue.svg)](https://react.dev/)
 [![FastAPI](https://img.shields.io/badge/API-FastAPI-green.svg)](https://fastapi.tiangolo.com/)
-[![Streamlit](https://img.shields.io/badge/Dashboard-Streamlit-red.svg)](https://streamlit.io/)
+[![Hugging Face](https://img.shields.io/badge/Inference-Hugging%20Face%20Router-yellow.svg)](https://router.huggingface.co/v1)
+[![LangGraph](https://img.shields.io/badge/Orchestration-LangGraph-orange.svg)](https://github.com/langchain-ai/langgraph)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A complete research implementation and observability platform addressing the **Non-Identifiability Problem** in multi-agent autonomous AI systems. Built in `C:\Users\prane\OneDrive\Desktop\RM_FINALE`.
@@ -79,7 +80,8 @@ Presented in *RM_MID.pdf* (IIIT Allahabad Research Methodology Presentation by B
 
 ### Prerequisites
 - Python 3.10, 3.11, 3.12, 3.13, or 3.14 installed and added to `PATH`.
-- (Optional for live LLM inference) [Ollama](https://ollama.com/download/windows).
+- Node.js (for high-speed React frontend).
+- Hugging Face Router access (or offline deterministic demo mode).
 
 ### 1-Click Launch (Recommended)
 Double-click `start_project.bat` or run:
@@ -87,11 +89,12 @@ Double-click `start_project.bat` or run:
 .\start_project.bat
 ```
 This automatically starts:
+- **Primary React High-Speed Frontend:** `http://127.0.0.1:5173` (opens in browser)
 - **FastAPI Backend Server:** `http://127.0.0.1:8000`
-- **Streamlit Research Dashboard:** `http://127.0.0.1:8501`
+- **Streamlit Research Dashboard (Secondary):** `http://127.0.0.1:8501`
 
 ### Manual Startup Commands
-1. **Install Dependencies:**
+1. **Install Backend Dependencies:**
    ```powershell
    pip install -r requirements.txt
    ```
@@ -99,23 +102,28 @@ This automatically starts:
    ```powershell
    python -m uvicorn backend.api.main:app --host 127.0.0.1 --port 8000
    ```
-3. **Start the Research Dashboard:**
+3. **Start the React Frontend (Primary):**
+   ```powershell
+   cd frontend
+   npm run dev -- --host 127.0.0.1 --port 5173
+   ```
+4. *(Optional) Start the Streamlit Dashboard (Secondary):*
    ```powershell
    streamlit run dashboard/app.py --server.port 8501
    ```
 
 ---
 
-## 4. Setting Up Ollama (Optional Local LLM)
+## 4. Hugging Face Router Multi-Agent Inference
 
-If you wish to run genuine live local LLM inference rather than the deterministic demo mode:
-1. Download Ollama for Windows from [ollama.com](https://ollama.com/download/windows) and install it.
-2. Open a terminal and pull the recommended lightweight model:
-   ```powershell
-   ollama pull qwen2.5:3b
-   ```
-3. The platform autodetects Ollama at `http://127.0.0.1:11434` and enables live inference.
-4. *If Ollama is not running, the platform operates seamlessly in Deterministic Demonstration Mode.*
+The platform utilizes the **Hugging Face Router** (`https://router.huggingface.co/v1`) as its primary multi-agent LLM inference engine:
+- **Coordinator Agent:** `meta-llama/Llama-3.1-8B-Instruct`
+- **Executor Agent:** `Qwen/Qwen2.5-7B-Instruct`
+- **Transparency Safeguard:** Automatically strips internal `<think>...</think>` neural reasoning chains before public inter-agent logging.
+- **Execution:** Open `http://127.0.0.1:5173` and click **"2. 🚀 Hugging Face Simulation"** or run:
+  ```powershell
+  python scripts/user_hf_simulation.py 6
+  ```
 
 ---
 

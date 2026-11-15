@@ -8,7 +8,8 @@ and delivering structured analytical findings.
 from typing import Dict, Any, List, Optional
 from backend.agents.base import BaseAgent
 from backend.schemas.events import InteractionType, SensitivityLabel
-from backend.agents.llm_client import query_local_llm
+from backend.agents.llm_client import query_agent_llm, query_local_llm
+from backend.config import settings
 
 ANALYST_SYSTEM_PROMPT = """You are Agent C (Analysis Agent).
 You receive extracted records from the Research Agent and execute statistical, sentiment,
@@ -92,10 +93,12 @@ class AnalysisAgent(BaseAgent):
                 f"{high_sev} tickets classified as High/Critical severity."
             )
 
-        if mode == "live_ollama":
-            llm_insight = query_local_llm(
+        if mode in ["live_huggingface", "live_ollama"]:
+            llm_insight = query_agent_llm(
                 prompt=f"Provide an analytical takeaway for executive decision makers from these metrics: {analysis_output}",
-                system_prompt=self.system_prompt
+                system_prompt=self.system_prompt,
+                model_name=settings.HF_EXECUTOR_MODEL,
+                mode=mode
             )
             if llm_insight:
                 key_takeaway += f"\nAnalytical Insight: {llm_insight}"

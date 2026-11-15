@@ -7,7 +7,8 @@ addressing what was asked, before displaying the LangGraph goal flow and evidenc
 import json
 from typing import Dict, Any, Optional, Tuple, List
 from backend.tools.file_tools import list_sample_datasets, read_sample_dataset
-from backend.agents.llm_client import is_ollama_available, query_local_llm
+from backend.agents.llm_client import is_ollama_available, query_local_llm, query_agent_llm
+from backend.config import settings
 
 def answer_user_query_directly(user_prompt: str, run: Optional[Any] = None, store: Optional[Any] = None) -> Tuple[str, bool]:
     """
@@ -93,28 +94,34 @@ def format_direct_task_findings(task_prompt: str, dataset_name: str, run: Any) -
     p_lower = task_prompt.lower().strip()
 
     # --------------------------------------------------------------------------
-    # Optional: Live Ollama LLM Generation (if Ollama is active)
+    # Optional: Live Hugging Face / Ollama LLM Generation
     # --------------------------------------------------------------------------
-    if is_ollama_available():
-        try:
-            # Determine appropriate context data
-            data_file = "system_access_logs.csv" if any(k in p_lower for k in ["access", "security", "log", "unauthorized"]) else "customer_complaints.csv"
-            raw_context = read_sample_dataset(data_file).get("data", [])
-            
-            system_prompt = (
-                "You are an executive AI assistant and team lead. "
-                "Answer the user's question directly, conversationally, and naturally in fluent English based on the provided records. "
-                "Do NOT include internal token IDs (like del_...), database file paths, or technical telemetry in your conversational response. "
-                "Focus on providing clear, human-friendly insights, specific names, numbers, and actionable takeaways."
-            )
+    try:
+        # Determine appropriate context data
+        data_file = "system_access_logs.csv" if any(k in p_lower for k in ["access", "security", "log", "unauthorized"]) else "customer_complaints.csv"
+        raw_context = read_sample_dataset(data_file).get("data", [])
+        
+        system_prompt = (
+            "You are an executive AI assistant and team lead. "
+            "Answer the user's question directly, conversationally, and naturally in fluent English based on the provided records. "
+            "Do NOT include internal token IDs (like del_...), database file paths, or technical telemetry in your conversational response. "
+            "Focus on providing clear, human-friendly insights, specific names, numbers, and actionable takeaways."
+        )
+        llm_reply = query_agent_llm(
+            prompt=f"User Question: {task_prompt}\n\nRelevant Data Records:\n{json.dumps(raw_context, indent=2)}\n\nPlease give a direct, natural, and helpful response:",
+            system_prompt=system_prompt,
+            model_name=settings.HF_COORDINATOR_MODEL,
+            mode="live_huggingface"
+        )
+        if not llm_reply and is_ollama_available():
             llm_reply = query_local_llm(
                 prompt=f"User Question: {task_prompt}\n\nRelevant Data Records:\n{json.dumps(raw_context, indent=2)}\n\nPlease give a direct, natural, and helpful response:",
                 system_prompt=system_prompt
             )
-            if llm_reply and len(llm_reply.strip()) > 30 and not llm_reply.startswith("["):
-                return llm_reply.strip()
-        except Exception:
-            pass
+        if llm_reply and len(llm_reply.strip()) > 30 and not llm_reply.startswith("["):
+            return llm_reply.strip()
+    except Exception:
+        pass
 
     # --------------------------------------------------------------------------
     # Deterministic Semantic Engine: Natural Language Responses

@@ -33,6 +33,7 @@ from backend.orchestration.langgraph_workflow import get_langgraph_mermaid, get_
 from backend.agents.response_synthesizer import answer_user_query_directly, format_direct_task_findings
 from backend.provenance.tracker import ProvenanceTracker
 from backend.evaluation.runner import BenchmarkRunner
+from backend.orchestration.hf_simulation import run_huggingface_transparency_simulation, DEFAULT_SIMULATION_AGENTS
 
 # Page Configuration
 st.set_page_config(
@@ -115,35 +116,35 @@ page = st.sidebar.radio(
     "Select Interface View",
     [
         "1. 💬 Chat with Lead Agent (Interactive)",
-        "2. 🌐 LangGraph Goal Flow & Topology",
-        "3. 📋 Agent Workspace (Task Runner)",
-        "4. 📊 Overview & Telemetry",
-        "5. ⏱️ Communication Timeline",
-        "6. 🕸️ Interactive Graph Explorer",
-        "7. 🧬 Provenance Explorer",
-        "8. 🔍 Event Inspector",
-        "9. 🧪 Research Evaluation",
-        "10. 📖 Architecture & Docs"
+        "2. 🚀 Hugging Face Multi-Agent Simulation",
+        "3. 🌐 LangGraph Goal Flow & Topology",
+        "4. 📋 Agent Workspace (Task Runner)",
+        "5. 📊 Overview & Telemetry",
+        "6. ⏱️ Communication Timeline",
+        "7. 🕸️ Interactive Graph Explorer",
+        "8. 🧬 Provenance Explorer",
+        "9. 🔍 Event Inspector",
+        "10. 🧪 Research Evaluation",
+        "11. 📖 Architecture & Docs"
     ]
 )
 
 # Global Sidebar Status
 st.sidebar.markdown("---")
 st.sidebar.subheader("System Status")
+
+st.sidebar.markdown(
+    f"**🤗 Hugging Face Router: Active**\n\n"
+    f"- **Coordinator**: `{settings.HF_COORDINATOR_MODEL}`\n"
+    f"- **Executor**: `{settings.HF_EXECUTOR_MODEL}`\n"
+    f"- **Endpoint**: `router.huggingface.co/v1`"
+)
+
 ollama_active = is_ollama_available()
 if ollama_active:
-    installed_models = list_installed_ollama_models()
-    if installed_models:
-        selected_ollama_model = st.sidebar.selectbox(
-            "🟢 Ollama Online (Model)",
-            installed_models,
-            index=0 if settings.OLLAMA_MODEL not in installed_models else installed_models.index(settings.OLLAMA_MODEL)
-        )
-        settings.OLLAMA_MODEL = selected_ollama_model
-    else:
-        st.sidebar.success(f"🟢 Ollama Online ({settings.OLLAMA_MODEL})")
+    st.sidebar.caption(f"⚪ Local Ollama: Online ({settings.OLLAMA_MODEL})")
 else:
-    st.sidebar.info("⚪ Ollama Offline (Deterministic Demo Active)")
+    st.sidebar.caption("⚪ Local Ollama: Standby (HF Router Primary)")
 
 st.sidebar.caption(f"Capture Level: **Level {settings.DEFAULT_CAPTURE_LEVEL}**")
 st.sidebar.caption(f"DB: `{Path(settings.DATABASE_PATH).name}`")
@@ -278,8 +279,8 @@ if page == "1. 💬 Chat with Lead Agent (Interactive)":
                 elif any(k in p_lower for k in ["research", "note", "architecture", "model", "paper", "cim", "three-graph"]):
                     target_dataset = "sample_research_notes.txt"
 
-                with st.spinner("🤖 Coordinating multi-agent team investigation..."):
-                    run_mode = WorkflowMode.LIVE_OLLAMA if ollama_active else WorkflowMode.DETERMINISTIC_DEMO
+                with st.spinner("🤖 Coordinating multi-agent team investigation via Hugging Face Router..."):
+                    run_mode = WorkflowMode.LIVE_HUGGINGFACE
                     run = runner.execute_workflow(
                         task_description=prompt_to_process,
                         dataset_name=target_dataset,
@@ -355,9 +356,154 @@ if page == "1. 💬 Chat with Lead Agent (Interactive)":
                 })
 
 # ==============================================================================
-# PAGE 2: LANGGRAPH GOAL FLOW & TOPOLOGY
+# PAGE 2: HUGGING FACE MULTI-AGENT RESEARCH SIMULATION & TRANSPARENCY OBSERVER
 # ==============================================================================
-elif page == "2. 🌐 LangGraph Goal Flow & Topology":
+elif page == "2. 🚀 Hugging Face Multi-Agent Simulation":
+    st.markdown('<div class="main-header">Hugging Face Router Multi-Agent Research Simulation</div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div class="sub-header">Live dynamic multi-agent interaction between <b>Coordinator_Agent</b> '
+        '(<code>meta-llama/Llama-3.1-8B-Instruct</code>) and <b>Executor_Agent</b> '
+        '(<code>Qwen/Qwen2.5-7B-Instruct</code>) over the Hugging Face Router (<code>router.huggingface.co/v1</code>). '
+        'Inspect observable message envelopes, authority tokens, and execution context with <b>internal reasoning (&lt;think&gt; blocks) strictly stripped</b>.</div>',
+        unsafe_allow_html=True
+    )
+
+    st.info(
+        "🧠 **Scope Boundary (RM_MID Slide 5 & 12)**: In accordance with transparency and privacy invariants, "
+        "internal neural reasoning chains (`<think>...</think>`) are systematically removed before inter-agent logging. "
+        "Only public communications, explicit delegation tokens (`del_...`), and normalized CIM execution events are captured."
+    )
+
+    col_sim1, col_sim2 = st.columns([2, 1])
+    with col_sim1:
+        sim_prompt = st.text_area(
+            "Research Directive / Initial Goal",
+            value="Audit customer churn dataset for critical severity anomalies and verify delegation token validity.",
+            height=90,
+            help="Initial research directive injected into the shared dialogue log."
+        )
+    with col_sim2:
+        sim_turns = st.slider("Simulation Turns", min_value=2, max_value=20, value=6, step=2, help="Number of alternating Coordinator-Executor turns.")
+        sim_capture = st.selectbox(
+            "Telemetry Capture Level",
+            [1, 2, 3],
+            index=1,
+            format_func=lambda x: f"Level {x}: {'Metadata Only' if x == 1 else 'Metadata + Summary' if x == 2 else 'Full Content (PII-Redacted)'}"
+        )
+
+    if st.button("🚀 Run Dynamic Multi-Agent Simulation", type="primary"):
+        with st.spinner(f"Executing {sim_turns} turns via Hugging Face Router ({settings.HF_COORDINATOR_MODEL} & {settings.HF_EXECUTOR_MODEL})..."):
+            sim_res = run_huggingface_transparency_simulation(
+                max_turns=sim_turns,
+                custom_prompt=sim_prompt,
+                capture_level=CaptureLevel(sim_capture)
+            )
+            st.session_state["hf_sim_result"] = sim_res
+            st.session_state["latest_workflow_id"] = sim_res["workflow_id"]
+            st.success(f"✅ Simulation Complete! Recorded Workflow ID: `{sim_res['workflow_id']}`")
+
+    # Display Simulation Result
+    sim_data = st.session_state.get("hf_sim_result")
+    if sim_data:
+        st.markdown("---")
+        st.subheader("📊 Multi-Agent Simulation Telemetry & Observability Envelope")
+        
+        m1, m2, m3, m4 = st.columns(4)
+        m1.metric("Workflow ID", sim_data["workflow_id"])
+        m2.metric("Turns Executed", f"{sim_data['turns_executed']} turns")
+        m3.metric("Root Delegation", sim_data["root_delegation_id"][:12])
+        m4.metric("Executor Delegation", sim_data["executor_delegation_id"][:12])
+
+        # Turn-by-Turn Dialogue View
+        st.subheader("💬 Inter-Agent Public Communication Log (Reasoning Stripped)")
+        st.caption("Notice: Every message is cryptographically attributed and timestamped in the EventStore.")
+
+        comm_log = sim_data.get("communication_log", [])
+        for idx, entry in enumerate(comm_log):
+            content = entry.get("content", "")
+            if "[Coordinator_Agent]" in content:
+                with st.chat_message("user", avatar="🎯"):
+                    st.markdown(f"**Turn {idx+1} • Coordinator Agent** (`{settings.HF_COORDINATOR_MODEL}`)")
+                    clean_msg = content.replace("[Coordinator_Agent]:", "").strip()
+                    st.write(clean_msg)
+            elif "[Executor_Agent]" in content:
+                with st.chat_message("assistant", avatar="⚡"):
+                    st.markdown(f"**Turn {idx+1} • Executor Agent** (`{settings.HF_EXECUTOR_MODEL}`)")
+                    clean_msg = content.replace("[Executor_Agent]:", "").strip()
+                    st.write(clean_msg)
+            else:
+                with st.chat_message("human", avatar="👤"):
+                    st.markdown(f"**Turn {idx+1} • Principal**")
+                    st.write(content)
+
+        # Transparency Tabs
+        st.markdown("---")
+        st.subheader("🔍 Three-Graph Transparency Observation")
+
+        t_graph, t_auth, t_exec, t_matrix = st.tabs([
+            "🕸️ Interaction Graph (G_inter)",
+            "🛡️ Authority Graph (G_auth)",
+            "⚙️ Execution Context (G_exec)",
+            "📋 Goal Traceability Matrix"
+        ])
+
+        with t_graph:
+            st.markdown("#### Dynamic Inter-Agent Interaction Graph ($G_{inter}$)")
+            st.caption("Captures sender/receiver agent endpoints, turn causality, message envelopes, and sensitivity labels.")
+            g_inter = sim_data["three_graphs"]["interaction_graph"]
+            st.write(f"- **Total Nodes**: {g_inter.number_of_nodes()} (Agents & Message Envelopes)")
+            st.write(f"- **Total Directed Edges**: {g_inter.number_of_edges()} (Causal Communications & Reply-To Links)")
+            if sim_data.get("goal_dot"):
+                st.graphviz_chart(sim_data["goal_dot"])
+
+        with t_auth:
+            st.markdown("#### Cryptographic Authority Graph ($G_{auth}$)")
+            st.caption("Tracks the delegation lineage from the Principal down through the Coordinator to the Executor.")
+            g_auth = sim_data["three_graphs"]["authority_graph"]
+            auth_nodes = list(g_auth.nodes(data=True))
+            auth_rows = []
+            for node_id, data in auth_nodes:
+                auth_rows.append({
+                    "Delegation ID": node_id,
+                    "Principal": data.get("principal", "Unknown"),
+                    "Agent": data.get("agent", "Unknown"),
+                    "Scope": data.get("scope", "General"),
+                    "Status": data.get("status", "active")
+                })
+            if auth_rows:
+                st.dataframe(pd.DataFrame(auth_rows), use_container_width=True)
+
+        with t_exec:
+            st.markdown("#### Normalized Tool Execution Context ($G_{exec}$)")
+            st.caption("Common Information Model (CIM) tool invocations executed across the Hugging Face Router.")
+            events = store.list_execution_events(workflow_id=sim_data["workflow_id"])
+            if events:
+                evt_rows = [{
+                    "Timestamp": e.timestamp[:19],
+                    "Agent": e.agent_id,
+                    "Tool": e.tool_name,
+                    "Operation": e.tool_operation,
+                    "Resource": e.resource_id,
+                    "Delegation ID": e.delegation_id,
+                    "Outcome": e.action_outcome
+                } for e in events]
+                st.dataframe(pd.DataFrame(evt_rows), use_container_width=True)
+            else:
+                st.info("No tool events recorded for this workflow.")
+
+        with t_matrix:
+            st.markdown("#### End-to-End Goal & Traceability Matrix")
+            st.caption("Correlates research goals, delegated tokens, observable messages, and downstream execution consequences.")
+            mat = sim_data.get("matrix", [])
+            if mat:
+                st.dataframe(pd.DataFrame(mat), use_container_width=True)
+            else:
+                st.info("Matrix generated successfully.")
+
+# ==============================================================================
+# PAGE 3: LANGGRAPH GOAL FLOW & TOPOLOGY
+# ==============================================================================
+elif page == "3. 🌐 LangGraph Goal Flow & Topology":
     st.markdown('<div class="main-header">LangGraph Goal Flow & State Machine Topology</div>', unsafe_allow_html=True)
     st.markdown(
         '<div class="sub-header">Inspect genuine compiled LangGraph state machines and visualize how goals propagate across '
@@ -454,9 +600,9 @@ elif page == "2. 🌐 LangGraph Goal Flow & Topology":
                 st.dataframe(df_mat, use_container_width=True)
 
 # ==============================================================================
-# PAGE 3: AGENT WORKSPACE (BATCH RUNNER)
+# PAGE 4: AGENT WORKSPACE (BATCH RUNNER)
 # ==============================================================================
-elif page == "3. 📋 Agent Workspace (Task Runner)":
+elif page == "4. 📋 Agent Workspace (Task Runner)":
     st.markdown('<div class="main-header">Multi-Agent Execution Workspace (Task Runner)</div>', unsafe_allow_html=True)
     st.markdown('<div class="sub-header">Submit parameterized research and security audit tasks to the LangGraph 4-agent team.</div>', unsafe_allow_html=True)
 
@@ -483,9 +629,10 @@ elif page == "3. 📋 Agent Workspace (Task Runner)":
         )
         mode_choice = st.radio(
             "Inference Mode",
-            ["deterministic_demo", "live_ollama"],
-            index=0 if not ollama_active else 1,
-            help="Live Ollama mode uses local LLM inference. Deterministic mode executes without external models."
+            ["live_huggingface", "deterministic_demo", "live_ollama"],
+            index=0,
+            format_func=lambda x: "🤗 Hugging Face Router (meta-llama & Qwen)" if x == "live_huggingface" else "Deterministic Demo (Zero-Dependency)" if x == "deterministic_demo" else "Local Ollama",
+            help="Live Hugging Face Router mode executes multi-agent inference via router.huggingface.co/v1."
         )
         capture_level_choice = st.selectbox(
             "Capture Level",
@@ -496,7 +643,12 @@ elif page == "3. 📋 Agent Workspace (Task Runner)":
 
     if st.button("🚀 Execute Multi-Agent Workflow", type="primary"):
         with st.spinner(f"LangGraph orchestrating workflow ({workflow_type_choice})..."):
-            run_mode = WorkflowMode.LIVE_OLLAMA if mode_choice == "live_ollama" else WorkflowMode.DETERMINISTIC_DEMO
+            if mode_choice == "live_huggingface":
+                run_mode = WorkflowMode.LIVE_HUGGINGFACE
+            elif mode_choice == "live_ollama":
+                run_mode = WorkflowMode.LIVE_OLLAMA
+            else:
+                run_mode = WorkflowMode.DETERMINISTIC_DEMO
             cap_enum = CaptureLevel(capture_level_choice)
             
             run = runner.execute_workflow(
@@ -531,9 +683,9 @@ elif page == "3. 📋 Agent Workspace (Task Runner)":
             )
 
 # ==============================================================================
-# PAGE 4: OVERVIEW & TELEMETRY
+# PAGE 5: OVERVIEW & TELEMETRY
 # ==============================================================================
-elif page == "4. 📊 Overview & Telemetry":
+elif page == "5. 📊 Overview & Telemetry":
     st.markdown('<div class="main-header">System Observability Overview</div>', unsafe_allow_html=True)
     st.markdown('<div class="sub-header">Real-time status of multi-agent tasks, delegations, communication interactions, and capture metrics.</div>', unsafe_allow_html=True)
     
@@ -590,9 +742,9 @@ elif page == "4. 📊 Overview & Telemetry":
             st.caption("No interactions to display.")
 
 # ==============================================================================
-# PAGE 5: COMMUNICATION TIMELINE
+# PAGE 6: COMMUNICATION TIMELINE
 # ==============================================================================
-elif page == "5. ⏱️ Communication Timeline":
+elif page == "6. ⏱️ Communication Timeline":
     st.markdown('<div class="main-header">Inter-Agent Communication Timeline</div>', unsafe_allow_html=True)
     st.markdown('<div class="sub-header">Chronological record of genuine observable messages exchanged through the Observability Gateway.</div>', unsafe_allow_html=True)
 
@@ -634,9 +786,9 @@ elif page == "5. ⏱️ Communication Timeline":
         st.info("No inter-agent messages match the selected filters.")
 
 # ==============================================================================
-# PAGE 6: INTERACTIVE GRAPH EXPLORER
+# PAGE 7: INTERACTIVE GRAPH EXPLORER
 # ==============================================================================
-elif page == "6. 🕸️ Interactive Graph Explorer":
+elif page == "7. 🕸️ Interactive Graph Explorer":
     st.markdown('<div class="main-header">Three-Graph Transparency Explorer</div>', unsafe_allow_html=True)
     st.markdown('<div class="sub-header">Inspect the three correlated graph views: Execution Graph, Authority Graph, and our proposed Interaction Graph.</div>', unsafe_allow_html=True)
 
@@ -674,9 +826,9 @@ elif page == "6. 🕸️ Interactive Graph Explorer":
             st.plotly_chart(fig3, use_container_width=True)
 
 # ==============================================================================
-# PAGE 7: PROVENANCE EXPLORER
+# PAGE 8: PROVENANCE EXPLORER
 # ==============================================================================
-elif page == "7. 🧬 Provenance Explorer":
+elif page == "8. 🧬 Provenance Explorer":
     st.markdown('<div class="main-header">W3C PROV Provenance & Evidence Explorer</div>', unsafe_allow_html=True)
     st.markdown('<div class="sub-header">Inspect the W3C PROV evidence DAG connecting output artifacts to activities, messages, and origin datasets (RM_MID Slide 10, 14).</div>', unsafe_allow_html=True)
 
@@ -749,9 +901,9 @@ elif page == "7. 🧬 Provenance Explorer":
         st.info("No artifacts recorded yet. Submit a goal in the Chat or Agent Workspace to generate a provenance-tracked report artifact.")
 
 # ==============================================================================
-# PAGE 8: EVENT INSPECTOR
+# PAGE 9: EVENT INSPECTOR
 # ==============================================================================
-elif page == "8. 🔍 Event Inspector":
+elif page == "9. 🔍 Event Inspector":
     st.markdown('<div class="main-header">CIM Event Inspector</div>', unsafe_allow_html=True)
     st.markdown('<div class="sub-header">Raw Common Information Model (CIM) tool events normalized by the Observability Gateway.</div>', unsafe_allow_html=True)
 
@@ -791,9 +943,9 @@ elif page == "8. 🔍 Event Inspector":
         st.info("No execution events found matching filters.")
 
 # ==============================================================================
-# PAGE 9: RESEARCH EVALUATION
+# PAGE 10: RESEARCH EVALUATION
 # ==============================================================================
-elif page == "9. 🧪 Research Evaluation":
+elif page == "10. 🧪 Research Evaluation":
     st.markdown('<div class="main-header">Research Evaluation & Baseline Benchmark Suite</div>', unsafe_allow_html=True)
     st.markdown('<div class="sub-header">Evaluating 8 representative scenarios against 5 baseline observability configurations.</div>', unsafe_allow_html=True)
 
@@ -909,9 +1061,9 @@ elif page == "9. 🧪 Research Evaluation":
         st.dataframe(df_eval, use_container_width=True)
 
 # ==============================================================================
-# PAGE 10: ARCHITECTURE & DOCS
+# PAGE 11: ARCHITECTURE & DOCS
 # ==============================================================================
-elif page == "10. 📖 Architecture & Docs":
+elif page == "11. 📖 Architecture & Docs":
     st.markdown('<div class="main-header">System Architecture & Research Traceability</div>', unsafe_allow_html=True)
     st.markdown('<div class="sub-header">Mapping theoretical models to implementation components and structural invariants.</div>', unsafe_allow_html=True)
 

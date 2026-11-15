@@ -16,6 +16,7 @@ from backend.schemas.workflow import WorkflowMode
 from backend.schemas.events import CaptureLevel
 from backend.tools.file_tools import list_sample_datasets
 from backend.agents.llm_client import is_ollama_available, list_installed_ollama_models
+from backend.orchestration.hf_simulation import run_huggingface_transparency_simulation
 from backend.graphs.three_graphs import ThreeGraphCoordinator
 from backend.provenance.tracker import ProvenanceTracker
 from backend.evaluation.runner import BenchmarkRunner
@@ -50,6 +51,10 @@ def get_system_status():
         "status": "healthy",
         "database_path": settings.DATABASE_PATH,
         "capture_level": settings.DEFAULT_CAPTURE_LEVEL,
+        "huggingface_router_url": settings.HF_ROUTER_BASE_URL,
+        "huggingface_coordinator_model": settings.HF_COORDINATOR_MODEL,
+        "huggingface_executor_model": settings.HF_EXECUTOR_MODEL,
+        "huggingface_available": True,
         "ollama_available": ollama_ok,
         "ollama_base_url": settings.OLLAMA_BASE_URL,
         "ollama_model": settings.OLLAMA_MODEL,
@@ -63,7 +68,12 @@ def get_datasets():
 
 @router.post("/workflow/start")
 def start_workflow(req: StartWorkflowRequest):
-    mode = WorkflowMode.LIVE_OLLAMA if req.mode == "live_ollama" else WorkflowMode.DETERMINISTIC_DEMO
+    if req.mode == "live_huggingface":
+        mode = WorkflowMode.LIVE_HUGGINGFACE
+    elif req.mode == "live_ollama":
+        mode = WorkflowMode.LIVE_OLLAMA
+    else:
+        mode = WorkflowMode.DETERMINISTIC_DEMO
     cap_level = CaptureLevel(req.capture_level) if req.capture_level in (1, 2, 3) else CaptureLevel.METADATA_SUMMARY
     
     run = runner.execute_workflow(
@@ -249,7 +259,12 @@ def chat_with_coordinator(req: ChatRequest):
         target_dataset = "customer_complaints.csv"
 
     # Execute workflow under user delegation
-    run_mode = WorkflowMode.LIVE_OLLAMA if req.mode == "live_ollama" else WorkflowMode.DETERMINISTIC_DEMO
+    if req.mode == "live_huggingface":
+        run_mode = WorkflowMode.LIVE_HUGGINGFACE
+    elif req.mode == "live_ollama":
+        run_mode = WorkflowMode.LIVE_OLLAMA
+    else:
+        run_mode = WorkflowMode.DETERMINISTIC_DEMO
     cap_enum = CaptureLevel(req.capture_level or 2)
     
     run = runner.execute_workflow(
@@ -362,3 +377,45 @@ def get_evaluation_results():
 @router.post("/evaluation/run")
 def trigger_evaluation(size: int = 50):
     return benchmark.run_full_evaluation(size_per_scenario=size)
+
+class SimulationRequest(BaseModel):
+    max_turns: Optional[int] = 20  # Safety loop circuit-breaker
+    turns: Optional[int] = None    # Backwards compatibility
+    custom_prompt: Optional[str] = None
+    capture_level: Optional[int] = 2
+
+@router.post("/simulation/huggingface")
+def run_hf_simulation_endpoint(req: SimulationRequest):
+    """
+    Runs the Goal-Oriented Hugging Face Router Multi-Agent Research Simulation
+    between Coordinator_Agent (meta-llama/Llama-3.1-8B-Instruct) and Executor_Agent (Qwen/Qwen2.5-7B-Instruct).
+    1. Produces the direct synthesized answer from the LLM APIs first.
+    2. Emits the complete data flow and communication protocol second.
+    3. Dynamically terminates upon goal resolution, bounded by max_turns circuit-breaker.
+    """
+    limit = req.max_turns or req.turns or 20
+    result = run_huggingface_transparency_simulation(
+        max_turns=limit,
+        custom_prompt=req.custom_prompt,
+        capture_level=CaptureLevel(req.capture_level or 2)
+    )
+    return {
+        "status": "completed",
+        "workflow_id": result["workflow_id"],
+        "goal_directive": result["goal_directive"],
+        "goal_status": result["goal_status"],
+        "turns_executed": result["turns_executed"],
+        "max_turns_limit": result["max_turns_limit"],
+        "direct_answer": result["direct_answer"],
+        "data_flow": result["data_flow"],
+        "communication_log": result["communication_log"],
+        "root_delegation_id": result["root_delegation_id"],
+        "executor_delegation_id": result["executor_delegation_id"],
+        "final_output": result["final_output"],
+        "interaction_nodes": result["three_graphs"]["interaction_graph"].number_of_nodes(),
+        "interaction_edges": result["three_graphs"]["interaction_graph"].number_of_edges(),
+        "authority_nodes": result["three_graphs"]["authority_graph"].number_of_nodes(),
+        "authority_edges": result["three_graphs"]["authority_graph"].number_of_edges(),
+        "matrix": result["matrix"],
+        "goal_dot": result["goal_dot"]
+    }

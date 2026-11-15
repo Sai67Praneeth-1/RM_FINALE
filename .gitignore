@@ -20,5 +20,6 @@ data/generated/*.db-shm
 
 # Temp files
 temp_pages/
+scratch/
 *.tmp
 

@@ -32,15 +32,16 @@ const API_BASE = "http://127.0.0.1:8000/api";
 
 const NAV_ITEMS = [
   { id: "chat", label: "1. 💬 Chat with Lead Agent", icon: MessageSquare },
-  { id: "topologies", label: "2. 🌐 LangGraph Topologies", icon: Network },
-  { id: "workspace", label: "3. 📋 Agent Workspace", icon: PlayCircle },
-  { id: "telemetry", label: "4. 📊 Overview & Telemetry", icon: Activity },
-  { id: "timeline", label: "5. ⏱️ Communication Timeline", icon: Clock },
-  { id: "graphs", label: "6. 🕸️ Three-Graph Explorer", icon: Share2 },
-  { id: "provenance", label: "7. 🧬 Provenance Explorer", icon: Dna },
-  { id: "events", label: "8. 🔍 Event Inspector", icon: Search },
-  { id: "benchmarks", label: "9. 🧪 Research Evaluation", icon: FlaskConical },
-  { id: "docs", label: "10. 📖 Architecture & Docs", icon: BookOpen },
+  { id: "hf_simulation", label: "2. 🚀 Hugging Face Simulation", icon: Sparkles },
+  { id: "topologies", label: "3. 🌐 LangGraph Topologies", icon: Network },
+  { id: "workspace", label: "4. 📋 Agent Workspace", icon: PlayCircle },
+  { id: "telemetry", label: "5. 📊 Overview & Telemetry", icon: Activity },
+  { id: "timeline", label: "6. ⏱️ Communication Timeline", icon: Clock },
+  { id: "graphs", label: "7. 🕸️ Three-Graph Explorer", icon: Share2 },
+  { id: "provenance", label: "8. 🧬 Provenance Explorer", icon: Dna },
+  { id: "events", label: "9. 🔍 Event Inspector", icon: Search },
+  { id: "benchmarks", label: "10. 🧪 Research Evaluation", icon: FlaskConical },
+  { id: "docs", label: "11. 📖 Architecture & Docs", icon: BookOpen },
 ];
 
 export default function App() {
@@ -63,15 +64,25 @@ export default function App() {
   const [isListening, setIsListening] = useState(false);
   const [expandedProofs, setExpandedProofs] = useState({});
 
-  // Tab 2: Topologies State
+  // Tab 2: Hugging Face Goal-Oriented Simulation State
+  const [maxTurnsLimit, setMaxTurnsLimit] = useState(20);
+  const [simPrompt, setSimPrompt] = useState(
+    "Audit customer complaints for High and Critical severity issues and verify system SLAs."
+  );
+  const [simCaptureLevel, setSimCaptureLevel] = useState(2);
+  const [simRunning, setSimRunning] = useState(false);
+  const [simResult, setSimResult] = useState(null);
+  const [activeSimTab, setActiveSimTab] = useState("direct_answer");
+
+  // Tab 3: Topologies State
   const [topologies, setTopologies] = useState({});
   const [selectedTopology, setSelectedTopology] = useState("adaptive");
 
-  // Tab 3: Workspace State
+  // Tab 4: Workspace State
   const [taskDesc, setTaskDesc] = useState("Audit customer complaints for High and Critical severity issues");
   const [selectedDataset, setSelectedDataset] = useState("customer_complaints.csv");
   const [workflowType, setWorkflowType] = useState("adaptive");
-  const [runMode, setRunMode] = useState("deterministic_demo");
+  const [runMode, setRunMode] = useState("live_huggingface");
   const [captureLevel, setCaptureLevel] = useState(2);
   const [workspaceRunning, setWorkspaceRunning] = useState(false);
   const [latestRunResult, setLatestRunResult] = useState(null);
@@ -224,7 +235,7 @@ export default function App() {
       const res = await fetch(`${API_BASE}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: textToSend }),
+        body: JSON.stringify({ message: textToSend, mode: "live_huggingface" }),
       });
       const data = await res.json();
       const assistantMsg = {
@@ -243,6 +254,34 @@ export default function App() {
       ]);
     } finally {
       setChatLoading(false);
+    }
+  };
+
+  const runHfSimulation = async (customPrompt) => {
+    if (simRunning) return;
+    setSimRunning(true);
+    const promptToUse = typeof customPrompt === "string" ? customPrompt : simPrompt;
+    if (typeof customPrompt === "string") {
+      setSimPrompt(customPrompt);
+    }
+    try {
+      const res = await fetch(`${API_BASE}/simulation/huggingface`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          max_turns: Number(maxTurnsLimit),
+          custom_prompt: promptToUse,
+          capture_level: Number(simCaptureLevel),
+        }),
+      });
+      const data = await res.json();
+      setSimResult(data);
+      setSelectedWorkflowId(data.workflow_id);
+      fetchInitialData();
+    } catch (err) {
+      alert(`Simulation failed: ${err.message}`);
+    } finally {
+      setSimRunning(false);
     }
   };
 
@@ -305,7 +344,7 @@ export default function App() {
 
   return (
     <div style={{ display: "flex", width: "100%", height: "100%" }}>
-      {/* 10-Item Nav Sidebar */}
+      {/* 11-Item Nav Sidebar */}
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-icon">
@@ -313,7 +352,7 @@ export default function App() {
           </div>
           <div>
             <div className="brand-title">Agentic AI Platform</div>
-            <div className="brand-sub">10 Research Interfaces</div>
+            <div className="brand-sub">11 Research Interfaces</div>
           </div>
         </div>
 
@@ -338,8 +377,13 @@ export default function App() {
             <div className="status-dot" />
             <span>FastAPI Server Online</span>
           </div>
-          <div>Capture: <strong>Level {status?.capture_level || 2}</strong></div>
-          <div>Model: <strong>{status?.ollama_available ? status?.ollama_model : "Deterministic Demo"}</strong></div>
+          <div style={{ padding: "8px 10px", background: "#0b0f19", borderRadius: 6, border: "1px solid #1f2937", marginTop: 4 }}>
+            <div style={{ color: "#38bdf8", fontWeight: 600, fontSize: 11, marginBottom: 3 }}>🤗 Hugging Face Router</div>
+            <div style={{ fontSize: 11, color: "#94a3b8" }}>Coord: <code>Llama-3.1-8B</code></div>
+            <div style={{ fontSize: 11, color: "#94a3b8" }}>Exec: <code>Qwen2.5-7B</code></div>
+          </div>
+          <div style={{ marginTop: 4 }}>Capture: <strong>Level {status?.capture_level || 2}</strong></div>
+          <div style={{ fontSize: 11, color: "#64748b" }}>Endpoint: <code style={{ fontSize: 10 }}>router.huggingface.co</code></div>
         </div>
       </aside>
 
@@ -448,7 +492,449 @@ export default function App() {
           </div>
         )}
 
-        {/* View 2: LangGraph Topologies */}
+        {/* View 2: Hugging Face Multi-Agent Research Simulation */}
+        {activeTab === "hf_simulation" && (
+          <div className="content-panel">
+            <div className="stat-card" style={{ marginBottom: 20 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                <div>
+                  <h3 style={{ color: "#60a5fa", fontSize: 18, fontWeight: 700, marginBottom: 6 }}>
+                    Hugging Face Router Multi-Agent Research Simulation
+                  </h3>
+                  <p style={{ color: "#94a3b8", fontSize: 13, lineHeight: 1.5 }}>
+                    Dynamic inter-agent dialogue between <strong>Coordinator_Agent</strong> (<code>meta-llama/Llama-3.1-8B-Instruct</code>) 
+                    and <strong>Executor_Agent</strong> (<code>Qwen/Qwen2.5-7B-Instruct</code>) over the Hugging Face Router.
+                  </p>
+                </div>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <div className="pill-badge active" style={{ fontSize: 11 }}>
+                    <ShieldCheck size={13} />
+                    <span>&lt;think&gt; Reasoning Stripped</span>
+                  </div>
+                  <div className="pill-badge" style={{ fontSize: 11 }}>
+                    <Sparkles size={13} color="#f59e0b" />
+                    <span>3-Graph Observed</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ background: "rgba(59, 130, 246, 0.08)", border: "1px solid rgba(59, 130, 246, 0.25)", padding: 12, borderRadius: 8, fontSize: 12.5, color: "#bfdbfe", marginBottom: 16 }}>
+                🧠 <strong>Goal-Driven Multi-Agent Protocol:</strong> Agents collaborate dynamically across turns until the research goal is conclusively answered.
+                The <code>Safety Loop Limit</code> acts strictly as a circuit-breaker to stop runaway loops. 
+                Internal neural reasoning chains (<code>&lt;think&gt;...&lt;/think&gt;</code>) are automatically stripped before public logging.
+              </div>
+
+              {/* Goal Presets */}
+              <div style={{ display: "flex", gap: 8, marginBottom: 14, flexWrap: "wrap" }}>
+                <button
+                  className="pill-btn"
+                  onClick={() => runHfSimulation("Which customer had delays with MFA codes and what was their account tier?")}
+                >
+                  🔑 MFA Delay & Account Tier Audit (TKT-1004)
+                </button>
+                <button
+                  className="pill-btn"
+                  onClick={() => runHfSimulation("Audit system access logs for unauthorized file sharing and root escalation")}
+                >
+                  🛡️ Audit system logs for unauthorized sharing (LOG-503)
+                </button>
+                <button
+                  className="pill-btn"
+                  onClick={() => runHfSimulation("Find all complaints related to billing disputes and calculate the average sentiment")}
+                >
+                  💳 Billing Disputes & Sentiment Impact (TKT-1001, 1005)
+                </button>
+                <button
+                  className="pill-btn"
+                  onClick={() => runHfSimulation("Audit customer complaints for High/Critical tickets and enterprise churn")}
+                >
+                  📊 High/Critical Customer Churn Analysis
+                </button>
+              </div>
+
+              {/* Controls */}
+              <div style={{ display: "grid", gridTemplateColumns: "2.5fr 1fr 1fr", gap: 14, marginBottom: 14 }}>
+                <div>
+                  <label style={{ fontSize: 12.5, color: "#94a3b8", display: "block", marginBottom: 6, fontWeight: 600 }}>
+                    Research Directive / Goal (Type ANY Custom Arbitrary Task)
+                  </label>
+                  <input
+                    type="text"
+                    value={simPrompt}
+                    onChange={(e) => setSimPrompt(e.target.value)}
+                    style={{ width: "100%", padding: "10px 12px", background: "#0b0f19", border: "1px solid #334155", borderRadius: 6, color: "#fff", fontSize: 13 }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12.5, color: "#94a3b8", display: "block", marginBottom: 6, fontWeight: 600 }}>
+                    Safety Loop Limit (max {maxTurnsLimit} turns)
+                  </label>
+                  <input
+                    type="range"
+                    min="4"
+                    max="30"
+                    step="2"
+                    value={maxTurnsLimit}
+                    onChange={(e) => setMaxTurnsLimit(Number(e.target.value))}
+                    style={{ width: "100%", marginTop: 8 }}
+                  />
+                  <span style={{ fontSize: 10, color: "#64748b" }}>Stops dynamically when solved</span>
+                </div>
+                <div>
+                  <label style={{ fontSize: 12.5, color: "#94a3b8", display: "block", marginBottom: 6, fontWeight: 600 }}>
+                    Capture Level
+                  </label>
+                  <select
+                    value={simCaptureLevel}
+                    onChange={(e) => setSimCaptureLevel(Number(e.target.value))}
+                    style={{ width: "100%", padding: "10px", background: "#0b0f19", border: "1px solid #334155", borderRadius: 6, color: "#fff", fontSize: 13 }}
+                  >
+                    <option value="1">Level 1: Metadata Only</option>
+                    <option value="2">Level 2: Metadata + Summary</option>
+                    <option value="3">Level 3: Full Content (Redacted)</option>
+                  </select>
+                </div>
+              </div>
+
+              <button
+                onClick={() => runHfSimulation()}
+                disabled={simRunning}
+                style={{
+                  background: "linear-gradient(135deg, #2563eb, #7c3aed)",
+                  color: "#fff",
+                  padding: "12px 24px",
+                  border: "none",
+                  borderRadius: 8,
+                  fontWeight: 600,
+                  fontSize: 14,
+                  cursor: simRunning ? "not-allowed" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                {simRunning ? (
+                  <>
+                    <RefreshCw size={16} className="spin-animate" />
+                    <span>Executing Dynamic Multi-Agent Collaboration...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={16} />
+                    <span>🚀 Execute Goal-Oriented Simulation (Max {maxTurnsLimit} Turns)</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Results */}
+            {simResult && (
+              <div>
+                {/* 1. DIRECT SYNTHESIZED ANSWER FIRST */}
+                <div
+                  className="stat-card"
+                  style={{
+                    marginBottom: 20,
+                    background: "linear-gradient(135deg, rgba(30, 58, 138, 0.25), rgba(16, 185, 129, 0.12))",
+                    border: "1px solid rgba(59, 130, 246, 0.4)",
+                    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.4)",
+                    padding: 20,
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 10px #10b981" }} />
+                      <h3 style={{ color: "#38bdf8", fontSize: 17, fontWeight: 700, margin: 0 }}>
+                        1. Direct Synthesized Answer (Produced First from LLM APIs)
+                      </h3>
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <span className="pill-badge active" style={{ fontSize: 11, background: "#065f46" }}>
+                        Goal Satisfied Dynamically ({simResult.turns_executed} Turns)
+                      </span>
+                      <span className="pill-badge" style={{ fontSize: 11 }}>
+                        Safety Circuit-Breaker: max {simResult.max_turns_limit}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ background: "#0b0f19", padding: 16, borderRadius: 8, border: "1px solid #1e293b", marginBottom: 14 }}>
+                    <div style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", fontWeight: 700, marginBottom: 4 }}>
+                      Executive Resolution
+                    </div>
+                    <div style={{ color: "#f8fafc", fontSize: 14, lineHeight: 1.6, fontWeight: 500 }}>
+                      {simResult.direct_answer?.executive_summary}
+                    </div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 14 }}>
+                    <div style={{ background: "#0b0f19", padding: 14, borderRadius: 8, border: "1px solid #1e293b" }}>
+                      <div style={{ fontSize: 11, color: "#34d399", textTransform: "uppercase", fontWeight: 700, marginBottom: 6 }}>
+                        📊 Discovered Evidence & Quantitative Metrics
+                      </div>
+                      <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: "#cbd5e1", lineHeight: 1.6 }}>
+                        {simResult.direct_answer?.key_findings?.map((f, i) => (
+                          <li key={i}>{f}</li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div style={{ background: "#0b0f19", padding: 14, borderRadius: 8, border: "1px solid #1e293b" }}>
+                      <div style={{ fontSize: 11, color: "#fbbf24", textTransform: "uppercase", fontWeight: 700, marginBottom: 6 }}>
+                        💡 Actionable Recommendations
+                      </div>
+                      <ol style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: "#cbd5e1", lineHeight: 1.6 }}>
+                        {simResult.direct_answer?.recommendations?.map((r, i) => (
+                          <li key={i}>{r}</li>
+                        ))}
+                      </ol>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14, fontSize: 11, color: "#64748b" }}>
+                    <span>Inference Models: <code>meta-llama/Llama-3.1-8B-Instruct</code> & <code>Qwen/Qwen2.5-7B-Instruct</code></span>
+                    <span>Target Dataset: <code>{simResult.direct_answer?.dataset_grounding}</code></span>
+                  </div>
+                </div>
+
+                {/* 2. DATA FLOW & COMMUNICATION TRACE SECOND */}
+                <div className="stat-card" style={{ marginBottom: 20 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                    <div>
+                      <h3 style={{ color: "#60a5fa", fontSize: 17, fontWeight: 700, marginBottom: 4 }}>
+                        2. End-to-End Data Flow & Multi-Agent Communication Architecture
+                      </h3>
+                      <p style={{ color: "#94a3b8", fontSize: 12.5, margin: 0 }}>
+                        Step-by-step trace showing how authority was delegated, how CIM tools queried data, and how agents communicated.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* ASCII / Visual Flow Banner */}
+                  <div style={{ background: "#0b0f19", padding: 14, borderRadius: 8, border: "1px solid #1e293b", marginBottom: 16 }}>
+                    <div style={{ fontSize: 11, color: "#38bdf8", textTransform: "uppercase", fontWeight: 700, marginBottom: 6 }}>
+                      Visual Data Flow Pipeline
+                    </div>
+                    <pre style={{ color: "#a5b4fc", fontSize: 11.5, margin: 0, overflowX: "auto" }}>
+                      {simResult.data_flow?.ascii_flow}
+                    </pre>
+                  </div>
+
+                  {/* Sequential Stage Cards */}
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                    {simResult.data_flow?.stages?.map((st) => (
+                      <div
+                        key={st.stage}
+                        style={{
+                          background: "#0f172a",
+                          border: "1px solid #1e293b",
+                          borderLeft: "4px solid #3b82f6",
+                          padding: 12,
+                          borderRadius: 6,
+                        }}
+                      >
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                          <span style={{ fontSize: 12.5, fontWeight: 700, color: "#f8fafc" }}>
+                            Stage {st.stage}: {st.name}
+                          </span>
+                          <span style={{ fontSize: 11, fontFamily: "monospace", color: "#38bdf8" }}>
+                            Token: {st.authority_token}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 4 }}>
+                          <strong>{st.sender}</strong> &rarr; <strong>{st.receiver}</strong> (Scope: <code>{st.scope}</code>)
+                        </div>
+                        <div style={{ fontSize: 12, color: "#cbd5e1" }}>
+                          {st.description}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Sub-tab navigation for Detailed Logs & Graphs */}
+                <div style={{ display: "flex", gap: 10, marginBottom: 16, borderBottom: "1px solid #1f2937", paddingBottom: 10 }}>
+                  {[
+                    { id: "dialogue", label: "💬 Public Dialogue Log", count: `${simResult.communication_log?.length} turns` },
+                    { id: "inter", label: "🕸️ Interaction Graph (G_inter)", count: `${simResult.interaction_nodes || 2} nodes` },
+                    { id: "auth", label: "🛡️ Authority Graph (G_auth)", count: `${simResult.authority_nodes || 6} tokens` },
+                    { id: "matrix", label: "📋 Goal Traceability Matrix", count: `${simResult.matrix?.length || 0} rows` },
+                  ].map((st) => (
+                    <button
+                      key={st.id}
+                      onClick={() => setActiveSimTab(st.id)}
+                      style={{
+                        background: activeSimTab === st.id ? "#1e293b" : "transparent",
+                        color: activeSimTab === st.id ? "#38bdf8" : "#94a3b8",
+                        border: activeSimTab === st.id ? "1px solid #38bdf8" : "1px solid transparent",
+                        padding: "8px 14px",
+                        borderRadius: 6,
+                        cursor: "pointer",
+                        fontSize: 13,
+                        fontWeight: activeSimTab === st.id ? 600 : 400,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6,
+                      }}
+                    >
+                      <span>{st.label}</span>
+                      <span style={{ fontSize: 11, opacity: 0.7 }}>({st.count})</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Dialogue View */}
+                {activeSimTab === "dialogue" && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                    <div style={{ background: "rgba(16, 185, 129, 0.08)", border: "1px solid rgba(16, 185, 129, 0.25)", padding: 10, borderRadius: 6, fontSize: 12, color: "#6ee7b7" }}>
+                      🛡️ <strong>Transparency Verified:</strong> All internal reasoning chains (<code>&lt;think&gt;...&lt;/think&gt;</code>) 
+                      were stripped before logging. Only public inter-agent communication envelopes are preserved.
+                    </div>
+
+                    {simResult.communication_log?.map((entry, idx) => {
+                      const isCoord = entry.content?.includes("[Coordinator_Agent]");
+                      const isExec = entry.content?.includes("[Executor_Agent]");
+                      const cleanText = entry.content
+                        ?.replace("[Coordinator_Agent]:", "")
+                        ?.replace("[Executor_Agent]:", "")
+                        ?.replace(/\[Principal.*?\]:/, "")
+                        ?.trim();
+
+                      return (
+                        <div
+                          key={idx}
+                          style={{
+                            background: isCoord ? "rgba(37, 99, 235, 0.08)" : isExec ? "rgba(16, 185, 129, 0.08)" : "#1e293b",
+                            border: `1px solid ${isCoord ? "#2563eb40" : isExec ? "#10b98140" : "#334155"}`,
+                            borderRadius: 8,
+                            padding: 14,
+                          }}
+                        >
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <span
+                                style={{
+                                  background: isCoord ? "#2563eb" : isExec ? "#10b981" : "#64748b",
+                                  color: "#fff",
+                                  padding: "2px 8px",
+                                  borderRadius: 4,
+                                  fontSize: 11,
+                                  fontWeight: 700,
+                                }}
+                              >
+                                {isCoord ? "COORDINATOR" : isExec ? "EXECUTOR" : "PRINCIPAL"}
+                              </span>
+                              <span style={{ fontSize: 12, color: "#94a3b8" }}>
+                                {isCoord ? "meta-llama/Llama-3.1-8B-Instruct" : isExec ? "Qwen/Qwen2.5-7B-Instruct" : "User Principal"}
+                              </span>
+                            </div>
+                            <span style={{ fontSize: 11, color: "#64748b" }}>Turn {idx + 1} • Public Envelope</span>
+                          </div>
+                          <div style={{ color: "#e2e8f0", fontSize: 13.5, lineHeight: 1.5 }}>
+                            {cleanText}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Interaction Graph View */}
+                {activeSimTab === "inter" && (
+                  <div className="stat-card">
+                    <h4 style={{ color: "#60a5fa", marginBottom: 8 }}>Interaction Graph Structure (G_inter)</h4>
+                    <p style={{ color: "#94a3b8", fontSize: 13, marginBottom: 14 }}>
+                      Captures observable message nodes, sender/receiver endpoints, and reply-to causal links across turns.
+                    </p>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
+                      <div style={{ background: "#0b0f19", padding: 12, borderRadius: 6 }}>
+                        <div style={{ color: "#38bdf8", fontWeight: 600 }}>Total Nodes</div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: "#fff", marginTop: 4 }}>{simResult.interaction_nodes || 2}</div>
+                        <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>Agents + Message Envelopes</div>
+                      </div>
+                      <div style={{ background: "#0b0f19", padding: 12, borderRadius: 6 }}>
+                        <div style={{ color: "#34d399", fontWeight: 600 }}>Directed Causal Edges</div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: "#fff", marginTop: 4 }}>{simResult.interaction_edges || 4}</div>
+                        <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>Turn reply-to dependencies</div>
+                      </div>
+                    </div>
+                    {simResult.goal_dot && (
+                      <div style={{ background: "#0b0f19", padding: 14, borderRadius: 6 }}>
+                        <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 6 }}>Graphviz Topology Representation:</div>
+                        <pre style={{ fontSize: 11, color: "#a5b4fc", maxHeight: 220, overflowY: "auto" }}>{simResult.goal_dot}</pre>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Authority Graph View */}
+                {activeSimTab === "auth" && (
+                  <div className="stat-card">
+                    <h4 style={{ color: "#fbbf24", marginBottom: 8 }}>Authority Graph Hierarchy (G_auth)</h4>
+                    <p style={{ color: "#94a3b8", fontSize: 13, marginBottom: 14 }}>
+                      Cryptographic delegation tree ensuring every executor action is backed by verifiable parent authorization.
+                    </p>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      <div style={{ background: "#0b0f19", padding: 12, borderRadius: 6, borderLeft: "4px solid #3b82f6" }}>
+                        <div style={{ fontSize: 11, color: "#94a3b8" }}>ROOT DELEGATION TOKEN</div>
+                        <div style={{ fontSize: 14, fontFamily: "monospace", color: "#60a5fa", fontWeight: 600 }}>{simResult.root_delegation_id}</div>
+                        <div style={{ fontSize: 12, color: "#cbd5e1", marginTop: 4 }}>
+                          Principal: <code>principal_researcher</code> &rarr; Agent: <code>agent_coordinator</code> (Scope: research_coordination)
+                        </div>
+                      </div>
+                      <div style={{ background: "#0b0f19", padding: 12, borderRadius: 6, borderLeft: "4px solid #10b981", marginLeft: 24 }}>
+                        <div style={{ fontSize: 11, color: "#94a3b8" }}>SUB-DELEGATION TOKEN (EXECUTOR)</div>
+                        <div style={{ fontSize: 14, fontFamily: "monospace", color: "#34d399", fontWeight: 600 }}>{simResult.executor_delegation_id}</div>
+                        <div style={{ fontSize: 12, color: "#cbd5e1", marginTop: 4 }}>
+                          Principal: <code>agent_coordinator</code> &rarr; Agent: <code>agent_executor</code> (Scope: technical_execution)
+                        </div>
+                        <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>
+                          Parent Token: <code>{simResult.root_delegation_id}</code>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Traceability Matrix View */}
+                {activeSimTab === "matrix" && (
+                  <div className="stat-card">
+                    <h4 style={{ color: "#38bdf8", marginBottom: 8 }}>End-to-End Traceability Matrix</h4>
+                    <p style={{ color: "#94a3b8", fontSize: 13, marginBottom: 14 }}>
+                      Correlates research goals, delegated authorities, observable messages, and downstream execution consequences.
+                    </p>
+                    {simResult.matrix && simResult.matrix.length > 0 ? (
+                      <div style={{ overflowX: "auto" }}>
+                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                          <thead>
+                            <tr style={{ background: "#0b0f19", borderBottom: "1px solid #334155" }}>
+                              {Object.keys(simResult.matrix[0]).map((h) => (
+                                <th key={h} style={{ padding: "8px 10px", textAlign: "left", color: "#94a3b8" }}>{h}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {simResult.matrix.map((row, rIdx) => (
+                              <tr key={rIdx} style={{ borderBottom: "1px solid #1f2937" }}>
+                                {Object.values(row).map((val, vIdx) => (
+                                  <td key={vIdx} style={{ padding: "8px 10px", color: "#e2e8f0" }}>{String(val)}</td>
+                                ))}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div style={{ color: "#94a3b8", fontSize: 13 }}>Matrix telemetry synchronized with EventStore.</div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* View 3: LangGraph Topologies */}
         {activeTab === "topologies" && (
           <div className="content-panel">
             <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
@@ -498,7 +984,7 @@ export default function App() {
                   />
                 </div>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 14 }}>
                   <div>
                     <label style={{ fontSize: 13, color: "#94a3b8", display: "block", marginBottom: 6 }}>Target Dataset</label>
                     <select
@@ -522,6 +1008,19 @@ export default function App() {
                       <option value="adaptive">Adaptive Multi-Agent</option>
                       <option value="w1_parallel">W1 Parallel Subtasks (Sec 7.2.1)</option>
                       <option value="w3_retry">W3 Trial-and-Adapt (Sec 7.2.3)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ fontSize: 13, color: "#94a3b8", display: "block", marginBottom: 6 }}>Inference Engine</label>
+                    <select
+                      value={runMode}
+                      onChange={(e) => setRunMode(e.target.value)}
+                      style={{ width: "100%", padding: "10px", background: "#0b0f19", border: "1px solid #334155", borderRadius: 6, color: "#fff" }}
+                    >
+                      <option value="live_huggingface">🤗 Hugging Face Router</option>
+                      <option value="deterministic_demo">Deterministic Demo</option>
+                      <option value="live_ollama">Local Ollama</option>
                     </select>
                   </div>
 

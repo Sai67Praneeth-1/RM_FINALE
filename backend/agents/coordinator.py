@@ -7,7 +7,8 @@ delegates tasks to specialized agents, handles clarification, and combines compl
 from typing import Dict, Any, List, Optional
 from backend.agents.base import BaseAgent
 from backend.schemas.events import InteractionType, SensitivityLabel
-from backend.agents.llm_client import query_local_llm
+from backend.agents.llm_client import query_agent_llm, query_local_llm
+from backend.config import settings
 
 COORDINATOR_SYSTEM_PROMPT = """You are Agent A (Coordinator) in an enterprise multi-agent analytics system.
 Your responsibility is to oversee task decomposition, assign sub-delegations to the Research Agent and Analysis Agent,
@@ -121,10 +122,12 @@ class CoordinatorAgent(BaseAgent):
             "and compute sentiment impact across Enterprise tier accounts."
         )
         
-        if mode == "live_ollama":
-            llm_reply = query_local_llm(
+        if mode in ["live_huggingface", "live_ollama"]:
+            llm_reply = query_agent_llm(
                 prompt=f"The sub-agent asked: '{question}'. Provide concise clarification for our complaint analysis task.",
-                system_prompt=self.system_prompt
+                system_prompt=self.system_prompt,
+                model_name=settings.HF_COORDINATOR_MODEL,
+                mode=mode
             )
             if llm_reply:
                 reply_body = llm_reply

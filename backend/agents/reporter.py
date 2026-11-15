@@ -8,7 +8,8 @@ from typing import Dict, Any, List
 from backend.agents.base import BaseAgent
 from backend.schemas.events import InteractionType, SensitivityLabel
 from backend.schemas.workflow import ArtifactRecord
-from backend.agents.llm_client import query_local_llm
+from backend.agents.llm_client import query_agent_llm, query_local_llm
+from backend.config import settings
 
 REPORTER_SYSTEM_PROMPT = """You are Agent D (Report Agent).
 Your purpose is to synthesize all completed research and statistical analyses into a transparent,
@@ -116,10 +117,12 @@ class ReportAgent(BaseAgent):
             f"interaction://agent_researcher_to_agent_analyst"
         ]
 
-        if mode == "live_ollama":
-            llm_report_enhancement = query_local_llm(
+        if mode in ["live_huggingface", "live_ollama"]:
+            llm_report_enhancement = query_agent_llm(
                 prompt=f"Enhance this executive summary for task '{task_description}' based on: {analysis_out}",
-                system_prompt=self.system_prompt
+                system_prompt=self.system_prompt,
+                model_name=settings.HF_COORDINATOR_MODEL,
+                mode=mode
             )
             if llm_report_enhancement:
                 exec_summary += f"\n\n**LLM Synthesis:**\n{llm_report_enhancement}"
