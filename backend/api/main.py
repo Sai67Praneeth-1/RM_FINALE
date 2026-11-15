@@ -7,11 +7,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.api.routes import router
 from backend.storage.database import init_db
+from backend.tools.dataset_manager import ensure_cfpb_datasets
 from backend.config import settings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db(settings.DATABASE_PATH)
+    ensure_cfpb_datasets()
     yield
 
 app = FastAPI(

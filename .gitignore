@@ -16,6 +16,9 @@ env/
 data/generated/*.db
 data/generated/*.db-wal
 data/generated/*.db-shm
+data/generated/*.zip
+*.zip
+*.csv.zip
 *.log
 
 # Temp files

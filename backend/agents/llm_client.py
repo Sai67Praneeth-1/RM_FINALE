@@ -9,7 +9,10 @@ import os
 import re
 import httpx
 from typing import Optional, Dict, Any, List, Tuple
-from openai import OpenAI
+try:
+    from openai import OpenAI
+except ImportError:
+    OpenAI = None
 
 from backend.config import settings
 from backend.gateway.privacy import strip_chain_of_thought
@@ -59,6 +62,8 @@ def init_hf_client(api_key: Optional[str] = None, base_url: Optional[str] = None
         or "https://router.huggingface.co/v1"
     )
     if _hf_client_cache is None:
+        if OpenAI is None:
+            raise RuntimeError("The 'openai' Python package is required. Run 'pip install openai'.")
         _hf_client_cache = OpenAI(
             base_url=url,
             api_key=key
@@ -70,6 +75,8 @@ def is_huggingface_available(api_key: Optional[str] = None, base_url: Optional[s
     Checks whether the Hugging Face Router client is initialized with a valid token
     and can connect to the models endpoint.
     """
+    if OpenAI is None:
+        return False
     key = api_key or settings.HF_API_KEY
     if not key or not key.startswith("hf_"):
         return False
