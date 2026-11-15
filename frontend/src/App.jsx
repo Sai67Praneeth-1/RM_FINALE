@@ -52,19 +52,36 @@ import ProvenanceDrawer from "./components/ProvenanceDrawer";
 
 const API_BASE = "http://127.0.0.1:8000/api";
 
-const NAV_ITEMS = [
-  { id: "chat", path: "/chat", label: "1. 💬 Chat with Lead Agent", icon: MessageSquare },
-  { id: "hf_simulation", path: "/simulation", label: "2. 🚀 Hugging Face Simulation", icon: Sparkles },
-  { id: "topologies", path: "/topologies", label: "3. 🌐 LangGraph Topologies", icon: Network },
-  { id: "workspace", path: "/workspace", label: "4. 📋 Agent Workspace", icon: PlayCircle },
-  { id: "telemetry", path: "/telemetry", label: "5. 📊 Overview & Telemetry", icon: Activity },
-  { id: "timeline", path: "/timeline", label: "6. ⏱️ Communication Timeline", icon: Clock },
-  { id: "graphs", path: "/graphs", label: "7. 🕸️ Three-Graph Explorer", icon: Share2 },
-  { id: "provenance", path: "/provenance", label: "8. 🧬 Provenance Explorer", icon: Dna },
-  { id: "events", path: "/events", label: "9. 🔍 Event Inspector", icon: Search },
-  { id: "benchmarks", path: "/benchmarks", label: "10. 🧪 Research Evaluation", icon: FlaskConical },
-  { id: "docs", path: "/docs", label: "11. 📖 Architecture & Docs", icon: BookOpen },
+const NAV_SECTIONS = [
+  {
+    title: "Workspace",
+    items: [
+      { id: "chat", path: "/chat", label: "AI Chat Assistant", icon: MessageSquare },
+      { id: "workspace", path: "/workspace", label: "Multi-Agent Workspace", icon: PlayCircle },
+      { id: "hf_simulation", path: "/simulation", label: "Agent Simulation", icon: Sparkles },
+    ],
+  },
+  {
+    title: "Observability",
+    items: [
+      { id: "telemetry", path: "/telemetry", label: "System Telemetry", icon: Activity },
+      { id: "timeline", path: "/timeline", label: "Communication Timeline", icon: Clock },
+      { id: "graphs", path: "/graphs", label: "Three-Graph Explorer", icon: Share2 },
+      { id: "provenance", path: "/provenance", label: "Provenance & Lineage", icon: Dna },
+      { id: "topologies", path: "/topologies", label: "Multi-Agent Topologies", icon: Network },
+      { id: "events", path: "/events", label: "Raw Event Inspector", icon: Search },
+    ],
+  },
+  {
+    title: "Research & Specs",
+    items: [
+      { id: "benchmarks", path: "/benchmarks", label: "Benchmark Evaluation", icon: FlaskConical },
+      { id: "docs", path: "/docs", label: "Architecture & Guide", icon: BookOpen },
+    ],
+  },
 ];
+
+const NAV_ITEMS = NAV_SECTIONS.flatMap((s) => s.items);
 
 const AGENT_META = {
   agent_coordinator: { name: "Coordinator", label: "Agent A (Coordinator)", color: "#38bdf8", bg: "rgba(56, 189, 248, 0.12)", border: "#0284c7" },
@@ -1118,7 +1135,7 @@ export default function App() {
             </div>
             <div className="brand-text">
               <div className="brand-title">Agentic AI Platform</div>
-              <div className="brand-sub">11 Research Interfaces</div>
+              <div className="brand-sub">Autonomous Investigation</div>
             </div>
             <button
               className="sidebar-toggle-btn close-btn"
@@ -1131,19 +1148,26 @@ export default function App() {
           </div>
 
           <nav className="nav-menu">
-            {NAV_ITEMS.map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.id}
-                  className={`nav-item ${activeTab === item.id ? "active" : ""}`}
-                  onClick={() => handleTabChange(item.id)}
-                >
-                  <Icon size={17} />
-                  <span>{item.label}</span>
-                </button>
-              );
-            })}
+            {NAV_SECTIONS.map((section) => (
+              <div key={section.title} className="nav-section">
+                <div className="nav-section-title">{section.title}</div>
+                <div className="nav-section-items">
+                  {section.items.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.id}
+                        className={`nav-item ${activeTab === item.id ? "active" : ""}`}
+                        onClick={() => handleTabChange(item.id)}
+                      >
+                        <Icon size={16} />
+                        <span>{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </nav>
 
           {/* ChatGPT-Style Chat History Section (Under Options) */}
@@ -1240,29 +1264,51 @@ export default function App() {
           </div>
 
           <div className="sidebar-status">
-            <div className="status-indicator">
-              <div className="status-dot" />
-              <span>FastAPI Server Online</span>
+            <div style={{
+              background: "#0b0f19",
+              padding: "10px 12px",
+              borderRadius: 8,
+              border: "1px solid #1f2937",
+              display: "flex",
+              flexDirection: "column",
+              gap: 6
+            }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#38bdf8", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                  System Health
+                </span>
+                <span style={{
+                  fontSize: 10,
+                  padding: "1px 6px",
+                  borderRadius: 4,
+                  background: "rgba(16, 185, 129, 0.15)",
+                  color: "#34d399",
+                  border: "1px solid rgba(16, 185, 129, 0.3)"
+                }}>
+                  Online
+                </span>
+              </div>
+              <div className="status-indicator">
+                <div className="status-dot" />
+                <span style={{ fontSize: 11.5 }}>Backend API Ready</span>
+              </div>
+              <div className="status-indicator">
+                <div
+                  className="status-dot"
+                  style={{
+                    background: status?.mongodb_connected ? "#10b981" : "#f59e0b",
+                    boxShadow: status?.mongodb_connected ? "0 0 8px rgba(16, 185, 129, 0.4)" : "none",
+                  }}
+                />
+                <span style={{ color: status?.mongodb_connected ? "#34d399" : "#fbbf24", fontSize: 11.5 }}>
+                  {status?.mongodb_connected ? "MongoDB Atlas Synced" : "Resilient Cache Mode"}
+                </span>
+              </div>
+              <div style={{ borderTop: "1px solid #1e293b", paddingTop: 6, marginTop: 2, display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 11, color: "#94a3b8" }}>
+                <span>Engine:</span>
+                <span style={{ color: "#f8fafc", fontWeight: 600 }}>Gemini 3.5 Flash</span>
+              </div>
             </div>
-            <div className="status-indicator" style={{ marginTop: 2 }}>
-              <div
-                className="status-dot"
-                style={{
-                  background: status?.mongodb_connected ? "#10b981" : "#f59e0b",
-                  boxShadow: status?.mongodb_connected ? "0 0 8px rgba(16, 185, 129, 0.4)" : "none",
-                }}
-              />
-              <span style={{ color: status?.mongodb_connected ? "#34d399" : "#fbbf24", fontSize: 11.5 }}>
-                MongoDB {status?.mongodb_connected ? "Atlas Online" : "Connecting..."}
-              </span>
-            </div>
-            <div style={{ padding: "8px 10px", background: "#0b0f19", borderRadius: 6, border: "1px solid #1f2937", marginTop: 4 }}>
-              <div style={{ color: "#38bdf8", fontWeight: 600, fontSize: 11, marginBottom: 3 }}>🤗 Hugging Face Router</div>
-              <div style={{ fontSize: 11, color: "#94a3b8" }}>Coord: <code>Llama-3.1-8B</code></div>
-              <div style={{ fontSize: 11, color: "#94a3b8" }}>Exec: <code>Qwen2.5-7B</code></div>
-            </div>
-            <div style={{ marginTop: 4 }}>Capture: <strong>Level {status?.capture_level || 2}</strong></div>
-            <div style={{ fontSize: 11, color: "#64748b" }}>Endpoint: <code style={{ fontSize: 10 }}>router.huggingface.co</code></div>
           </div>
         </div>
       </aside>
@@ -1283,30 +1329,40 @@ export default function App() {
             )}
             <div className="top-title" style={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span>{NAV_ITEMS.find((n) => n.id === activeTab)?.label}</span>
-                <span style={{ fontSize: 11, padding: "1px 6px", borderRadius: 4, background: "rgba(56, 189, 248, 0.15)", color: "#38bdf8", border: "1px solid rgba(56, 189, 248, 0.3)" }}>
-                  Verified Gov URL
+                <span style={{ fontSize: 16, fontWeight: 700, color: "#f8fafc" }}>
+                  {NAV_ITEMS.find((n) => n.id === activeTab)?.label}
+                </span>
+                <span style={{
+                  fontSize: 11,
+                  padding: "2px 8px",
+                  borderRadius: 12,
+                  background: "rgba(56, 189, 248, 0.15)",
+                  color: "#38bdf8",
+                  border: "1px solid rgba(56, 189, 248, 0.3)",
+                  fontWeight: 600
+                }}>
+                  Lead Orchestrator
                 </span>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#64748b", fontFamily: "monospace" }}>
-                <Globe size={11} color="#10b981" />
-                <span>agency.gov/transparency</span>
-                <span style={{ color: "#38bdf8", fontWeight: 600 }}>{location.pathname}{location.search}</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: "#64748b" }}>
+                <span>Autonomous Multi-Agent Investigation</span>
+                <span>&bull;</span>
+                <span style={{ color: "#94a3b8" }}>Google Gemini 3.5 Flash</span>
               </div>
             </div>
           </div>
           <div className="top-badges">
-            <div className="pill-badge" style={{ background: "rgba(16, 185, 129, 0.12)", color: "#34d399", borderColor: "rgba(16, 185, 129, 0.3)" }}>
-              <ShieldCheck size={14} />
-              <span>NIST SP 800-53 / FedRAMP Audited URI</span>
+            <div className="pill-badge" style={{ background: "rgba(56, 189, 248, 0.1)", color: "#38bdf8", borderColor: "rgba(56, 189, 248, 0.25)" }}>
+              <Bot size={13} />
+              <span>4 Agents Active</span>
             </div>
-            <div className="pill-badge active">
-              <ShieldCheck size={14} />
-              <span>W3C PROV Verified</span>
+            <div className="pill-badge active" style={{ background: "rgba(16, 185, 129, 0.12)", color: "#34d399", borderColor: "rgba(16, 185, 129, 0.3)" }}>
+              <ShieldCheck size={13} />
+              <span>W3C PROV Audited</span>
             </div>
             <div className="pill-badge">
-              <Database size={14} />
-              <span>Total Events: {status?.metrics_summary?.total_events || 0}</span>
+              <Database size={13} />
+              <span>{status?.metrics_summary?.total_events || 0} Telemetry Events</span>
             </div>
           </div>
         </header>
@@ -1384,7 +1440,8 @@ export default function App() {
                           interactions={msg.interactions}
                           workflowId={msg.workflow_run?.workflow_id}
                           compact={true}
-                          title="Inter-Agent Interaction Graph (How Agents Communicated)"
+                          defaultCollapsed={true}
+                          title="Inter-Agent Interaction Graph"
                         />
                       )}
 
@@ -1423,8 +1480,8 @@ export default function App() {
                               Inspect Events for this prompt →
                             </button>
                           )}
-                          <span style={{ fontSize: "11px", color: "#64748b" }}>
-                            Detailed multi-agent trace available in <strong>Tab 5 (Timeline)</strong> & <strong>Tab 7 (Provenance)</strong>
+                          <span style={{ fontSize: "11.5px", color: "#64748b" }}>
+                            Detailed multi-agent trace available in <strong>Communication Timeline</strong> &amp; <strong>Three-Graph Explorer</strong>
                           </span>
                         </div>
                       )}
