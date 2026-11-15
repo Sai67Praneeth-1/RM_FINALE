@@ -3,8 +3,11 @@ Unified Event Store providing thread-safe persistence and querying
 for workflows, delegations, interactions, execution events, artifacts, and provenance.
 """
 
+import os
 import sqlite3
 import json
+from pathlib import Path
+from datetime import datetime, timezone
 from typing import List, Optional, Dict, Any
 from backend.storage.database import get_connection, init_db
 from backend.schemas.events import CIMEvent, ActionSemantic, ActionOutcome, Direction, PrincipalScope, ResourceClass, SensitivityLabel, InteractionType, CaptureLevel

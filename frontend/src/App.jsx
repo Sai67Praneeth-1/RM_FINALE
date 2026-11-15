@@ -1838,68 +1838,21 @@ export default function App() {
           </div>
         )}
 
-        {/* View 6: Three-Graph Explorer */}
+        {/* View 7: Three-Graph Explorer (Execution, Authority, Interaction, & Unified Overlay) */}
         {activeTab === "graphs" && (
           <div className="content-panel">
-            <div style={{ display: "flex", gap: 14, marginBottom: 16 }}>
-              <select
-                value={selectedWorkflowId}
-                onChange={(e) => {
-                  const wf = e.target.value;
-                  setSelectedWorkflowId(wf);
-                  navigate(`/graphs?workflow_id=${encodeURIComponent(wf)}`, { replace: true });
-                  fetchGraphData(wf);
-                }}
-                style={{ padding: "8px 12px", background: "#111827", border: "1px solid #334155", borderRadius: 6, color: "#fff" }}
-              >
-                {workflows.map((w) => (
-                  <option key={w.workflow_id} value={w.workflow_id}>
-                    {w.workflow_id} - {w.task_description?.substring(0, 40)}...
-                  </option>
-                ))}
-              </select>
-
-              <div style={{ display: "flex", gap: 8 }}>
-                {["execution_graph", "authority_graph", "interaction_graph"].map((gKey) => (
-                  <button
-                    key={gKey}
-                    className="pill-btn"
-                    style={{
-                      background: selectedGraphType === gKey ? "#2563eb" : "#1e293b",
-                      color: selectedGraphType === gKey ? "#fff" : "#94a3b8",
-                    }}
-                    onClick={() => setSelectedGraphType(gKey)}
-                  >
-                    {gKey.replace("_", " ").toUpperCase()}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {graphData && graphData[selectedGraphType] && (
-              <div className="stat-card">
-                <h4 style={{ color: "#60a5fa", marginBottom: 10 }}>
-                  Nodes: {graphData[selectedGraphType].nodes?.length || 0} | Edges: {graphData[selectedGraphType].edges?.length || 0}
-                </h4>
-
-                {/* Visual Interactive Graph Render */}
-                {selectedGraphType === "interaction_graph" && (
-                  <div style={{ marginBottom: 16 }}>
-                    <AgentInteractionGraph
-                      graph={graphData.interaction_graph}
-                      workflowId={selectedWorkflowId}
-                      title="Interaction Graph (G_interact) Visual Topology"
-                    />
-                  </div>
-                )}
-
-                <div style={{ background: "#0b0f19", padding: 14, borderRadius: 8, maxHeight: 400, overflowY: "auto" }}>
-                  <pre style={{ color: "#94a3b8", fontSize: 12 }}>
-                    {JSON.stringify(graphData[selectedGraphType], null, 2)}
-                  </pre>
-                </div>
-              </div>
-            )}
+            <ThreeGraphViewer
+              graphData={graphData}
+              selectedWorkflowId={selectedWorkflowId}
+              workflows={workflows}
+              onSelectWorkflow={(wf) => {
+                setSelectedWorkflowId(wf);
+                navigate(`/graphs?workflow_id=${encodeURIComponent(wf)}`, { replace: true });
+                fetchGraphData(wf);
+              }}
+              onRefresh={() => selectedWorkflowId && fetchGraphData(selectedWorkflowId)}
+              onRunSampleWorkflow={runSampleWorkflow}
+            />
           </div>
         )}
 
