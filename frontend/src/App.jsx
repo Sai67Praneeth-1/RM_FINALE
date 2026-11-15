@@ -1026,6 +1026,8 @@ export default function App() {
       const assistantMsg = {
         role: "assistant",
         content: data.response,
+        workflow_id: data.workflow_id || data.workflow_run?.workflow_id || data.metadata?.workflow_id,
+        metadata: data.metadata,
         workflow_run: data.workflow_run,
         goal_traceability: data.goal_traceability,
         final_output: data.final_output,
@@ -1525,8 +1527,80 @@ export default function App() {
                         />
                       )}
 
+                      {/* Prominent Action Bar bridging Chat prompt & Three-Graph Explorer */}
+                      {(msg.workflow_id || msg.metadata?.workflow_id || msg.workflow_run?.workflow_id) && (
+                        <div
+                          style={{
+                            marginTop: 12,
+                            padding: "12px 16px",
+                            borderRadius: 8,
+                            background: "linear-gradient(135deg, rgba(232, 164, 74, 0.12) 0%, rgba(45, 212, 191, 0.08) 100%)",
+                            border: "1px solid rgba(232, 164, 74, 0.45)",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            flexWrap: "wrap",
+                            gap: 12,
+                            boxShadow: "0 4px 16px rgba(0,0,0,0.25)",
+                          }}
+                        >
+                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            <div
+                              style={{
+                                width: 32,
+                                height: 32,
+                                borderRadius: 8,
+                                background: "rgba(232, 164, 74, 0.2)",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                color: "var(--accent-primary, #e8a44a)",
+                              }}
+                            >
+                              <Network size={18} />
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary, #f0f2f5)" }}>
+                                Multi-Agent Execution Recorded
+                              </div>
+                              <div style={{ fontSize: 11.5, color: "var(--text-secondary, #9ba3b0)" }}>
+                                Workflow: <code style={{ color: "var(--accent-primary, #e8a44a)" }}>{msg.workflow_id || msg.metadata?.workflow_id || msg.workflow_run?.workflow_id}</code> &bull; Correlated across Interaction, Execution &amp; Authority graphs
+                              </div>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => {
+                              const wf = msg.workflow_id || msg.metadata?.workflow_id || msg.workflow_run?.workflow_id;
+                              setSelectedWorkflowId(wf);
+                              navigate(`/graphs?workflow_id=${encodeURIComponent(wf)}&auto_trace=true`);
+                            }}
+                            style={{
+                              background: "var(--accent-primary, #e8a44a)",
+                              color: "#111214",
+                              border: "none",
+                              borderRadius: 6,
+                              padding: "8px 16px",
+                              fontSize: 13,
+                              fontWeight: 700,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 8,
+                              cursor: "pointer",
+                              transition: "all 0.15s ease",
+                              boxShadow: "0 2px 10px rgba(232, 164, 74, 0.35)",
+                            }}
+                            onMouseEnter={(e) => (e.currentTarget.style.filter = "brightness(1.1)")}
+                            onMouseLeave={(e) => (e.currentTarget.style.filter = "none")}
+                          >
+                            <Search size={15} />
+                            <span>🔍 Inspect in Three-Graph Explorer (Trace Lineage)</span>
+                          </button>
+                        </div>
+                      )}
+
                       {/* Pure Data Response - Transparency available on-demand in dedicated tabs */}
-                      {(msg.final_output || msg.workflow_run || msg.workflow_id) && (
+                      {(msg.final_output || msg.workflow_run || msg.workflow_id || msg.metadata?.workflow_id) && (
                         <div style={{ marginTop: 10, display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center" }}>
                           {msg.final_output && (
                             <button
@@ -3708,6 +3782,7 @@ export default function App() {
               }}
               onRefresh={() => selectedWorkflowId && fetchGraphData(selectedWorkflowId)}
               onRunSampleWorkflow={runSampleWorkflow}
+              autoTrace={searchParams.get("auto_trace") === "true"}
             />
           </div>
         )}
