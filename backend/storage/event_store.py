@@ -435,3 +435,190 @@ class EventStore:
             "total_retries": retries_cnt,
             "active_agents": agents_cnt
         }
+
+    def get_telemetry_feed(self, limit_workflows: int = 10, limit_events: int = 30) -> Dict[str, Any]:
+        """
+        Computes a rich, unified telemetry feed for the real-time Observability Overview.
+        Aggregates KPI metrics, agent workload distribution, interaction breakdown,
+        recent workflow streams, live CIM event feeds, and storage metrics.
+        """
+        conn = self._conn()
+        
+        # 1. Workflow KPIs
+        total_wf = conn.execute("SELECT COUNT(*) FROM workflow_runs").fetchone()[0]
+        active_wf = conn.execute("SELECT COUNT(*) FROM workflow_runs WHERE status = 'running'").fetchone()[0]
+        completed_wf = conn.execute("SELECT COUNT(*) FROM workflow_runs WHERE status = 'completed'").fetchone()[0]
+        failed_wf = conn.execute("SELECT COUNT(*) FROM workflow_runs WHERE status = 'failed'").fetchone()[0]
+        success_rate = round((completed_wf / total_wf) * 100, 1) if total_wf > 0 else 100.0
+
+        interactions_cnt = conn.execute("SELECT COUNT(*) FROM interactions").fetchone()[0]
+        events_cnt = conn.execute("SELECT COUNT(*) FROM execution_events").fetchone()[0]
+        delegations_cnt = conn.execute("SELECT COUNT(*) FROM delegations").fetchone()[0]
+        retries_cnt = conn.execute("SELECT COALESCE(SUM(retry_count), 0) FROM interactions").fetchone()[0]
+        agents_cnt = conn.execute("SELECT COUNT(DISTINCT agent_id) FROM agents").fetchone()[0]
+
+        # 2. Agent Breakdown
+        agent_colors = {
+            "agent_coordinator": "#38bdf8",
+            "agent_researcher": "#818cf8",
+            "agent_analyst": "#f59e0b",
+            "agent_reporter": "#10b981",
+        }
+        agent_names = {
+            "agent_coordinator": "Coordinator (Agent A)",
+            "agent_researcher": "Researcher (Agent B)",
+            "agent_analyst": "Analyst (Agent C)",
+            "agent_reporter": "Reporter (Agent D)",
+        }
+        agent_roles = {
+            "agent_coordinator": "Lead Orchestrator & Planner",
+            "agent_researcher": "Data Ingestion & Filtering",
+            "agent_analyst": "Statistical & Anomaly Analysis",
+            "agent_reporter": "Synthesis & Provenance Report",
+        }
+
+        # Query events per agent
+        ev_cur = conn.execute("SELECT agent_id, COUNT(*) as c FROM execution_events GROUP BY agent_id")
+        events_by_agent = {r[0]: r[1] for r in ev_cur.fetchall()}
+
+        # Query interactions sent per agent
+        sent_cur = conn.execute("SELECT sender_agent_id, COUNT(*) as c FROM interactions GROUP BY sender_agent_id")
+        sent_by_agent = {r[0]: r[1] for r in sent_cur.fetchall()}
+
+        # Query interactions received per agent
+        recv_cur = conn.execute("SELECT receiver_agent_id, COUNT(*) as c FROM interactions GROUP BY receiver_agent_id")
+        recv_by_agent = {r[0]: r[1] for r in recv_cur.fetchall()}
+
+        total_system_activity = sum(events_by_agent.values()) + sum(sent_by_agent.values())
+
+        agent_breakdown = []
+        for aid in ["agent_coordinator", "agent_researcher", "agent_analyst", "agent_reporter"]:
+            ev = events_by_agent.get(aid, 0)
+            sent = sent_by_agent.get(aid, 0)
+            recv = recv_by_agent.get(aid, 0)
+            total_act = ev + sent
+            pct = round((total_act / max(total_system_activity, 1)) * 100, 1)
+            agent_breakdown.append({
+                "agent_id": aid,
+                "name": agent_names.get(aid, aid),
+                "role": agent_roles.get(aid, "Specialized Agent"),
+                "events_count": ev,
+                "interactions_sent": sent,
+                "interactions_received": recv,
+                "total_activity": total_act,
+                "activity_pct": pct,
+                "color": agent_colors.get(aid, "#94a3b8")
+            })
+
+        # 3. Interaction Types Breakdown
+        type_labels = {
+            "delegation": ("Task Delegation", "#3b82f6"),
+            "handoff": ("Context Handoff", "#10b981"),
+            "clarification": ("Clarification Request", "#f59e0b"),
+            "response": ("Clarification Reply", "#a855f7"),
+            "information_transfer": ("Data Transfer", "#06b6d4"),
+            "result": ("Task Findings", "#ec4899"),
+            "escalation": ("Task Escalation", "#ef4444")
+        }
+        type_cur = conn.execute(
+            "SELECT interaction_type, COUNT(*) as c FROM interactions GROUP BY interaction_type ORDER BY c DESC"
+        )
+        interaction_breakdown = []
+        for r in type_cur.fetchall():
+            itype = str(r[0])
+            lbl, col = type_labels.get(itype, (itype.replace("_", " ").title(), "#94a3b8"))
+            pct = round((r[1] / max(interactions_cnt, 1)) * 100, 1)
+            interaction_breakdown.append({
+                "type": itype,
+                "label": lbl,
+                "count": r[1],
+                "percentage": pct,
+                "color": col
+            })
+
+        # 4. Recent Workflows
+        wf_cur = conn.execute(
+            "SELECT workflow_id, name, task_description, dataset_name, mode, status, start_time, end_time, stats "
+            "FROM workflow_runs ORDER BY start_time DESC LIMIT ?",
+            (limit_workflows,)
+        )
+        recent_workflows = []
+        for row in wf_cur.fetchall():
+            row_dict = dict(row)
+            stats_raw = row_dict.get("stats")
+            stats_obj = {}
+            if stats_raw:
+                try:
+                    stats_obj = json.loads(stats_raw) if isinstance(stats_raw, str) else stats_raw
+                except Exception:
+                    pass
+
+            duration = None
+            if row_dict.get("start_time") and row_dict.get("end_time"):
+                try:
+                    t1 = datetime.fromisoformat(row_dict["start_time"].replace("Z", "+00:00"))
+                    t2 = datetime.fromisoformat(row_dict["end_time"].replace("Z", "+00:00"))
+                    duration = round((t2 - t1).total_seconds(), 2)
+                except Exception:
+                    pass
+
+            recent_workflows.append({
+                "workflow_id": row_dict["workflow_id"],
+                "name": row_dict.get("name") or row_dict.get("task_description", "")[:45],
+                "task_description": row_dict.get("task_description", ""),
+                "dataset_name": row_dict.get("dataset_name") or "customer_complaints.csv",
+                "mode": row_dict.get("mode") or "deterministic_demo",
+                "status": row_dict.get("status") or "completed",
+                "start_time": row_dict.get("start_time"),
+                "end_time": row_dict.get("end_time"),
+                "duration_seconds": duration,
+                "events_count": stats_obj.get("events_count", 0),
+                "interactions_count": stats_obj.get("interactions_count", 0),
+                "clarification_occurred": stats_obj.get("clarification_occurred", False),
+                "escalation_occurred": stats_obj.get("escalation_occurred", False),
+            })
+
+        # 5. Live CIM Execution Event Stream
+        ev_stream_cur = conn.execute(
+            "SELECT event_id, time, delegation_id, principal_user_id, agent_id, tool_name, tool_operation, "
+            "action_semantic, action_outcome, sensitivity_label, workflow_id "
+            "FROM execution_events ORDER BY time DESC LIMIT ?",
+            (limit_events,)
+        )
+        live_events = []
+        for r in ev_stream_cur.fetchall():
+            live_events.append(dict(r))
+
+        # 6. Database Storage Stats
+        from backend.config import settings
+        db_file = Path(self.db_path or settings.DATABASE_PATH)
+        file_size = db_file.stat().st_size if db_file.exists() else 0
+        if file_size > 1024 * 1024:
+            size_fmt = f"{file_size / (1024 * 1024):.2f} MB"
+        else:
+            size_fmt = f"{file_size / 1024:.1f} KB"
+
+        return {
+            "metrics": {
+                "total_workflows": total_wf,
+                "active_workflows": active_wf,
+                "completed_workflows": completed_wf,
+                "failed_workflows": failed_wf,
+                "success_rate_pct": success_rate,
+                "total_interactions": interactions_cnt,
+                "total_events": events_cnt,
+                "total_delegations": delegations_cnt,
+                "total_retries": retries_cnt,
+                "active_agents": agents_cnt,
+            },
+            "agent_breakdown": agent_breakdown,
+            "interaction_breakdown": interaction_breakdown,
+            "recent_workflows": recent_workflows,
+            "live_event_stream": live_events,
+            "storage": {
+                "database_path": str(db_file),
+                "file_size_bytes": file_size,
+                "file_size_formatted": size_fmt,
+                "journal_mode": "WAL",
+            }
+        }
