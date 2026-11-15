@@ -18,8 +18,19 @@ import {
   ExternalLink,
   Play,
   Zap,
+  Code,
+  Compass,
+  FileText,
 } from "lucide-react";
 import AgentInteractionGraph from "./AgentInteractionGraph";
+import MermaidViewer from "./components/MermaidViewer";
+import {
+  generateC4ContainerDiagram,
+  generateExecutionMermaid,
+  generateAuthorityMermaid,
+  generateInteractionSequenceMermaid,
+  generateUnifiedThreeGraphMermaid,
+} from "./utils/mermaidGenerators";
 
 // Obsidian Research Palette Node Colors
 export const OBSIDIAN_NODE_COLORS = {
@@ -55,6 +66,8 @@ export default function ThreeGraphViewer({
   const [activeGraphTab, setActiveGraphTab] = useState("unified"); // "unified" | "execution_graph" | "authority_graph" | "interaction_graph" | "raw_json"
   const [selectedEntity, setSelectedEntity] = useState(null);
   const [isSampleRunning, setIsSampleRunning] = useState(false);
+  const [viewMode, setViewMode] = useState("interactive"); // "interactive" | "c4_mermaid"
+  const [mermaidDiagram, setMermaidDiagram] = useState("c4"); // "c4" | "sequence" | "execution" | "authority" | "unified"
 
   // Safe fallback if graphData is null or empty
   const execGraph = graphData?.execution_graph || { nodes: [], edges: [] };
@@ -67,6 +80,42 @@ export default function ThreeGraphViewer({
   const authEdges = authGraph.edges || [];
   const itrNodes = itrGraph.nodes || [];
   const itrEdges = itrGraph.edges || [];
+
+  const currentMermaidChart = useMemo(() => {
+    switch (mermaidDiagram) {
+      case "c4":
+        return {
+          title: "Level 2 C4 Container Architecture: Multi-Agent Observability",
+          type: "C4 Container Diagram",
+          code: generateC4ContainerDiagram(),
+        };
+      case "sequence":
+        return {
+          title: "G_interact Multi-Agent Interaction Sequence",
+          type: "Sequence Diagram",
+          code: generateInteractionSequenceMermaid(itrNodes, itrEdges),
+        };
+      case "execution":
+        return {
+          title: "G_exec Causal Tool Execution Pipeline",
+          type: "Causal Flowchart",
+          code: generateExecutionMermaid(execNodes, execEdges),
+        };
+      case "authority":
+        return {
+          title: "G_auth Cryptographic Delegation Tree",
+          type: "Delegation DAG",
+          code: generateAuthorityMermaid(authNodes, authEdges),
+        };
+      case "unified":
+      default:
+        return {
+          title: "Unified Three-Graph Multi-Layer Invariant Proof",
+          type: "Cross-Graph Overlay",
+          code: generateUnifiedThreeGraphMermaid(execNodes.length, authNodes.length, itrEdges.length),
+        };
+    }
+  }, [mermaidDiagram, execNodes, execEdges, authNodes, authEdges, itrNodes, itrEdges]);
 
   const handleRunSample = async () => {
     if (onRunSampleWorkflow) {
@@ -273,127 +322,288 @@ export default function ThreeGraphViewer({
         </div>
       </div>
 
-      {/* 3. Main Topology View & Forensic Node Inspector Split View */}
-      <div style={{ display: "grid", gridTemplateColumns: selectedEntity ? "1fr 340px" : "1fr", gap: 16 }}>
-        {/* Graph Display Card */}
-        <div className="stat-card" style={{ padding: 18, minHeight: 460 }}>
-          {/* Sub-Header Tabs */}
-          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #1f2937", paddingBottom: 12, marginBottom: 16 }}>
+      {/* 3. Visualization Paradigm Mode Switcher (Interactive vs C4 Architecture / Mermaid) */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          background: "#16191d",
+          border: "1px solid #2a2f38",
+          borderRadius: 8,
+          padding: "8px 14px",
+          flexWrap: "wrap",
+          gap: 10,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <Compass size={16} color="#e8a44a" />
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#f0f2f5" }}>
+            Visualization Engine:
+          </span>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button
+            onClick={() => setViewMode("interactive")}
+            style={{
+              background: viewMode === "interactive" ? "#e8a44a" : "#22262c",
+              color: viewMode === "interactive" ? "#111214" : "#94a3b8",
+              border: "1px solid",
+              borderColor: viewMode === "interactive" ? "#e8a44a" : "#334155",
+              borderRadius: 6,
+              padding: "6px 14px",
+              fontSize: 12.5,
+              fontWeight: 700,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              transition: "all 0.15s ease",
+            }}
+          >
+            <Layers size={14} />
+            <span>🎛️ Interactive Canvas & Forensic Inspector</span>
+          </button>
+
+          <button
+            onClick={() => setViewMode("c4_mermaid")}
+            style={{
+              background: viewMode === "c4_mermaid" ? "#2dd4bf" : "#22262c",
+              color: viewMode === "c4_mermaid" ? "#111214" : "#94a3b8",
+              border: "1px solid",
+              borderColor: viewMode === "c4_mermaid" ? "#2dd4bf" : "#334155",
+              borderRadius: 6,
+              padding: "6px 14px",
+              fontSize: 12.5,
+              fontWeight: 700,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              transition: "all 0.15s ease",
+            }}
+          >
+            <Code size={14} />
+            <span>📐 C4 Architecture & Mermaid (Draw.io Ready)</span>
+          </button>
+        </div>
+      </div>
+
+      {/* 4. Display Mode: C4 Enterprise & Mermaid Diagrams */}
+      {viewMode === "c4_mermaid" && (
+        <div className="stat-card" style={{ padding: 18 }}>
+          {/* Mermaid Diagram Selector Tabs */}
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "space-between",
+              alignItems: "center",
+              borderBottom: "1px solid #1f2937",
+              paddingBottom: 12,
+              marginBottom: 16,
+              gap: 8,
+            }}
+          >
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
               <button
-                className={`pill-btn ${activeGraphTab === "unified" ? "active" : ""}`}
-                onClick={() => setActiveGraphTab("unified")}
+                className={`pill-btn ${mermaidDiagram === "c4" ? "active" : ""}`}
+                onClick={() => setMermaidDiagram("c4")}
                 style={{
-                  background: activeGraphTab === "unified" ? "#d97706" : "#1e293b",
-                  color: activeGraphTab === "unified" ? "#ffffff" : "#94a3b8",
-                  fontWeight: 600,
+                  background: mermaidDiagram === "c4" ? "#e8a44a" : "#1e293b",
+                  color: mermaidDiagram === "c4" ? "#111214" : "#94a3b8",
+                  fontWeight: 700,
                 }}
               >
-                <Layers size={14} style={{ display: "inline", marginRight: 6 }} />
-                Unified 3-in-1 Overlay
+                🏛️ Level 2 C4 Architecture
               </button>
+
               <button
-                className={`pill-btn ${activeGraphTab === "execution_graph" ? "active" : ""}`}
-                onClick={() => setActiveGraphTab("execution_graph")}
+                className={`pill-btn ${mermaidDiagram === "sequence" ? "active" : ""}`}
+                onClick={() => setMermaidDiagram("sequence")}
                 style={{
-                  background: activeGraphTab === "execution_graph" ? "#059669" : "#1e293b",
-                  color: activeGraphTab === "execution_graph" ? "#ffffff" : "#94a3b8",
-                  fontWeight: 600,
+                  background: mermaidDiagram === "sequence" ? "#38bdf8" : "#1e293b",
+                  color: mermaidDiagram === "sequence" ? "#ffffff" : "#94a3b8",
+                  fontWeight: 700,
                 }}
               >
-                <Activity size={14} style={{ display: "inline", marginRight: 6 }} />
-                Execution Graph (GE)
+                💬 Interaction Sequence (GI)
               </button>
+
               <button
-                className={`pill-btn ${activeGraphTab === "authority_graph" ? "active" : ""}`}
-                onClick={() => setActiveGraphTab("authority_graph")}
+                className={`pill-btn ${mermaidDiagram === "execution" ? "active" : ""}`}
+                onClick={() => setMermaidDiagram("execution")}
                 style={{
-                  background: activeGraphTab === "authority_graph" ? "#7c3aed" : "#1e293b",
-                  color: activeGraphTab === "authority_graph" ? "#ffffff" : "#94a3b8",
-                  fontWeight: 600,
+                  background: mermaidDiagram === "execution" ? "#34d399" : "#1e293b",
+                  color: mermaidDiagram === "execution" ? "#ffffff" : "#94a3b8",
+                  fontWeight: 700,
                 }}
               >
-                <Key size={14} style={{ display: "inline", marginRight: 6 }} />
-                Authority Lineage (GA)
+                ⚡ Causal Execution Flow (GE)
               </button>
+
               <button
-                className={`pill-btn ${activeGraphTab === "interaction_graph" ? "active" : ""}`}
-                onClick={() => setActiveGraphTab("interaction_graph")}
+                className={`pill-btn ${mermaidDiagram === "authority" ? "active" : ""}`}
+                onClick={() => setMermaidDiagram("authority")}
                 style={{
-                  background: activeGraphTab === "interaction_graph" ? "#0284c7" : "#1e293b",
-                  color: activeGraphTab === "interaction_graph" ? "#ffffff" : "#94a3b8",
-                  fontWeight: 600,
+                  background: mermaidDiagram === "authority" ? "#a78bfa" : "#1e293b",
+                  color: mermaidDiagram === "authority" ? "#ffffff" : "#94a3b8",
+                  fontWeight: 700,
                 }}
               >
-                <Share2 size={14} style={{ display: "inline", marginRight: 6 }} />
-                Interaction Graph (GI)
+                🔑 Authority Lineage Tree (GA)
               </button>
+
               <button
-                className={`pill-btn ${activeGraphTab === "raw_json" ? "active" : ""}`}
-                onClick={() => setActiveGraphTab("raw_json")}
-                style={{ fontSize: 11 }}
+                className={`pill-btn ${mermaidDiagram === "unified" ? "active" : ""}`}
+                onClick={() => setMermaidDiagram("unified")}
+                style={{
+                  background: mermaidDiagram === "unified" ? "#f59e0b" : "#1e293b",
+                  color: mermaidDiagram === "unified" ? "#ffffff" : "#94a3b8",
+                  fontWeight: 700,
+                }}
               >
-                Developer JSON
+                🔗 Unified Multi-Layer Proof
               </button>
             </div>
 
-            <div style={{ fontSize: 12, color: "#64748b" }}>
-              💡 <em>Click any node or connection arrow to inspect forensic attributes.</em>
+            <div style={{ fontSize: 12, color: "#2dd4bf" }}>
+              ✨ <em>Ready for Draw.io: Click "Draw.io" above to import directly into diagrams.net.</em>
             </div>
           </div>
 
-          {/* VIEW A: UNIFIED 3-IN-1 OVERLAY */}
-          {activeGraphTab === "unified" && (
-            <UnifiedThreeGraphView
-              execNodes={execNodes}
-              authNodes={authNodes}
-              itrEdges={itrEdges}
-              itrNodes={itrNodes}
-              onSelectNode={(node, type) => setSelectedEntity({ ...node, entityCategory: type })}
-              onSelectEdge={(edge, type) => setSelectedEntity({ ...edge, entityCategory: type })}
-            />
-          )}
-
-          {/* VIEW B: EXECUTION GRAPH (GE) VISUAL TOPOLOGY */}
-          {activeGraphTab === "execution_graph" && (
-            <ExecutionGraphTopology
-              nodes={execNodes}
-              edges={execEdges}
-              onSelectNode={(node) => setSelectedEntity({ ...node, entityCategory: "Execution Event (CIM)" })}
-              onSelectEdge={(edge) => setSelectedEntity({ ...edge, entityCategory: "Execution Causal Link" })}
-            />
-          )}
-
-          {/* VIEW C: AUTHORITY GRAPH (GA) VISUAL TOPOLOGY */}
-          {activeGraphTab === "authority_graph" && (
-            <AuthorityGraphTopology
-              nodes={authNodes}
-              edges={authEdges}
-              onSelectNode={(node) => setSelectedEntity({ ...node, entityCategory: "Authority / Delegation Node" })}
-              onSelectEdge={(edge) => setSelectedEntity({ ...edge, entityCategory: "Delegation Grant" })}
-            />
-          )}
-
-          {/* VIEW D: INTERACTION GRAPH (GI) VISUAL TOPOLOGY */}
-          {activeGraphTab === "interaction_graph" && (
-            <div>
-              <AgentInteractionGraph
-                graph={itrGraph}
-                workflowId={selectedWorkflowId}
-                title="Inter-Agent Communication Graph (G_interact) Topology"
-              />
-            </div>
-          )}
-
-          {/* VIEW E: RAW JSON (DEVELOPER VIEW) */}
-          {activeGraphTab === "raw_json" && (
-            <div style={{ background: "#0b0f19", border: "1px solid #1e293b", borderRadius: 8, padding: 14, maxHeight: 480, overflowY: "auto" }}>
-              <pre style={{ color: "#94a3b8", fontSize: 11.5, margin: 0, fontFamily: "monospace" }}>
-                {JSON.stringify(graphData || {}, null, 2)}
-              </pre>
-            </div>
-          )}
+          {/* Render Mermaid Component */}
+          <MermaidViewer
+            chart={currentMermaidChart.code}
+            title={currentMermaidChart.title}
+            diagramType={currentMermaidChart.type}
+          />
         </div>
+      )}
+
+      {/* 5. Display Mode: Interactive Topology & Forensic Node Inspector */}
+      {viewMode === "interactive" && (
+        <div style={{ display: "grid", gridTemplateColumns: selectedEntity ? "1fr 340px" : "1fr", gap: 16 }}>
+          {/* Graph Display Card */}
+          <div className="stat-card" style={{ padding: 18, minHeight: 460 }}>
+            {/* Sub-Header Tabs */}
+            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #1f2937", paddingBottom: 12, marginBottom: 16 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                <button
+                  className={`pill-btn ${activeGraphTab === "unified" ? "active" : ""}`}
+                  onClick={() => setActiveGraphTab("unified")}
+                  style={{
+                    background: activeGraphTab === "unified" ? "#d97706" : "#1e293b",
+                    color: activeGraphTab === "unified" ? "#ffffff" : "#94a3b8",
+                    fontWeight: 600,
+                  }}
+                >
+                  <Layers size={14} style={{ display: "inline", marginRight: 6 }} />
+                  Unified 3-in-1 Overlay
+                </button>
+                <button
+                  className={`pill-btn ${activeGraphTab === "execution_graph" ? "active" : ""}`}
+                  onClick={() => setActiveGraphTab("execution_graph")}
+                  style={{
+                    background: activeGraphTab === "execution_graph" ? "#059669" : "#1e293b",
+                    color: activeGraphTab === "execution_graph" ? "#ffffff" : "#94a3b8",
+                    fontWeight: 600,
+                  }}
+                >
+                  <Activity size={14} style={{ display: "inline", marginRight: 6 }} />
+                  Execution Graph (GE)
+                </button>
+                <button
+                  className={`pill-btn ${activeGraphTab === "authority_graph" ? "active" : ""}`}
+                  onClick={() => setActiveGraphTab("authority_graph")}
+                  style={{
+                    background: activeGraphTab === "authority_graph" ? "#7c3aed" : "#1e293b",
+                    color: activeGraphTab === "authority_graph" ? "#ffffff" : "#94a3b8",
+                    fontWeight: 600,
+                  }}
+                >
+                  <Key size={14} style={{ display: "inline", marginRight: 6 }} />
+                  Authority Lineage (GA)
+                </button>
+                <button
+                  className={`pill-btn ${activeGraphTab === "interaction_graph" ? "active" : ""}`}
+                  onClick={() => setActiveGraphTab("interaction_graph")}
+                  style={{
+                    background: activeGraphTab === "interaction_graph" ? "#0284c7" : "#1e293b",
+                    color: activeGraphTab === "interaction_graph" ? "#ffffff" : "#94a3b8",
+                    fontWeight: 600,
+                  }}
+                >
+                  <Share2 size={14} style={{ display: "inline", marginRight: 6 }} />
+                  Interaction Graph (GI)
+                </button>
+                <button
+                  className={`pill-btn ${activeGraphTab === "raw_json" ? "active" : ""}`}
+                  onClick={() => setActiveGraphTab("raw_json")}
+                  style={{ fontSize: 11 }}
+                >
+                  Developer JSON
+                </button>
+              </div>
+
+              <div style={{ fontSize: 12, color: "#64748b" }}>
+                💡 <em>Click any node or connection arrow to inspect forensic attributes.</em>
+              </div>
+            </div>
+
+            {/* VIEW A: UNIFIED 3-IN-1 OVERLAY */}
+            {activeGraphTab === "unified" && (
+              <UnifiedThreeGraphView
+                execNodes={execNodes}
+                authNodes={authNodes}
+                itrEdges={itrEdges}
+                itrNodes={itrNodes}
+                onSelectNode={(node, type) => setSelectedEntity({ ...node, entityCategory: type })}
+                onSelectEdge={(edge, type) => setSelectedEntity({ ...edge, entityCategory: type })}
+              />
+            )}
+
+            {/* VIEW B: EXECUTION GRAPH (GE) VISUAL TOPOLOGY */}
+            {activeGraphTab === "execution_graph" && (
+              <ExecutionGraphTopology
+                nodes={execNodes}
+                edges={execEdges}
+                onSelectNode={(node) => setSelectedEntity({ ...node, entityCategory: "Execution Event (CIM)" })}
+                onSelectEdge={(edge) => setSelectedEntity({ ...edge, entityCategory: "Execution Causal Link" })}
+              />
+            )}
+
+            {/* VIEW C: AUTHORITY GRAPH (GA) VISUAL TOPOLOGY */}
+            {activeGraphTab === "authority_graph" && (
+              <AuthorityGraphTopology
+                nodes={authNodes}
+                edges={authEdges}
+                onSelectNode={(node) => setSelectedEntity({ ...node, entityCategory: "Authority / Delegation Node" })}
+                onSelectEdge={(edge) => setSelectedEntity({ ...edge, entityCategory: "Delegation Grant" })}
+              />
+            )}
+
+            {/* VIEW D: INTERACTION GRAPH (GI) VISUAL TOPOLOGY */}
+            {activeGraphTab === "interaction_graph" && (
+              <div>
+                <AgentInteractionGraph
+                  graph={itrGraph}
+                  workflowId={selectedWorkflowId}
+                  title="Inter-Agent Communication Graph (G_interact) Topology"
+                />
+              </div>
+            )}
+
+            {/* VIEW E: RAW JSON (DEVELOPER VIEW) */}
+            {activeGraphTab === "raw_json" && (
+              <div style={{ background: "#0b0f19", border: "1px solid #1e293b", borderRadius: 8, padding: 14, maxHeight: 480, overflowY: "auto" }}>
+                <pre style={{ color: "#94a3b8", fontSize: 11.5, margin: 0, fontFamily: "monospace" }}>
+                  {JSON.stringify(graphData || {}, null, 2)}
+                </pre>
+              </div>
+            )}
+          </div>
 
         {/* 4. Forensic Node & Edge Inspector Slide-In Drawer */}
         {selectedEntity && (
@@ -520,6 +730,7 @@ export default function ThreeGraphViewer({
           </div>
         )}
       </div>
+      )}
     </div>
   );
 }
