@@ -356,13 +356,61 @@ def delete_chat_session(chat_id: str):
         raise HTTPException(status_code=404, detail="Chat not found or deletion failed")
     return {"status": "success", "deleted_chat_id": chat_id}
 
-# Specific keywords that indicate the user wants a multi-agent data audit/investigation
-_WORKFLOW_INDICATORS = [
-    "complaint", "customer", "ticket", "access log", "system log", "security log",
-    "unauthorized", "breach", "audit log", "dataset", "three-graph", "three graph",
-    "delegation graph", "multi-agent", "provenance", "sentiment score", "severity category"
-]
-_WORKFLOW_VERBS = ["audit", "investigate"]
+def is_data_audit_request(prompt: str) -> bool:
+    """
+    Precisely identifies whether a user message is an explicit instruction to audit or
+    investigate our enterprise datasets (customer_complaints.csv, system_access_logs.csv, etc.).
+    All general questions (math, science, coding, explanations, general definitions) return False
+    so they are handled conversationally by Gemini like ChatGPT.
+    """
+    p_lower = prompt.lower().strip()
+
+    # Fast exclusion: Basic math and arithmetic (e.g. 5*100, 2+2, 100/5)
+    if any(op in p_lower for op in ["*", "+", "/", "="]) and len(p_lower) < 25 and not any(w in p_lower for w in ["audit", "complaint", "log"]):
+        return False
+
+    # Exclude common informational/conceptual question patterns unless they are specific dataset audit questions
+    is_general_question = any(p_lower.startswith(prefix) for prefix in [
+        "what is a ", "what is an ", "what is ", "what are ", "whats a ", "whats an ",
+        "define ", "explain ", "how does ", "how do ", "how can ", "how to ",
+        "why is ", "why do ", "why does ", "who is ", "where is ", "when was ",
+        "can you explain", "could you explain", "tell me about", "give me an example",
+        "write a ", "write code", "solve ", "calculate ", "help me understand"
+    ]) and not any(p_lower.startswith(exact) for exact in [
+        "what are the customers mostly complaining of",
+        "what are customers mostly complaining of",
+        "who are our enterprise customers",
+        "who are the enterprise customers"
+    ])
+
+    if is_general_question:
+        return False
+
+    # 1. Preset suggestions from the UI
+    if "what are customers mostly complaining of" in p_lower or "what are the customers mostly complaining of" in p_lower:
+        return True
+    if "who are our enterprise customers" in p_lower or "status of enterprise accounts" in p_lower:
+        return True
+    if any(p in p_lower for p in ["check system access logs", "check system logs", "check access logs", "check security logs"]):
+        return True
+
+    # 2. Explicit audit/investigation commands directed at data, complaints, logs, or tickets
+    has_audit_verb = any(p_lower.startswith(v) or f" {v}" in p_lower for v in [
+        "audit", "investigate", "run audit", "run workflow", "analyze the dataset", "audit the dataset", "inspect dataset"
+    ])
+    has_audit_target = any(w in p_lower for w in [
+        "complaint", "ticket", "access log", "security log", "system log", "audit log", "cfpb"
+    ])
+    if has_audit_verb and has_audit_target:
+        return True
+
+    # 3. Direct mention of specific dataset files or record identifiers
+    if any(f in p_lower for f in ["customer_complaints.csv", "system_access_logs.csv", "cfpb_complaints.csv", "sample_research_notes.txt"]):
+        return True
+    if any(p_lower.startswith(id_pfx) or f" {id_pfx}" in p_lower for id_pfx in ["cust_", "tkt-", "usr_"]):
+        return True
+
+    return False
 
 @router.post("/chat")
 def chat_with_coordinator(req: ChatRequest):
@@ -428,41 +476,59 @@ def chat_with_coordinator(req: ChatRequest):
         }
 
     # 3. Determine if this is a data-related task that should trigger the multi-agent workflow
-    is_workflow_task = (
-        any(w in msg_lower for w in _WORKFLOW_INDICATORS)
-        or any(msg_lower.startswith(v) for v in _WORKFLOW_VERBS)
-        or ("audit" in msg_lower and any(w in msg_lower for w in ["log", "ticket", "system", "file", "security", "customer", "data"]))
-    )
+    is_workflow_task = is_data_audit_request(msg)
 
     # ---------------------------------------------------------------------------
     # CASE 1: General chatbot question (NOT a data workflow task)
-    # Answer directly using Gemini like ChatGPT
+    # Answer directly using Gemini multi-turn chat like ChatGPT
     # ---------------------------------------------------------------------------
     if not is_workflow_task:
+        # Retrieve full conversation history for rich multi-turn context
+        chat_doc = mongo_chat_store.get_chat(conversation_id)
+        raw_history = (chat_doc.get("messages", []) if chat_doc else [])
+
+        # Build message history for Gemini (last 10 turns)
+        context_msgs = []
+        for m in raw_history[-10:]:
+            m_role = "user" if m.get("role") == "user" else "model"
+            m_content = (m.get("content") or "").strip()
+            if m_content:
+                context_msgs.append({"role": m_role, "content": m_content})
+
+        if not context_msgs or context_msgs[-1]["content"] != msg:
+            context_msgs.append({"role": "user", "content": msg})
+
         system_prompt = (
-            "You are a helpful, intelligent AI assistant. "
-            "Answer the user's question clearly, accurately, and conversationally. "
-            "You can answer questions about anything: math, science, coding, history, "
-            "general knowledge, explanations, creative writing, and more. "
-            "Use markdown formatting where appropriate. "
-            "Be concise but thorough."
+            "You are a helpful, intelligent, conversational AI assistant (like ChatGPT). "
+            "Answer the user's questions clearly, accurately, and naturally. "
+            "You can answer anything: math, science, coding, history, general knowledge, explanations, advice, etc. "
+            "Use clean GitHub-flavored markdown formatting. "
+            "Never inject unrelated customer complaints or access logs unless the user specifically asks for them."
         )
 
-        llm_response = query_gemini(
-            prompt=msg,
+        llm_response = query_gemini_chat(
+            messages=context_msgs,
             system_prompt=system_prompt,
             temperature=0.7,
             max_tokens=2048
         )
 
         if not llm_response:
-            direct_ans, _ = answer_user_query_directly(msg)
-            llm_response = direct_ans or (
-                "⚠️ **LLM API is not configured or unreachable.**\n\n"
-                "Please set your `GEMINI_API_KEY` in the `.env` file.\n\n"
-                "Meanwhile, you can still use data audit commands like:\n"
+            # Fallback to single-turn prompt
+            llm_response = query_gemini(
+                prompt=msg,
+                system_prompt=system_prompt,
+                temperature=0.7,
+                max_tokens=2048
+            )
+
+        if not llm_response:
+            llm_response = (
+                "⚠️ **Unable to connect to Google Gemini API.**\n\n"
+                "Please verify your internet connection or check the `GEMINI_API_KEY` in `.env`.\n\n"
+                "You can still run data audit commands on local datasets, such as:\n"
                 "- *'Audit customer complaints for critical severity tickets'*\n"
-                "- *'Check system access logs for unauthorized sharing'*"
+                "- *'Check system access logs for unauthorized root escalation'*"
             )
 
         asst_doc = mongo_chat_store.append_message(

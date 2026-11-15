@@ -91,8 +91,12 @@ def format_direct_task_findings(task_prompt: str, dataset_name: str, run: Any) -
     p_lower = task_prompt.lower().strip()
 
     # --------------------------------------------------------------------------
-    # 0. Relevance Gate: If prompt is irrelevant, return explicit advisory immediately
+    # 0. If workflow completed with a final_output, prefer returning the findings
     # --------------------------------------------------------------------------
+    if run and getattr(run, "final_output", None):
+        return run.final_output
+
+    # Relevance Gate: If prompt is irrelevant, return explicit advisory immediately
     query_analysis = analyze_dynamic_query(task_prompt)
     if query_analysis.get("domain") == "irrelevant":
         return query_analysis["executive_summary"]

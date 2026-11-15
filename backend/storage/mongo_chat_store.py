@@ -25,6 +25,7 @@ class MongoChatStore:
         self._client: Optional[MongoClient] = None
         self._db: Optional[Database] = None
         self._collection: Optional[Collection] = None
+        self._in_memory_chats: Dict[str, Dict[str, Any]] = {}
         self._last_attempt_time: float = 0.0
         self._connect()
 
@@ -34,8 +35,8 @@ class MongoChatStore:
             return False
         import time
         now = time.time()
-        # Cooldown: don't attempt reconnection more than once every 10 seconds if offline
-        if self._collection is None and (now - self._last_attempt_time) < 10.0:
+        # Cooldown: don't attempt reconnection more than once every 15 seconds if offline
+        if self._collection is None and (now - self._last_attempt_time) < 15.0:
             return False
         self._last_attempt_time = now
         try:
@@ -43,7 +44,7 @@ class MongoChatStore:
                 self.uri,
                 serverSelectionTimeoutMS=2000,
                 connectTimeoutMS=2000,
-                socketTimeoutMS=4000,
+                socketTimeoutMS=3000,
                 retryWrites=True,
                 maxPoolSize=20
             )
@@ -60,7 +61,7 @@ class MongoChatStore:
             logger.info(f"[MongoChatStore] Successfully connected to MongoDB database: {self.db_name}")
             return True
         except Exception as e:
-            logger.error(f"[MongoChatStore] Connection error: {e}")
+            logger.warning(f"[MongoChatStore] MongoDB connection unavailable ({e}). Operating with local in-memory fallback.")
             self._client = None
             self._db = None
             self._collection = None
@@ -84,7 +85,7 @@ class MongoChatStore:
 
         import time
         now = time.time()
-        if hasattr(self, "_last_attempt_time") and (now - self._last_attempt_time < 10.0):
+        if hasattr(self, "_last_attempt_time") and (now - self._last_attempt_time < 15.0):
             return False
         return self._connect()
 
@@ -163,36 +164,56 @@ class MongoChatStore:
 
     def list_chats(self, limit: int = 100) -> List[Dict[str, Any]]:
         """Returns sorted summary list of chat sessions for the sidebar."""
-        if not self.is_connected():
-            return []
-        try:
-            cursor = self._collection.find(
-                {},
-                {
-                    "_id": 0,
-                    "id": 1,
-                    "title": 1,
-                    "created_at": 1,
-                    "updated_at": 1,
-                    "message_count": 1,
-                    "last_message": 1
-                }
-            ).sort("updated_at", -1).limit(limit)
-            return list(cursor)
-        except Exception as e:
-            logger.error(f"[MongoChatStore] list_chats error: {e}")
-            return []
+        if self.is_connected():
+            try:
+                cursor = self._collection.find(
+                    {},
+                    {
+                        "_id": 0,
+                        "id": 1,
+                        "title": 1,
+                        "created_at": 1,
+                        "updated_at": 1,
+                        "message_count": 1,
+                        "last_message": 1
+                    }
+                ).sort("updated_at", -1).limit(limit)
+                mongo_list = list(cursor)
+                if mongo_list:
+                    return mongo_list
+            except Exception as e:
+                logger.warning(f"[MongoChatStore] list_chats Mongo read error ({e}), falling back to memory.")
+
+        # In-memory fallback
+        sorted_chats = sorted(
+            self._in_memory_chats.values(),
+            key=lambda c: c.get("updated_at", ""),
+            reverse=True
+        )[:limit]
+        return [
+            {
+                "id": c["id"],
+                "title": c.get("title", "New Investigation"),
+                "created_at": c.get("created_at", ""),
+                "updated_at": c.get("updated_at", ""),
+                "message_count": c.get("message_count", len(c.get("messages", []))),
+                "last_message": c.get("last_message", "")
+            }
+            for c in sorted_chats
+        ]
 
     def get_chat(self, chat_id: str) -> Optional[Dict[str, Any]]:
         """Returns the full conversation document including all messages and graphs."""
-        if not self.is_connected():
-            return None
-        try:
-            doc = self._collection.find_one({"id": chat_id}, {"_id": 0})
-            return doc
-        except Exception as e:
-            logger.error(f"[MongoChatStore] get_chat error for {chat_id}: {e}")
-            return None
+        if self.is_connected():
+            try:
+                doc = self._collection.find_one({"id": chat_id}, {"_id": 0})
+                if doc:
+                    self._in_memory_chats[chat_id] = doc
+                    return doc
+            except Exception as e:
+                logger.warning(f"[MongoChatStore] get_chat Mongo read error ({e}), checking memory.")
+
+        return self._in_memory_chats.get(chat_id)
 
     def create_chat(
         self,
@@ -200,7 +221,7 @@ class MongoChatStore:
         initial_messages: Optional[List[Dict[str, Any]]] = None,
         chat_id: Optional[str] = None
     ) -> Dict[str, Any]:
-        """Creates a new conversation record in MongoDB."""
+        """Creates a new conversation record in MongoDB or in-memory."""
         now_iso = datetime.now(timezone.utc).isoformat()
         cid = chat_id or str(uuid.uuid4())
         msgs = initial_messages or []
@@ -213,6 +234,8 @@ class MongoChatStore:
             "last_message": msgs[-1].get("content", "")[:120] if msgs else "",
             "messages": msgs
         }
+        self._in_memory_chats[cid] = doc
+
         if self.is_connected():
             try:
                 self._collection.update_one({"id": cid}, {"$set": doc}, upsert=True)
@@ -247,79 +270,102 @@ class MongoChatStore:
                         continue
                     msg_obj[k] = v
 
-        if not self.is_connected():
-            return {
+        # Retrieve existing from memory or MongoDB
+        existing = self._in_memory_chats.get(chat_id)
+        if not existing and self.is_connected():
+            try:
+                existing = self._collection.find_one({"id": chat_id}, {"_id": 0})
+            except Exception:
+                existing = None
+
+        if not existing:
+            title = self.generate_smart_title(content) if role == "user" else "New Investigation"
+            doc = {
                 "id": chat_id,
-                "title": "Local Chat",
-                "messages": [msg_obj],
-                "updated_at": now_iso
+                "title": title,
+                "created_at": now_iso,
+                "updated_at": now_iso,
+                "message_count": 1,
+                "last_message": content[:120],
+                "messages": [msg_obj]
             }
+            self._in_memory_chats[chat_id] = doc
+            if self.is_connected():
+                try:
+                    self._collection.insert_one(dict(doc))
+                except Exception as e:
+                    logger.error(f"[MongoChatStore] insert_one error: {e}")
+            return doc
+        else:
+            existing_messages = existing.get("messages", [])
+            existing_messages.append(msg_obj)
+            existing["messages"] = existing_messages
+            existing["updated_at"] = now_iso
+            existing["message_count"] = len(existing_messages)
+            existing["last_message"] = content[:120]
 
-        try:
-            existing = self._collection.find_one({"id": chat_id})
-            if not existing:
-                # First message in this chat
-                title = self.generate_smart_title(content) if role == "user" else "New Investigation"
-                doc = {
-                    "id": chat_id,
-                    "title": title,
-                    "created_at": now_iso,
-                    "updated_at": now_iso,
-                    "message_count": 1,
-                    "last_message": content[:120],
-                    "messages": [msg_obj]
-                }
-                self._collection.insert_one(doc)
-                doc.pop("_id", None)
-                return doc
-            else:
-                update_fields = {
-                    "updated_at": now_iso,
-                    "last_message": content[:120]
-                }
-                # If existing title is generic and this is a user message, update title
-                if role == "user" and (existing.get("title") in ("New Investigation", "New Conversation", "Untitled Chat", "") or existing.get("message_count", 0) <= 1):
-                    update_fields["title"] = self.generate_smart_title(content)
+            if role == "user" and (existing.get("title") in ("New Investigation", "New Conversation", "Untitled Chat", "") or len(existing_messages) <= 2):
+                existing["title"] = self.generate_smart_title(content)
 
-                self._collection.update_one(
-                    {"id": chat_id},
-                    {
-                        "$push": {"messages": msg_obj},
-                        "$inc": {"message_count": 1},
-                        "$set": update_fields
-                    }
-                )
-                updated = self._collection.find_one({"id": chat_id}, {"_id": 0})
-                return updated or {}
-        except Exception as e:
-            logger.error(f"[MongoChatStore] append_message error for {chat_id}: {e}")
-            return {"id": chat_id, "messages": [msg_obj], "updated_at": now_iso}
+            self._in_memory_chats[chat_id] = existing
+
+            if self.is_connected():
+                try:
+                    self._collection.update_one(
+                        {"id": chat_id},
+                        {
+                            "$push": {"messages": msg_obj},
+                            "$inc": {"message_count": 1},
+                            "$set": {
+                                "updated_at": now_iso,
+                                "last_message": content[:120],
+                                "title": existing["title"]
+                            }
+                        },
+                        upsert=True
+                    )
+                except Exception as e:
+                    logger.error(f"[MongoChatStore] append update_one error: {e}")
+            return existing
 
     def update_chat_title(self, chat_id: str, new_title: str) -> bool:
         """Renames a chat title."""
-        if not self.is_connected() or not new_title:
+        if not new_title:
             return False
-        try:
-            now_iso = datetime.now(timezone.utc).isoformat()
-            res = self._collection.update_one(
-                {"id": chat_id},
-                {"$set": {"title": new_title.strip(), "updated_at": now_iso}}
-            )
-            return res.matched_count > 0
-        except Exception as e:
-            logger.error(f"[MongoChatStore] update_chat_title error: {e}")
-            return False
+        now_iso = datetime.now(timezone.utc).isoformat()
+        updated = False
+        if chat_id in self._in_memory_chats:
+            self._in_memory_chats[chat_id]["title"] = new_title.strip()
+            self._in_memory_chats[chat_id]["updated_at"] = now_iso
+            updated = True
+
+        if self.is_connected():
+            try:
+                res = self._collection.update_one(
+                    {"id": chat_id},
+                    {"$set": {"title": new_title.strip(), "updated_at": now_iso}}
+                )
+                if res.matched_count > 0:
+                    updated = True
+            except Exception as e:
+                logger.error(f"[MongoChatStore] update_chat_title error: {e}")
+        return updated
 
     def delete_chat(self, chat_id: str) -> bool:
         """Deletes a conversation by ID."""
-        if not self.is_connected():
-            return False
-        try:
-            res = self._collection.delete_one({"id": chat_id})
-            return res.deleted_count > 0
-        except Exception as e:
-            logger.error(f"[MongoChatStore] delete_chat error: {e}")
-            return False
+        deleted = False
+        if chat_id in self._in_memory_chats:
+            del self._in_memory_chats[chat_id]
+            deleted = True
+
+        if self.is_connected():
+            try:
+                res = self._collection.delete_one({"id": chat_id})
+                if res.deleted_count > 0:
+                    deleted = True
+            except Exception as e:
+                logger.error(f"[MongoChatStore] delete_chat error: {e}")
+        return deleted
 
     def get_chat_telemetry_summary(self) -> Dict[str, Any]:
         """
@@ -327,12 +373,18 @@ class MongoChatStore:
         Uses safe projections and avoids restricted Atlas free-tier pipeline commands.
         """
         if not self.is_connected() or self._collection is None:
+            mem_chats = list(self._in_memory_chats.values())
+            mem_total_msgs = sum(len(c.get("messages", [])) for c in mem_chats)
+            recent_mem = [
+                {"id": c["id"], "title": c.get("title", ""), "message_count": len(c.get("messages", [])), "updated_at": c.get("updated_at", "")}
+                for c in sorted(mem_chats, key=lambda x: x.get("updated_at", ""), reverse=True)[:6]
+            ]
             return {
                 "mongodb_connected": False,
                 "database": self.db_name,
-                "total_chats": 0,
-                "total_messages": 0,
-                "recent_sessions": []
+                "total_chats": len(mem_chats),
+                "total_messages": mem_total_msgs,
+                "recent_sessions": recent_mem
             }
         try:
             total_chats = self._collection.count_documents({})
