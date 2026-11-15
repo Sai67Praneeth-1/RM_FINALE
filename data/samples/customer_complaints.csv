@@ -7,3 +7,20 @@ TKT-1005,CUST-731,phone,Billing Dispute,High,-0.78,Disputed cancellation penalty
 TKT-1006,CUST-412,web_portal,Data Privacy,Critical,-0.95,User reports audit log export contained coworker email addresses unexpectedly.,under_review,Enterprise
 TKT-1007,CUST-904,chat,Performance Latency,Medium,-0.35,Dashboard reporting page takes 12 seconds to load queries exceeding 100 rows.,in_progress,Professional
 TKT-1008,CUST-223,email,Contract Renewal,Low,0.4,Inquiring regarding multi-year enterprise volume discount schedule.,pending_sales,Enterprise
+TKT-1009,CUST-611,web_portal,Authentication & SSO,Critical,-0.88,SAML 2.0 Single Sign-On handshake failing with Okta identity provider.,open,Enterprise
+TKT-1010,CUST-304,email,Billing Dispute,Medium,-0.52,VAT tax calculation applied incorrectly on European quarterly invoice.,in_progress,Professional
+TKT-1011,CUST-789,chat,Security Incident,Critical,-0.96,Suspected compromised API key making unauthorized read requests to customer database.,escalated,Enterprise
+TKT-1012,CUST-152,web_portal,Service Downtime,High,-0.81,Webhook notification deliveries failing with 504 gateway timeouts.,investigating,Professional
+TKT-1013,CUST-443,phone,Account Lockout,High,-0.74,Password reset links expiring within 60 seconds preventing admin re-entry.,open,Enterprise
+TKT-1014,CUST-990,email,Compliance & GDPR,High,-0.68,Formal Right-to-be-Forgotten data deletion request submitted for former employees.,pending_legal,Enterprise
+TKT-1015,CUST-238,chat,Feature Request,Low,0.25,Requesting automated webhook retry logic and exponential backoff configuration.,backlog,Standard
+TKT-1016,CUST-871,web_portal,Performance Latency,High,-0.79,Bulk CSV export job stalled at 85% for datasets exceeding 50000 records.,investigating,Enterprise
+TKT-1017,CUST-519,email,Billing Overcharge,High,-0.83,Charged for 50 inactive seats that were de-provisioned last billing cycle.,escalated,Enterprise
+TKT-1018,CUST-340,phone,Service Downtime,Critical,-0.91,Redis cache cluster failover caused 20 minutes of complete portal unresponsiveness.,resolved,Enterprise
+TKT-1019,CUST-667,web_portal,Data Privacy,Critical,-0.94,Customer PII visible in shared staging test environment logs.,under_review,Enterprise
+TKT-1020,CUST-128,chat,Feature Request,Low,0.35,Inquiring about multi-region data residency support in EU Frankfurt cluster.,backlog,Professional
+TKT-1021,CUST-705,email,Authentication & SSO,Medium,-0.42,OAuth2 token refresh returning 401 unauthorized on mobile client.,resolved,Professional
+TKT-1022,CUST-833,web_portal,Performance Latency,Medium,-0.48,GraphQL query response time degraded from 250ms to 2.4 seconds.,in_progress,Standard
+TKT-1023,CUST-491,phone,Billing Dispute,High,-0.71,Refund for annual plan downgrade not processed after 14 business days.,escalated,Professional
+TKT-1024,CUST-955,email,Compliance & SOC2,Low,0.1,Requesting current SOC-2 Type II audit certification report for annual vendor review.,pending_sales,Enterprise
+TKT-1025,CUST-208,chat,Account Lockout,Medium,-0.38,Role-based permissions revoked unexpectedly after platform maintenance update.,resolved,Standard
