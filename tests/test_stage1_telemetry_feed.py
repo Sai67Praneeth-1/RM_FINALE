@@ -107,7 +107,8 @@ def run_stage1_tests():
 
     mongo_tel = data.get("mongodb_telemetry", {})
     assert "mongodb_connected" in mongo_tel
-    print(f" -> MongoDB Connected: {mongo_tel.get('mongodb_connected')}, Database: {mongo_tel.get('database')}")
+    assert isinstance(mongo_tel["mongodb_connected"], bool)
+    print(f" -> MongoDB Connected: {mongo_tel['mongodb_connected']}, Database: {mongo_tel.get('database')}")
 
     # Test limit parameters
     param_res = client.get("/api/telemetry/overview?workflow_limit=3&event_limit=5")

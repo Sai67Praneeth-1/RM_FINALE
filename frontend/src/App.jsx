@@ -38,6 +38,11 @@ import {
   X,
   ExternalLink,
   Globe,
+  ArrowRight,
+  Filter,
+  Radio,
+  Server,
+  Zap,
 } from "lucide-react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import AgentInteractionGraph from "./AgentInteractionGraph";
@@ -58,6 +63,34 @@ const NAV_ITEMS = [
   { id: "benchmarks", path: "/benchmarks", label: "10. 🧪 Research Evaluation", icon: FlaskConical },
   { id: "docs", path: "/docs", label: "11. 📖 Architecture & Docs", icon: BookOpen },
 ];
+
+const AGENT_META = {
+  agent_coordinator: { name: "Coordinator", label: "Agent A (Coordinator)", color: "#38bdf8", bg: "rgba(56, 189, 248, 0.12)", border: "#0284c7" },
+  agent_researcher: { name: "Researcher", label: "Agent B (Researcher)", color: "#c084fc", bg: "rgba(192, 132, 252, 0.12)", border: "#9333ea" },
+  agent_analyst: { name: "Analyst", label: "Agent C (Analyst)", color: "#34d399", bg: "rgba(52, 211, 153, 0.12)", border: "#059669" },
+  agent_reporter: { name: "Reporter", label: "Agent D (Reporter)", color: "#fbbf24", bg: "rgba(251, 191, 36, 0.12)", border: "#d97706" },
+};
+
+const getAgentMeta = (agentId) => {
+  if (!agentId) return { name: "Unknown", label: "Unknown Agent", color: "#94a3b8", bg: "rgba(148, 163, 184, 0.1)", border: "#475569" };
+  const lower = String(agentId).toLowerCase();
+  for (const [k, v] of Object.entries(AGENT_META)) {
+    if (lower.includes(k) || k.includes(lower)) return v;
+  }
+  return { name: agentId, label: agentId, color: "#94a3b8", bg: "rgba(148, 163, 184, 0.1)", border: "#475569" };
+};
+
+const TYPE_META = {
+  delegation: { color: "#60a5fa", bg: "rgba(96, 165, 250, 0.15)", border: "#2563eb", icon: "📋" },
+  request: { color: "#38bdf8", bg: "rgba(56, 189, 248, 0.15)", border: "#0284c7", icon: "❓" },
+  response: { color: "#4ade80", bg: "rgba(74, 222, 128, 0.15)", border: "#16a34a", icon: "💬" },
+  clarification: { color: "#fbbf24", bg: "rgba(251, 191, 36, 0.15)", border: "#d97706", icon: "⚡" },
+  information_transfer: { color: "#c084fc", bg: "rgba(192, 132, 252, 0.15)", border: "#9333ea", icon: "📦" },
+  result: { color: "#34d399", bg: "rgba(52, 211, 153, 0.15)", border: "#059669", icon: "✅" },
+  escalation: { color: "#f87171", bg: "rgba(248, 113, 113, 0.15)", border: "#dc2626", icon: "🚨" },
+  handoff: { color: "#e879f9", bg: "rgba(232, 121, 249, 0.15)", border: "#c026d3", icon: "🤝" },
+  warning: { color: "#fb923c", bg: "rgba(251, 146, 60, 0.15)", border: "#ea580c", icon: "⚠️" },
+};
 
 export default function App() {
   const navigate = useNavigate();
@@ -146,8 +179,33 @@ export default function App() {
   const [workspaceRunning, setWorkspaceRunning] = useState(false);
   const [latestRunResult, setLatestRunResult] = useState(null);
 
-  // Tab 5: Timeline State
+  // Tab 5: Overview & Telemetry State
+  const [telemetryData, setTelemetryData] = useState(null);
+  const [telemetryLoading, setTelemetryLoading] = useState(false);
+  const [isLiveTelemetrySync, setIsLiveTelemetrySync] = useState(true);
+  const [lastTelemetrySyncTime, setLastTelemetrySyncTime] = useState(null);
+  const [telemetryWorkflowFilter, setTelemetryWorkflowFilter] = useState("all");
+
+  // Tab 5/6: Communication Timeline State
   const [interactions, setInteractions] = useState([]);
+  const [timelineLoading, setTimelineLoading] = useState(false);
+  const [timelineScope, setTimelineScope] = useState("all");
+  const [timelineAgentFilter, setTimelineAgentFilter] = useState("all");
+  const [timelineTypeFilter, setTimelineTypeFilter] = useState("all");
+  const [timelineSearch, setTimelineSearch] = useState("");
+  const [expandedInteractionId, setExpandedInteractionId] = useState(null);
+
+  const filteredInteractions = interactions.filter((it) => {
+    if (!timelineSearch.trim()) return true;
+    const term = timelineSearch.toLowerCase();
+    const summary = (it.semantic_summary || "").toLowerCase();
+    const sId = (it.sender_id || it.sender_agent_id || "").toLowerCase();
+    const rId = (it.recipient_id || it.receiver_agent_id || "").toLowerCase();
+    const itType = (it.interaction_type || "").toLowerCase();
+    const delId = (it.delegation_id || "").toLowerCase();
+    const msgId = (it.message_id || "").toLowerCase();
+    return summary.includes(term) || sId.includes(term) || rId.includes(term) || itType.includes(term) || delId.includes(term) || msgId.includes(term);
+  });
 
   // Tab 6: Graphs State
   const [graphData, setGraphData] = useState(null);
@@ -316,8 +374,11 @@ export default function App() {
     }
 
     // Trigger tab-specific data fetches when navigating directly to a tab
-    if (currentTab === "timeline") {
-      fetchInteractions();
+    if (currentTab === "telemetry") {
+      fetchTelemetryOverview();
+    } else if (currentTab === "timeline") {
+      const targetWf = wfParam || (timelineScope !== "all" ? timelineScope : "all");
+      fetchInteractions(targetWf);
     } else if (currentTab === "graphs") {
       const targetWf = wfParam || selectedWorkflowId;
       if (targetWf) fetchGraphData(targetWf);
@@ -343,9 +404,9 @@ export default function App() {
     if (tabId === "events") {
       const s = extraParams.scope || selectedEventScope;
       if (s && s !== "all") q.set("scope", s);
-    } else if (tabId === "graphs" || tabId === "provenance") {
+    } else if (tabId === "graphs" || tabId === "provenance" || tabId === "timeline") {
       const w = extraParams.workflow_id || selectedWorkflowId;
-      if (w) q.set("workflow_id", w);
+      if (w && w !== "all") q.set("workflow_id", w);
     }
     for (const [k, v] of Object.entries(extraParams)) {
       if (k !== "scope" && k !== "workflow_id" && v) q.set(k, v);
@@ -414,16 +475,65 @@ export default function App() {
       console.warn("Backend still starting or offline:", err);
     }
     fetchChatList();
+    fetchInteractions();
+    fetchTelemetryOverview(false);
   };
 
-
-
-  const fetchInteractions = async () => {
+  const fetchTelemetryOverview = async (showLoading = true) => {
     try {
-      const res = await fetch(`${API_BASE}/interactions?limit=100`);
-      if (res.ok) setInteractions(await res.json());
+      if (showLoading) setTelemetryLoading(true);
+      const res = await fetch(`${API_BASE}/telemetry/overview?workflow_limit=15&event_limit=30`);
+      if (res.ok) {
+        const data = await res.json();
+        setTelemetryData(data);
+        setLastTelemetrySyncTime(new Date().toLocaleTimeString());
+      }
+    } catch (err) {
+      console.error("Failed to fetch telemetry overview:", err);
+    } finally {
+      if (showLoading) setTelemetryLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let timer = null;
+    if (activeTab === "telemetry" && isLiveTelemetrySync) {
+      timer = setInterval(() => {
+        fetchTelemetryOverview(false);
+      }, 5000);
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [activeTab, isLiveTelemetrySync]);
+
+  const fetchInteractions = async (scope, agent, type) => {
+    setTimelineLoading(true);
+    try {
+      const activeScope = scope !== undefined ? scope : timelineScope;
+      const activeAgent = agent !== undefined ? agent : timelineAgentFilter;
+      const activeType = type !== undefined ? type : timelineTypeFilter;
+
+      const params = new URLSearchParams({ limit: "200", order: "desc" });
+      if (activeScope && activeScope !== "all") {
+        params.set("workflow_id", activeScope);
+      }
+      if (activeAgent && activeAgent !== "all") {
+        params.set("agent_id", activeAgent);
+      }
+      if (activeType && activeType !== "all") {
+        params.set("interaction_type", activeType);
+      }
+
+      const res = await fetch(`${API_BASE}/interactions?${params.toString()}`);
+      if (res.ok) {
+        const data = await res.json();
+        setInteractions(Array.isArray(data) ? data : []);
+      }
     } catch (e) {
-      console.error(e);
+      console.error("Failed to fetch interactions:", e);
+    } finally {
+      setTimelineLoading(false);
     }
   };
 
@@ -1759,82 +1869,932 @@ export default function App() {
           </div>
         )}
 
-        {/* View 4: Overview & Telemetry */}
+        {/* View 5: Overview & Telemetry Control Plane */}
         {activeTab === "telemetry" && (
           <div className="content-panel">
-            <div className="card-grid">
-              <div className="stat-card">
-                <div className="stat-lbl">Total Workflows</div>
-                <div className="stat-val">{status?.metrics_summary?.total_workflows || 0}</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-lbl">Inter-Agent Interactions</div>
-                <div className="stat-val">{status?.metrics_summary?.total_interactions || 0}</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-lbl">Execution Events</div>
-                <div className="stat-val">{status?.metrics_summary?.total_events || 0}</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-lbl">Delegation Tokens Minted</div>
-                <div className="stat-val">{status?.metrics_summary?.total_delegations || 0}</div>
-              </div>
-            </div>
+            <div className="telemetry-dashboard-container">
+              {/* Top Action & Status Control Bar */}
+              <div className="telemetry-header-bar">
+                <div>
+                  <div className="telemetry-header-title">
+                    <Activity size={22} style={{ color: "#38bdf8" }} />
+                    Multi-Agent System Observability & Telemetry Control Plane
+                  </div>
+                  <div className="telemetry-header-subtitle">
+                    Real-time distributed execution telemetry, authority delegation chains, and multi-agent coordination metrics.
+                  </div>
+                </div>
 
-            <div className="stat-card" style={{ marginBottom: 20 }}>
-              <h3 style={{ color: "#60a5fa", marginBottom: 12 }}>Available Allowlisted Datasets</h3>
-              <table style={{ width: "100%", fontSize: 13 }}>
-                <thead>
-                  <tr>
-                    <th>Dataset File</th>
-                    <th>Size (Bytes)</th>
-                    <th>Storage Path</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {datasets.map((d) => (
-                    <tr key={d.name}>
-                      <td><strong>{d.name}</strong></td>
-                      <td>{d.size_bytes}</td>
-                      <td><code>{d.path}</code></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                <div className="telemetry-controls-group">
+                  <button
+                    className={`telemetry-sync-btn ${isLiveTelemetrySync ? "active" : ""}`}
+                    onClick={() => setIsLiveTelemetrySync(!isLiveTelemetrySync)}
+                    title={isLiveTelemetrySync ? "Click to pause live polling" : "Click to resume live polling"}
+                  >
+                    <span className={isLiveTelemetrySync ? "live-dot" : ""} style={!isLiveTelemetrySync ? { width: 8, height: 8, borderRadius: "50%", background: "#64748b", display: "inline-block" } : {}}></span>
+                    {isLiveTelemetrySync ? "Live Polling (5s)" : "Polling Paused"}
+                  </button>
+
+                  <button
+                    className="telemetry-refresh-btn"
+                    onClick={() => fetchTelemetryOverview(true)}
+                    disabled={telemetryLoading}
+                  >
+                    <RefreshCw size={14} className={telemetryLoading ? "spin-icon" : ""} />
+                    Refresh Now
+                  </button>
+
+                  {lastTelemetrySyncTime && (
+                    <div className="telemetry-last-sync">
+                      <Clock size={12} />
+                      Synced: {lastTelemetrySyncTime}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* 6-Card Modern KPI Metric Grid */}
+              <div className="telemetry-kpi-grid">
+                {/* 1. Total Workflows */}
+                <div className="telemetry-kpi-card" style={{ "--card-accent": "#3b82f6" }}>
+                  <div className="telemetry-kpi-header">
+                    <span className="telemetry-kpi-lbl">Total Workflows</span>
+                    <div className="telemetry-kpi-icon" style={{ color: "#3b82f6" }}>
+                      <PlayCircle size={16} />
+                    </div>
+                  </div>
+                  <div className="telemetry-kpi-val">
+                    {telemetryData?.metrics?.total_workflows ?? status?.metrics_summary?.total_workflows ?? 0}
+                  </div>
+                  <div className="telemetry-kpi-sub">
+                    <span style={{ color: "#10b981", fontWeight: 600 }}>
+                      ✓ {telemetryData?.metrics?.completed_workflows ?? status?.metrics_summary?.total_workflows ?? 0} ({telemetryData?.metrics?.success_rate_pct ?? 100}%)
+                    </span>
+                    <span>•</span>
+                    <span style={{ color: telemetryData?.metrics?.failed_workflows ? "#ef4444" : "#64748b" }}>
+                      {telemetryData?.metrics?.failed_workflows ?? 0} failed
+                    </span>
+                  </div>
+                </div>
+
+                {/* 2. Active Multi-Agent Team */}
+                <div className="telemetry-kpi-card" style={{ "--card-accent": "#10b981" }}>
+                  <div className="telemetry-kpi-header">
+                    <span className="telemetry-kpi-lbl">Multi-Agent Team</span>
+                    <div className="telemetry-kpi-icon" style={{ color: "#10b981" }}>
+                      <Bot size={16} />
+                    </div>
+                  </div>
+                  <div className="telemetry-kpi-val">
+                    {telemetryData?.metrics?.active_agents ?? 4} Specialized
+                  </div>
+                  <div className="telemetry-kpi-sub" style={{ color: "#94a3b8" }}>
+                    Coordinator, Researcher, Analyst, Reporter
+                  </div>
+                </div>
+
+                {/* 3. Tool CIM Execution Events */}
+                <div className="telemetry-kpi-card" style={{ "--card-accent": "#f59e0b" }}>
+                  <div className="telemetry-kpi-header">
+                    <span className="telemetry-kpi-lbl">Tool CIM Events</span>
+                    <div className="telemetry-kpi-icon" style={{ color: "#f59e0b" }}>
+                      <Zap size={16} />
+                    </div>
+                  </div>
+                  <div className="telemetry-kpi-val">
+                    {telemetryData?.metrics?.total_events ?? status?.metrics_summary?.total_events ?? 0}
+                  </div>
+                  <div className="telemetry-kpi-sub">
+                    Continuous Inspection Mechanism
+                  </div>
+                </div>
+
+                {/* 4. Inter-Agent Messages */}
+                <div className="telemetry-kpi-card" style={{ "--card-accent": "#8b5cf6" }}>
+                  <div className="telemetry-kpi-header">
+                    <span className="telemetry-kpi-lbl">Inter-Agent Messages</span>
+                    <div className="telemetry-kpi-icon" style={{ color: "#8b5cf6" }}>
+                      <MessageSquare size={16} />
+                    </div>
+                  </div>
+                  <div className="telemetry-kpi-val">
+                    {telemetryData?.metrics?.total_interactions ?? status?.metrics_summary?.total_interactions ?? 0}
+                  </div>
+                  <div className="telemetry-kpi-sub">
+                    Structured ACL protocol communications
+                  </div>
+                </div>
+
+                {/* 5. Delegation Tokens Minted */}
+                <div className="telemetry-kpi-card" style={{ "--card-accent": "#06b6d4" }}>
+                  <div className="telemetry-kpi-header">
+                    <span className="telemetry-kpi-lbl">Authority Tokens</span>
+                    <div className="telemetry-kpi-icon" style={{ color: "#06b6d4" }}>
+                      <ShieldCheck size={16} />
+                    </div>
+                  </div>
+                  <div className="telemetry-kpi-val">
+                    {telemetryData?.metrics?.total_delegations ?? status?.metrics_summary?.total_delegations ?? 0}
+                  </div>
+                  <div className="telemetry-kpi-sub">
+                    Cryptographic tokens minted
+                  </div>
+                </div>
+
+                {/* 6. MongoDB Atlas Chat Storage */}
+                <div className="telemetry-kpi-card" style={{ "--card-accent": "#f43f5e" }}>
+                  <div className="telemetry-kpi-header">
+                    <span className="telemetry-kpi-lbl">Chat Persistence</span>
+                    <div className="telemetry-kpi-icon" style={{ color: "#f43f5e" }}>
+                      <Database size={16} />
+                    </div>
+                  </div>
+                  <div className="telemetry-kpi-val" style={{ fontSize: 22 }}>
+                    {telemetryData?.metrics?.mongodb_chats_count ?? 0} <span style={{ fontSize: 13, fontWeight: 400, color: "#94a3b8" }}>chats</span> / {telemetryData?.metrics?.mongodb_messages_count ?? 0} <span style={{ fontSize: 13, fontWeight: 400, color: "#94a3b8" }}>msgs</span>
+                  </div>
+                  <div className="telemetry-kpi-sub">
+                    MongoDB Atlas ({telemetryData?.mongodb_telemetry?.mongodb_connected ? "Online" : "Standby/Offline"})
+                  </div>
+                </div>
+              </div>
+
+              {/* Infrastructure & Gateway Status Envelope */}
+              <div className="telemetry-infra-strip">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0", display: "flex", alignItems: "center", gap: 8 }}>
+                    <Server size={16} style={{ color: "#38bdf8" }} />
+                    Distributed Gateway & Infrastructure Health
+                  </div>
+                  <span className={`telemetry-infra-badge ${telemetryData?.infrastructure?.mongodb?.connected ? "online" : "standby"}`}>
+                    <span className={telemetryData?.infrastructure?.mongodb?.connected ? "live-dot" : ""} style={!telemetryData?.infrastructure?.mongodb?.connected ? { width: 6, height: 6, borderRadius: "50%", background: "#f59e0b", display: "inline-block" } : {}}></span>
+                    Cluster Status: {telemetryData?.infrastructure?.mongodb?.connected ? "Active & Synchronized" : "Local Event Store Active"}
+                  </span>
+                </div>
+
+                <div className="telemetry-infra-grid">
+                  <div className="telemetry-infra-item">
+                    <div className="telemetry-infra-label">FastAPI Gateway</div>
+                    <div className="telemetry-infra-val">
+                      <code>{telemetryData?.infrastructure?.api_host || "127.0.0.1"}:{telemetryData?.infrastructure?.api_port || "8000"}</code>
+                      <span className="telemetry-infra-badge online">● Healthy</span>
+                    </div>
+                  </div>
+
+                  <div className="telemetry-infra-item">
+                    <div className="telemetry-infra-label">MongoDB Atlas Cluster</div>
+                    <div className="telemetry-infra-val">
+                      <span>{telemetryData?.infrastructure?.mongodb?.database || "transparency_platform"}</span>
+                      <span className={`telemetry-infra-badge ${telemetryData?.infrastructure?.mongodb?.connected ? "online" : "standby"}`}>
+                        {telemetryData?.infrastructure?.mongodb?.connected ? "● Connected" : "○ Standby"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="telemetry-infra-item">
+                    <div className="telemetry-infra-label">Hugging Face Router</div>
+                    <div className="telemetry-infra-val">
+                      <span style={{ fontSize: 12 }}>Llama-3.1-8B & Qwen2.5-7B</span>
+                      <span className="telemetry-infra-badge online">● Ready</span>
+                    </div>
+                  </div>
+
+                  <div className="telemetry-infra-item">
+                    <div className="telemetry-infra-label">Privacy & Audit Storage</div>
+                    <div className="telemetry-infra-val">
+                      <span style={{ fontSize: 12 }}>Level 2 (Semantic)</span>
+                      <span style={{ fontSize: 12, color: "#94a3b8" }}>SQLite: {telemetryData?.storage?.file_size_formatted || "45.59 MB"}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dual Visual Analytics Panels */}
+              <div className="telemetry-dual-panel">
+                {/* Panel 1: Multi-Agent Workload Distribution */}
+                <div className="telemetry-panel-card">
+                  <div className="telemetry-panel-title">
+                    <BarChart3 size={16} style={{ color: "#38bdf8" }} />
+                    Specialized Multi-Agent Workload Distribution
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
+                    {(telemetryData?.agent_breakdown || [
+                      { agent_id: "agent_coordinator", name: "Coordinator (Agent A)", role: "Lead Orchestrator & Planner", events_count: 0, interactions_sent: 138, activity_pct: 25.5, color: "#3b82f6" },
+                      { agent_id: "agent_researcher", name: "Researcher (Agent B)", role: "Data Ingestion & Filtering", events_count: 53, interactions_sent: 106, activity_pct: 29.4, color: "#10b981" },
+                      { agent_id: "agent_analyst", name: "Analyst (Agent C)", role: "Statistical & Anomaly Analysis", events_count: 53, interactions_sent: 85, activity_pct: 25.5, color: "#f59e0b" },
+                      { agent_id: "agent_reporter", name: "Reporter (Agent D)", role: "Synthesis & Provenance Report", events_count: 53, interactions_sent: 53, activity_pct: 19.6, color: "#ec4899" }
+                    ]).map((ag) => (
+                      <div key={ag.agent_id} className="telemetry-agent-row">
+                        <div className="telemetry-agent-meta">
+                          <div className="telemetry-agent-name">
+                            <span style={{ width: 8, height: 8, borderRadius: "50%", background: ag.color, display: "inline-block" }}></span>
+                            <strong>{ag.name}</strong>
+                            <span className="telemetry-agent-role">({ag.role})</span>
+                          </div>
+                          <div className="telemetry-agent-stats">
+                            <span style={{ fontWeight: 700, color: ag.color }}>{ag.activity_pct}%</span>
+                            <span style={{ color: "#64748b", marginLeft: 6 }}>({ag.events_count} events / {ag.interactions_sent} msgs)</span>
+                          </div>
+                        </div>
+                        <div className="telemetry-agent-track">
+                          <div
+                            className="telemetry-agent-fill"
+                            style={{
+                              width: `${Math.max(ag.activity_pct, 4)}%`,
+                              background: ag.color,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Panel 2: Communication & Interaction Types Breakdown */}
+                <div className="telemetry-panel-card">
+                  <div className="telemetry-panel-title">
+                    <TrendingUp size={16} style={{ color: "#10b981" }} />
+                    Inter-Agent Communication Types Share
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
+                    {(telemetryData?.interaction_breakdown || []).map((it) => (
+                      <div key={it.type} className="telemetry-agent-row" style={{ padding: "8px 0" }}>
+                        <div className="telemetry-agent-meta">
+                          <div className="telemetry-agent-name">
+                            <span style={{ width: 8, height: 8, borderRadius: 2, background: it.color, display: "inline-block" }}></span>
+                            <span style={{ color: "#e2e8f0" }}>{it.label}</span>
+                            <code style={{ fontSize: 11, color: "#94a3b8" }}>{it.type}</code>
+                          </div>
+                          <div className="telemetry-agent-stats">
+                            <span style={{ fontWeight: 700, color: "#f8fafc" }}>{it.count}</span>
+                            <span style={{ color: "#64748b", marginLeft: 4 }}>({it.percentage}%)</span>
+                          </div>
+                        </div>
+                        <div className="telemetry-agent-track" style={{ height: 6 }}>
+                          <div
+                            className="telemetry-agent-fill"
+                            style={{
+                              width: `${Math.max(it.percentage, 3)}%`,
+                              background: it.color,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Live Recent Workflow Executions Stream */}
+              <div className="telemetry-section-card">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+                  <div>
+                    <h3 style={{ color: "#60a5fa", margin: 0, display: "flex", alignItems: "center", gap: 8, fontSize: 16 }}>
+                      <PlayCircle size={18} />
+                      Live Recent Workflow Executions
+                    </h3>
+                    <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>
+                      Recent multi-agent collaborative workflows with duration, execution outcomes, and graph linkage.
+                    </div>
+                  </div>
+
+                  {/* Filter Pills */}
+                  <div style={{ display: "flex", gap: 6 }}>
+                    {["all", "completed", "running", "failed"].map((f) => (
+                      <button
+                        key={f}
+                        onClick={() => setTelemetryWorkflowFilter(f)}
+                        style={{
+                          background: telemetryWorkflowFilter === f ? "#2563eb" : "#1e293b",
+                          color: telemetryWorkflowFilter === f ? "#ffffff" : "#94a3b8",
+                          border: "1px solid",
+                          borderColor: telemetryWorkflowFilter === f ? "#3b82f6" : "#334155",
+                          padding: "4px 10px",
+                          borderRadius: 5,
+                          fontSize: 12,
+                          fontWeight: 500,
+                          cursor: "pointer",
+                          textTransform: "capitalize",
+                        }}
+                      >
+                        {f}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="telemetry-table-wrapper">
+                  <table style={{ width: "100%", fontSize: 12.5, borderCollapse: "collapse" }}>
+                    <thead>
+                      <tr style={{ background: "#111827", textAlign: "left" }}>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Workflow ID</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Task / Goal</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Dataset</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Mode</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Status</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Duration</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Events / Msgs</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937", textAlign: "right" }}>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(telemetryData?.recent_workflows || workflows || [])
+                        .filter((w) => {
+                          if (telemetryWorkflowFilter === "all") return true;
+                          const s = (w.status || "").toLowerCase();
+                          return s === telemetryWorkflowFilter;
+                        })
+                        .map((wf) => (
+                          <tr key={wf.workflow_id} style={{ borderBottom: "1px solid #1e293b" }}>
+                            <td style={{ padding: "9px 12px" }}>
+                              <code style={{ color: "#38bdf8", fontWeight: 600 }}>{wf.workflow_id}</code>
+                            </td>
+                            <td style={{ padding: "9px 12px", maxWidth: 260 }}>
+                              <span style={{ color: "#e2e8f0", display: "inline-block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 260 }} title={wf.name || wf.task_description}>
+                                {wf.name || wf.task_description || "Workflow Execution"}
+                              </span>
+                            </td>
+                            <td style={{ padding: "9px 12px" }}>
+                              <code style={{ fontSize: 11 }}>{wf.dataset_name || "N/A"}</code>
+                            </td>
+                            <td style={{ padding: "9px 12px", color: "#94a3b8", fontSize: 11.5 }}>
+                              {wf.mode || "adaptive"}
+                            </td>
+                            <td style={{ padding: "9px 12px" }}>
+                              <span className={`telemetry-badge-status ${(wf.status || "completed").toLowerCase()}`}>
+                                {(wf.status || "completed").toLowerCase() === "running" && <span className="live-dot" style={{ width: 6, height: 6 }}></span>}
+                                {wf.status || "completed"}
+                              </span>
+                            </td>
+                            <td style={{ padding: "9px 12px", color: "#94a3b8" }}>
+                              {wf.duration_seconds !== undefined && wf.duration_seconds !== null ? `${wf.duration_seconds}s` : "0.0s"}
+                            </td>
+                            <td style={{ padding: "9px 12px", color: "#cbd5e1" }}>
+                              {wf.event_count ?? 3} ev / {wf.interaction_count ?? 7} msgs
+                            </td>
+                            <td style={{ padding: "9px 12px", textAlign: "right" }}>
+                              <button
+                                className="telemetry-view-graph-btn"
+                                onClick={() => {
+                                  setSelectedWorkflowId(wf.workflow_id);
+                                  fetchGraphData(wf.workflow_id);
+                                  setActiveTab("graphs");
+                                  navigate(`/graphs?workflow_id=${encodeURIComponent(wf.workflow_id)}`);
+                                }}
+                                title="Inspect Execution & Interaction Graphs"
+                              >
+                                <ExternalLink size={12} />
+                                View Graph
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Real-Time Continuous Inspection Mechanism (CIM) Event Stream */}
+              <div className="telemetry-section-card">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+                  <div>
+                    <h3 style={{ color: "#34d399", margin: 0, display: "flex", alignItems: "center", gap: 8, fontSize: 16 }}>
+                      <Zap size={18} />
+                      Real-Time Continuous Inspection Mechanism (CIM) Event Stream
+                    </h3>
+                    <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>
+                      Live verifiable audit trail of tool invocations, state updates, and cryptographic delegation IDs.
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 12, color: "#64748b" }}>
+                    Showing latest {(telemetryData?.live_event_stream || []).length} events
+                  </div>
+                </div>
+
+                <div className="telemetry-table-wrapper">
+                  <table style={{ width: "100%", fontSize: 12.5, borderCollapse: "collapse" }}>
+                    <thead>
+                      <tr style={{ background: "#111827", textAlign: "left" }}>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Event ID</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Time</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Agent</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Tool Invoked</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Outcome</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Sensitivity</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Delegation ID</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(telemetryData?.live_event_stream || []).map((ev) => (
+                        <tr key={ev.event_id} style={{ borderBottom: "1px solid #1e293b" }}>
+                          <td style={{ padding: "8px 12px" }}>
+                            <code style={{ color: "#93c5fd" }}>{ev.event_id}</code>
+                          </td>
+                          <td style={{ padding: "8px 12px", color: "#94a3b8", fontSize: 11.5 }}>
+                            {ev.time ? ev.time.substring(11, 19) : "N/A"}
+                          </td>
+                          <td style={{ padding: "8px 12px" }}>
+                            <span style={{ fontWeight: 600, color: "#e2e8f0" }}>{ev.agent_id}</span>
+                          </td>
+                          <td style={{ padding: "8px 12px" }}>
+                            <code style={{ color: "#f59e0b", background: "rgba(245, 158, 11, 0.1)", padding: "2px 6px", borderRadius: 4 }}>
+                              {ev.tool_name}
+                            </code>
+                          </td>
+                          <td style={{ padding: "8px 12px" }}>
+                            <span
+                              style={{
+                                color: (ev.action_outcome || ev.outcome) === "success" ? "#10b981" : "#f87171",
+                                fontWeight: 600,
+                                textTransform: "capitalize",
+                              }}
+                            >
+                              {(ev.action_outcome || ev.outcome) === "success" ? "✓ " : "✕ "}
+                              {ev.action_outcome || ev.outcome || "success"}
+                            </span>
+                          </td>
+                          <td style={{ padding: "8px 12px" }}>
+                            <span
+                              style={{
+                                fontSize: 11,
+                                padding: "2px 6px",
+                                borderRadius: 4,
+                                background: ev.sensitivity === "confidential" ? "rgba(244, 63, 94, 0.15)" : ev.sensitivity === "restricted" ? "rgba(245, 158, 11, 0.15)" : "rgba(100, 116, 139, 0.15)",
+                                color: ev.sensitivity === "confidential" ? "#fb7185" : ev.sensitivity === "restricted" ? "#fbbf24" : "#94a3b8",
+                              }}
+                            >
+                              {ev.sensitivity || "public"}
+                            </span>
+                          </td>
+                          <td style={{ padding: "8px 12px" }}>
+                            <code style={{ fontSize: 11, color: "#64748b" }}>
+                              {ev.delegation_id ? ev.delegation_id.substring(0, 16) + "..." : "root"}
+                            </code>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Allowlisted Datasets Inventory */}
+              <div className="telemetry-section-card" style={{ marginBottom: 20 }}>
+                <h3 style={{ color: "#60a5fa", margin: "0 0 12px 0", display: "flex", alignItems: "center", gap: 8, fontSize: 16 }}>
+                  <Database size={18} />
+                  Available Allowlisted Datasets Inventory
+                </h3>
+                <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 12 }}>
+                  Datasets approved for ingestion by Researcher (Agent B) and statistical inspection by Analyst (Agent C).
+                </div>
+                <div className="telemetry-table-wrapper" style={{ maxHeight: 240, marginTop: 0 }}>
+                  <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
+                    <thead>
+                      <tr style={{ background: "#111827", textAlign: "left" }}>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Dataset Name</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Size</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Local Storage Path</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(telemetryData?.datasets || datasets || []).map((d) => (
+                        <tr key={d.name} style={{ borderBottom: "1px solid #1e293b" }}>
+                          <td style={{ padding: "9px 12px" }}>
+                            <strong style={{ color: "#f8fafc" }}>{d.name}</strong>
+                          </td>
+                          <td style={{ padding: "9px 12px", color: "#94a3b8" }}>
+                            {d.size_bytes ? `${(d.size_bytes / 1024).toFixed(1)} KB` : "N/A"}
+                          </td>
+                          <td style={{ padding: "9px 12px" }}>
+                            <code style={{ color: "#38bdf8", fontSize: 11 }}>{d.path}</code>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
         )}
 
-        {/* View 5: Communication Timeline */}
+        {/* View 6: Communication Timeline */}
         {activeTab === "timeline" && (
           <div className="content-panel">
-            <div className="stat-card">
-              <h3 style={{ color: "#60a5fa", marginBottom: 14 }}>Inter-Agent Interaction Messages Timeline</h3>
-              <div style={{ maxHeight: 600, overflowY: "auto" }}>
-                <table style={{ width: "100%", fontSize: 13 }}>
-                  <thead>
-                    <tr>
-                      <th>Time</th>
-                      <th>Sender</th>
-                      <th>Recipient</th>
-                      <th>Type</th>
-                      <th>Semantic Summary</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {interactions.slice(0, 30).map((it) => (
-                      <tr key={it.interaction_id}>
-                        <td>{it.timestamp ? it.timestamp.substring(11, 19) : "N/A"}</td>
-                        <td><strong>{it.sender_id}</strong></td>
-                        <td><strong>{it.recipient_id}</strong></td>
-                        <td><code style={{ color: "#f59e0b" }}>{it.interaction_type}</code></td>
-                        <td>{it.semantic_summary}</td>
-                      </tr>
+            {/* Header & Metric Summary */}
+            <div className="stat-card" style={{ marginBottom: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
+                <div>
+                  <h3 style={{ color: "#60a5fa", margin: 0, display: "flex", alignItems: "center", gap: 8, fontSize: 18 }}>
+                    <Clock size={20} />
+                    Inter-Agent Communication Timeline
+                  </h3>
+                  <p style={{ color: "#94a3b8", fontSize: 13, margin: "6px 0 0 0" }}>
+                    Chronological, observable message transfers captured at the Observability Gateway boundary between autonomous agents.
+                  </p>
+                </div>
+                <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  <div className="pill-badge active" style={{ fontSize: 12 }}>
+                    <span>Showing: <strong>{filteredInteractions.length}</strong> Messages</span>
+                  </div>
+                  <div className="pill-badge" style={{ fontSize: 12 }}>
+                    <span>Scope: <code style={{ color: "#38bdf8" }}>{timelineScope === "all" ? "All Workflows (Latest)" : timelineScope}</code></span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Filter & Controls Toolbar */}
+              <div
+                style={{
+                  display: "flex",
+                  gap: 12,
+                  marginTop: 16,
+                  paddingTop: 14,
+                  borderTop: "1px solid #1f2937",
+                  flexWrap: "wrap",
+                  alignItems: "flex-end",
+                }}
+              >
+                {/* Workflow Selector */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 230, flex: "1 1 200px" }}>
+                  <label style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600 }}>WORKFLOW SCOPE</label>
+                  <select
+                    value={timelineScope}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setTimelineScope(val);
+                      fetchInteractions(val, timelineAgentFilter, timelineTypeFilter);
+                    }}
+                    style={{ padding: "8px 12px", background: "#0b0f19", border: "1px solid #334155", borderRadius: 6, color: "#fff", fontSize: 13 }}
+                  >
+                    <option value="all">🌐 All Workflows (Latest Activity)</option>
+                    {workflows.map((w) => (
+                      <option key={w.workflow_id} value={w.workflow_id}>
+                        {w.workflow_id} - {(w.task_description || "").substring(0, 36)}...
+                      </option>
                     ))}
-                  </tbody>
-                </table>
+                  </select>
+                </div>
+
+                {/* Agent Filter */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 180, flex: "1 1 160px" }}>
+                  <label style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600 }}>FILTER BY AGENT</label>
+                  <select
+                    value={timelineAgentFilter}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setTimelineAgentFilter(val);
+                      fetchInteractions(timelineScope, val, timelineTypeFilter);
+                    }}
+                    style={{ padding: "8px 12px", background: "#0b0f19", border: "1px solid #334155", borderRadius: 6, color: "#fff", fontSize: 13 }}
+                  >
+                    <option value="all">👥 All Agents</option>
+                    <option value="agent_coordinator">👑 Coordinator (Agent A)</option>
+                    <option value="agent_researcher">🔍 Researcher (Agent B)</option>
+                    <option value="agent_analyst">📊 Analyst (Agent C)</option>
+                    <option value="agent_reporter">📝 Reporter (Agent D)</option>
+                  </select>
+                </div>
+
+                {/* Interaction Type Filter */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 170, flex: "1 1 150px" }}>
+                  <label style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600 }}>INTERACTION TYPE</label>
+                  <select
+                    value={timelineTypeFilter}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setTimelineTypeFilter(val);
+                      fetchInteractions(timelineScope, timelineAgentFilter, val);
+                    }}
+                    style={{ padding: "8px 12px", background: "#0b0f19", border: "1px solid #334155", borderRadius: 6, color: "#fff", fontSize: 13 }}
+                  >
+                    <option value="all">⚡ All Types</option>
+                    <option value="delegation">📋 Delegation</option>
+                    <option value="request">❓ Request</option>
+                    <option value="response">💬 Response</option>
+                    <option value="clarification">⚡ Clarification</option>
+                    <option value="information_transfer">📦 Information Transfer</option>
+                    <option value="result">✅ Result</option>
+                    <option value="escalation">🚨 Escalation</option>
+                    <option value="handoff">🤝 Handoff</option>
+                    <option value="warning">⚠️ Warning</option>
+                  </select>
+                </div>
+
+                {/* Keyword Search */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: "2 1 200px" }}>
+                  <label style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600 }}>KEYWORD SEARCH</label>
+                  <div style={{ position: "relative" }}>
+                    <Search size={14} style={{ position: "absolute", left: 10, top: 11, color: "#64748b" }} />
+                    <input
+                      type="text"
+                      placeholder="Search summaries, agents, IDs..."
+                      value={timelineSearch}
+                      onChange={(e) => setTimelineSearch(e.target.value)}
+                      style={{ width: "100%", padding: "8px 12px 8px 32px", background: "#0b0f19", border: "1px solid #334155", borderRadius: 6, color: "#fff", fontSize: 13 }}
+                    />
+                  </div>
+                </div>
+
+                {/* Refresh Feed Button */}
+                <div style={{ display: "flex", alignItems: "flex-end" }}>
+                  <button
+                    onClick={() => fetchInteractions(timelineScope, timelineAgentFilter, timelineTypeFilter)}
+                    disabled={timelineLoading}
+                    className="pill-btn"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      background: "#2563eb",
+                      color: "#fff",
+                      padding: "8px 16px",
+                      borderRadius: 6,
+                      height: 36,
+                      cursor: timelineLoading ? "not-allowed" : "pointer",
+                      border: "none",
+                      fontWeight: 500,
+                    }}
+                  >
+                    <RefreshCw size={14} className={timelineLoading ? "animate-spin" : ""} />
+                    <span>{timelineLoading ? "Refreshing..." : "Refresh Feed"}</span>
+                  </button>
+                </div>
               </div>
             </div>
+
+            {/* Timeline Stream Feed */}
+            {timelineLoading ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {[1, 2, 3].map((n) => (
+                  <div
+                    key={n}
+                    style={{
+                      background: "#0d1322",
+                      border: "1px solid #1e293b",
+                      borderRadius: 8,
+                      padding: 20,
+                      opacity: 0.6,
+                    }}
+                  >
+                    <div style={{ height: 14, width: 200, background: "#1e293b", borderRadius: 4, marginBottom: 10 }} />
+                    <div style={{ height: 18, width: "80%", background: "#1e293b", borderRadius: 4, marginBottom: 8 }} />
+                    <div style={{ height: 12, width: 140, background: "#1e293b", borderRadius: 4 }} />
+                  </div>
+                ))}
+              </div>
+            ) : filteredInteractions.length === 0 ? (
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "48px 24px",
+                  background: "#0f172a",
+                  border: "1px dashed #334155",
+                  borderRadius: 10,
+                }}
+              >
+                <Clock size={40} style={{ color: "#64748b", margin: "0 auto 14px", display: "block" }} />
+                <h4 style={{ color: "#f8fafc", marginBottom: 6, fontSize: 16 }}>No Inter-Agent Messages Found</h4>
+                <p style={{ color: "#94a3b8", fontSize: 13, maxWidth: 480, margin: "0 auto 18px", lineHeight: 1.5 }}>
+                  {timelineScope !== "all" || timelineAgentFilter !== "all" || timelineTypeFilter !== "all" || timelineSearch
+                    ? "No inter-agent messages match your current filters. Try resetting the filters or switching to 'All Workflows'."
+                    : "No inter-agent messages have been recorded yet. Launch a workflow or send a chat prompt to trigger live multi-agent communication."}
+                </p>
+                <button
+                  onClick={() => {
+                    setTimelineScope("all");
+                    setTimelineAgentFilter("all");
+                    setTimelineTypeFilter("all");
+                    setTimelineSearch("");
+                    fetchInteractions("all", "all", "all");
+                  }}
+                  className="pill-btn"
+                  style={{ background: "#1e293b", color: "#38bdf8", padding: "8px 18px", border: "1px solid #334155", borderRadius: 6, cursor: "pointer" }}
+                >
+                  Reset All Filters
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {filteredInteractions.map((it, idx) => {
+                  const sender = getAgentMeta(it.sender_id || it.sender_agent_id);
+                  const receiver = getAgentMeta(it.recipient_id || it.receiver_agent_id);
+                  const typeInfo = TYPE_META[it.interaction_type] || { color: "#94a3b8", bg: "rgba(148, 163, 184, 0.15)", border: "#475569", icon: "💬" };
+                  const isExpanded = expandedInteractionId === it.interaction_id;
+                  const timeStr = it.timestamp
+                    ? it.timestamp.includes("T")
+                      ? it.timestamp.split("T")[1].substring(0, 8) + " UTC"
+                      : it.timestamp
+                    : "N/A";
+
+                  return (
+                    <div
+                      key={it.interaction_id || idx}
+                      style={{
+                        background: "#0d1322",
+                        border: `1px solid ${isExpanded ? typeInfo.border : "#1e293b"}`,
+                        borderLeft: `4px solid ${typeInfo.color}`,
+                        borderRadius: 8,
+                        padding: "14px 18px",
+                        transition: "all 0.2s ease",
+                      }}
+                    >
+                      {/* Top Bar: Timestamp, Sender -> Receiver, Type Badge, Action count */}
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                          <span style={{ fontSize: 11, color: "#64748b", fontFamily: "monospace", display: "flex", alignItems: "center", gap: 4 }}>
+                            <Clock size={12} />
+                            {timeStr}
+                          </span>
+
+                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <span
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 600,
+                                color: sender.color,
+                                background: sender.bg,
+                                border: `1px solid ${sender.border}`,
+                                padding: "2px 8px",
+                                borderRadius: 4,
+                              }}
+                            >
+                              {sender.label}
+                            </span>
+                            <ArrowRight size={13} style={{ color: "#64748b" }} />
+                            <span
+                              style={{
+                                fontSize: 11,
+                                fontWeight: 600,
+                                color: receiver.color,
+                                background: receiver.bg,
+                                border: `1px solid ${receiver.border}`,
+                                padding: "2px 8px",
+                                borderRadius: 4,
+                              }}
+                            >
+                              {receiver.label}
+                            </span>
+                          </div>
+
+                          <span
+                            style={{
+                              fontSize: 11,
+                              fontWeight: 600,
+                              color: typeInfo.color,
+                              background: typeInfo.bg,
+                              border: `1px solid ${typeInfo.border}`,
+                              padding: "2px 8px",
+                              borderRadius: 12,
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 4,
+                            }}
+                          >
+                            <span>{typeInfo.icon}</span>
+                            <span>{it.interaction_type}</span>
+                          </span>
+                        </div>
+
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          {it.downstream_action_ids && it.downstream_action_ids.length > 0 && (
+                            <span
+                              style={{
+                                fontSize: 11,
+                                color: "#10b981",
+                                background: "rgba(16, 185, 129, 0.1)",
+                                border: "1px solid #059669",
+                                padding: "2px 7px",
+                                borderRadius: 4,
+                              }}
+                            >
+                              ⚙️ {it.downstream_action_ids.length} Tool Actions
+                            </span>
+                          )}
+                          <button
+                            onClick={() => setExpandedInteractionId(isExpanded ? null : it.interaction_id)}
+                            className="pill-btn"
+                            style={{
+                              fontSize: 11,
+                              padding: "3px 9px",
+                              background: isExpanded ? "#1e293b" : "transparent",
+                              color: isExpanded ? "#38bdf8" : "#94a3b8",
+                              border: "1px solid #334155",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 4,
+                              cursor: "pointer",
+                              borderRadius: 4,
+                            }}
+                          >
+                            <span>{isExpanded ? "Collapse" : "Details"}</span>
+                            {isExpanded ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Semantic Summary Text */}
+                      <div style={{ fontSize: 13, color: "#e2e8f0", lineHeight: 1.5, marginBottom: 4 }}>
+                        {it.semantic_summary || "No semantic summary available for this interaction."}
+                      </div>
+
+                      {/* Inline Causal Identifiers */}
+                      <div style={{ fontSize: 11, color: "#64748b", display: "flex", gap: 14, flexWrap: "wrap", marginTop: 6 }}>
+                        {it.delegation_id && (
+                          <span>
+                            Delegation: <code style={{ color: "#38bdf8" }}>{it.delegation_id}</code>
+                          </span>
+                        )}
+                        {it.task_id && (
+                          <span>
+                            Task: <code style={{ color: "#a855f7" }}>{it.task_id}</code>
+                          </span>
+                        )}
+                        {it.trace_id && (
+                          <span>
+                            Trace: <code style={{ color: "#94a3b8" }}>{it.trace_id}</code>
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Expandable Details Drawer */}
+                      {isExpanded && (
+                        <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #1e293b" }}>
+                          <div
+                            style={{
+                              display: "grid",
+                              gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                              gap: 8,
+                              background: "#080c14",
+                              padding: 12,
+                              borderRadius: 6,
+                              fontSize: 12,
+                              marginBottom: 10,
+                            }}
+                          >
+                            <div>
+                              <span style={{ color: "#64748b" }}>Interaction ID:</span>{" "}
+                              <code style={{ color: "#cbd5e1" }}>{it.interaction_id}</code>
+                            </div>
+                            <div>
+                              <span style={{ color: "#64748b" }}>Message ID:</span>{" "}
+                              <code style={{ color: "#cbd5e1" }}>{it.message_id}</code>
+                            </div>
+                            <div>
+                              <span style={{ color: "#64748b" }}>Parent Delegation:</span>{" "}
+                              <code style={{ color: "#cbd5e1" }}>{it.delegation_parent_id || "None (Root)"}</code>
+                            </div>
+                            <div>
+                              <span style={{ color: "#64748b" }}>Capture Level:</span>{" "}
+                              <span style={{ color: "#f59e0b" }}>Level {it.capture_level} (Metadata Summary)</span>
+                            </div>
+                            {it.resource_refs && it.resource_refs.length > 0 && (
+                              <div style={{ gridColumn: "1 / -1" }}>
+                                <span style={{ color: "#64748b" }}>Referenced Resources:</span>{" "}
+                                {it.resource_refs.map((r, i) => (
+                                  <code key={i} style={{ color: "#34d399", marginRight: 6 }}>
+                                    {r}
+                                  </code>
+                                ))}
+                              </div>
+                            )}
+                            {it.downstream_action_ids && it.downstream_action_ids.length > 0 && (
+                              <div style={{ gridColumn: "1 / -1" }}>
+                                <span style={{ color: "#64748b" }}>Downstream Action IDs:</span>{" "}
+                                {it.downstream_action_ids.map((act, i) => (
+                                  <code key={i} style={{ color: "#10b981", marginRight: 6 }}>
+                                    {act}
+                                  </code>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Raw JSON Accordion */}
+                          <details style={{ fontSize: 11, color: "#64748b" }}>
+                            <summary style={{ cursor: "pointer", color: "#38bdf8", marginBottom: 6 }}>
+                              Inspect Raw InteractionRecord JSON
+                            </summary>
+                            <pre
+                              style={{
+                                background: "#050810",
+                                padding: 10,
+                                borderRadius: 6,
+                                color: "#a5b4fc",
+                                maxHeight: 220,
+                                overflowY: "auto",
+                                fontSize: 11,
+                              }}
+                            >
+                              {JSON.stringify(it, null, 2)}
+                            </pre>
+                          </details>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 

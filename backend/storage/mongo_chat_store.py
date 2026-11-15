@@ -25,12 +25,19 @@ class MongoChatStore:
         self._client: Optional[MongoClient] = None
         self._db: Optional[Database] = None
         self._collection: Optional[Collection] = None
+        self._last_attempt_time: float = 0.0
         self._connect()
 
     def _connect(self) -> bool:
         if not self.uri:
             logger.warning("[MongoChatStore] No MONGODB_URI provided in configuration.")
             return False
+        import time
+        now = time.time()
+        # Cooldown: don't attempt reconnection more than once every 10 seconds if offline
+        if self._collection is None and (now - self._last_attempt_time) < 10.0:
+            return False
+        self._last_attempt_time = now
         try:
             self._client = MongoClient(
                 self.uri,
@@ -73,12 +80,12 @@ class MongoChatStore:
             except Exception:
                 self._client = None
                 self._collection = None
+                self._db = None
 
         import time
         now = time.time()
-        if hasattr(self, "_last_connect_attempt") and (now - self._last_connect_attempt < 30.0):
+        if hasattr(self, "_last_attempt_time") and (now - self._last_attempt_time < 10.0):
             return False
-        self._last_connect_attempt = now
         return self._connect()
 
     def generate_smart_title(self, text: str) -> str:
