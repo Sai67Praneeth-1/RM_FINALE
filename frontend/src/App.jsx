@@ -26,6 +26,8 @@ import {
   FileText,
   CheckCircle2,
   AlertTriangle,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import AgentInteractionGraph from "./AgentInteractionGraph";
 
@@ -51,6 +53,35 @@ export default function App() {
   const [datasets, setDatasets] = useState([]);
   const [workflows, setWorkflows] = useState([]);
   const [selectedWorkflowId, setSelectedWorkflowId] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => {
+    try {
+      const saved = localStorage.getItem("rm_sidebar_open");
+      return saved !== null ? saved === "true" : true;
+    } catch {
+      return true;
+    }
+  });
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("rm_sidebar_open", String(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === "b" || e.key === "B" || e.key === "\\")) {
+        e.preventDefault();
+        toggleSidebar();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // Tab 1: Chat State
   const [messages, setMessages] = useState([
@@ -346,55 +377,77 @@ export default function App() {
   };
 
   return (
-    <div style={{ display: "flex", width: "100%", height: "100%" }}>
-      {/* 11-Item Nav Sidebar */}
-      <aside className="sidebar">
-        <div className="brand">
-          <div className="brand-icon">
-            <Sparkles size={20} color="#fff" />
+    <div style={{ display: "flex", width: "100%", height: "100%", position: "relative", overflow: "hidden" }}>
+      {/* 11-Item Nav Sidebar (ChatGPT Style Collapsible & Scrollable) */}
+      <aside className={`sidebar ${isSidebarOpen ? "open" : "collapsed"}`}>
+        <div className="sidebar-inner">
+          <div className="brand">
+            <div className="brand-icon">
+              <Sparkles size={20} color="#fff" />
+            </div>
+            <div className="brand-text">
+              <div className="brand-title">Agentic AI Platform</div>
+              <div className="brand-sub">11 Research Interfaces</div>
+            </div>
+            <button
+              className="sidebar-toggle-btn close-btn"
+              onClick={toggleSidebar}
+              title="Close sidebar (Ctrl+B)"
+              aria-label="Close sidebar"
+            >
+              <PanelLeftClose size={18} />
+            </button>
           </div>
-          <div>
-            <div className="brand-title">Agentic AI Platform</div>
-            <div className="brand-sub">11 Research Interfaces</div>
-          </div>
-        </div>
 
-        <nav className="nav-menu">
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                className={`nav-item ${activeTab === item.id ? "active" : ""}`}
-                onClick={() => handleTabChange(item.id)}
-              >
-                <Icon size={17} />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
+          <nav className="nav-menu">
+            {NAV_ITEMS.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  className={`nav-item ${activeTab === item.id ? "active" : ""}`}
+                  onClick={() => handleTabChange(item.id)}
+                >
+                  <Icon size={17} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
 
-        <div className="sidebar-status">
-          <div className="status-indicator">
-            <div className="status-dot" />
-            <span>FastAPI Server Online</span>
+          <div className="sidebar-status">
+            <div className="status-indicator">
+              <div className="status-dot" />
+              <span>FastAPI Server Online</span>
+            </div>
+            <div style={{ padding: "8px 10px", background: "#0b0f19", borderRadius: 6, border: "1px solid #1f2937", marginTop: 4 }}>
+              <div style={{ color: "#38bdf8", fontWeight: 600, fontSize: 11, marginBottom: 3 }}>🤗 Hugging Face Router</div>
+              <div style={{ fontSize: 11, color: "#94a3b8" }}>Coord: <code>Llama-3.1-8B</code></div>
+              <div style={{ fontSize: 11, color: "#94a3b8" }}>Exec: <code>Qwen2.5-7B</code></div>
+            </div>
+            <div style={{ marginTop: 4 }}>Capture: <strong>Level {status?.capture_level || 2}</strong></div>
+            <div style={{ fontSize: 11, color: "#64748b" }}>Endpoint: <code style={{ fontSize: 10 }}>router.huggingface.co</code></div>
           </div>
-          <div style={{ padding: "8px 10px", background: "#0b0f19", borderRadius: 6, border: "1px solid #1f2937", marginTop: 4 }}>
-            <div style={{ color: "#38bdf8", fontWeight: 600, fontSize: 11, marginBottom: 3 }}>🤗 Hugging Face Router</div>
-            <div style={{ fontSize: 11, color: "#94a3b8" }}>Coord: <code>Llama-3.1-8B</code></div>
-            <div style={{ fontSize: 11, color: "#94a3b8" }}>Exec: <code>Qwen2.5-7B</code></div>
-          </div>
-          <div style={{ marginTop: 4 }}>Capture: <strong>Level {status?.capture_level || 2}</strong></div>
-          <div style={{ fontSize: 11, color: "#64748b" }}>Endpoint: <code style={{ fontSize: 10 }}>router.huggingface.co</code></div>
         </div>
       </aside>
 
       {/* Main Content Area */}
       <div className="main-wrapper">
         <header className="top-bar">
-          <div className="top-title">
-            {NAV_ITEMS.find((n) => n.id === activeTab)?.label}
+          <div className="top-left-section">
+            {!isSidebarOpen && (
+              <button
+                className="sidebar-toggle-btn open-btn"
+                onClick={toggleSidebar}
+                title="Open sidebar (Ctrl+B)"
+                aria-label="Open sidebar"
+              >
+                <PanelLeftOpen size={19} />
+              </button>
+            )}
+            <div className="top-title">
+              {NAV_ITEMS.find((n) => n.id === activeTab)?.label}
+            </div>
           </div>
           <div className="top-badges">
             <div className="pill-badge active">
