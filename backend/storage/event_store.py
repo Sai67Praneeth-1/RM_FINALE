@@ -187,14 +187,15 @@ class EventStore:
         agent_id: Optional[str] = None,
         interaction_type: Optional[str] = None,
         workflow_id: Optional[str] = None,
+        order: str = "desc",
         limit: int = 200
     ) -> List[InteractionRecord]:
         conn = self._conn()
         clauses = []
         params = []
         if workflow_id:
-            clauses.append("task_id LIKE ?")
-            params.append(f"%{workflow_id}%")
+            clauses.append("(task_id LIKE ? OR conversation_id LIKE ?)")
+            params.extend([f"%{workflow_id}%", f"%{workflow_id}%"])
         if conversation_id:
             clauses.append("conversation_id = ?")
             params.append(conversation_id)
@@ -209,7 +210,8 @@ class EventStore:
             params.append(interaction_type)
             
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
-        query = f"SELECT * FROM interactions {where} ORDER BY timestamp ASC LIMIT ?"
+        order_dir = "DESC" if str(order).lower() == "desc" else "ASC"
+        query = f"SELECT * FROM interactions {where} ORDER BY timestamp {order_dir} LIMIT ?"
         params.append(limit)
         
         cur = conn.execute(query, params)

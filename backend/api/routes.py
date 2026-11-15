@@ -152,6 +152,8 @@ def list_interactions(
     delegation_id: Optional[str] = None,
     agent_id: Optional[str] = None,
     interaction_type: Optional[str] = None,
+    workflow_id: Optional[str] = None,
+    order: str = "desc",
     limit: int = 200
 ):
     return store.list_interactions(
@@ -159,6 +161,8 @@ def list_interactions(
         delegation_id=delegation_id,
         agent_id=agent_id,
         interaction_type=interaction_type,
+        workflow_id=workflow_id,
+        order=order,
         limit=limit
     )
 

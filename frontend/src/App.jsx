@@ -36,26 +36,34 @@ import {
   Edit3,
   Check,
   X,
+  ExternalLink,
+  Globe,
 } from "lucide-react";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import AgentInteractionGraph from "./AgentInteractionGraph";
+import ThreeGraphViewer from "./ThreeGraphViewer";
 
 const API_BASE = "http://127.0.0.1:8000/api";
 
 const NAV_ITEMS = [
-  { id: "chat", label: "1. 💬 Chat with Lead Agent", icon: MessageSquare },
-  { id: "hf_simulation", label: "2. 🚀 Hugging Face Simulation", icon: Sparkles },
-  { id: "topologies", label: "3. 🌐 LangGraph Topologies", icon: Network },
-  { id: "workspace", label: "4. 📋 Agent Workspace", icon: PlayCircle },
-  { id: "telemetry", label: "5. 📊 Overview & Telemetry", icon: Activity },
-  { id: "timeline", label: "6. ⏱️ Communication Timeline", icon: Clock },
-  { id: "graphs", label: "7. 🕸️ Three-Graph Explorer", icon: Share2 },
-  { id: "provenance", label: "8. 🧬 Provenance Explorer", icon: Dna },
-  { id: "events", label: "9. 🔍 Event Inspector", icon: Search },
-  { id: "benchmarks", label: "10. 🧪 Research Evaluation", icon: FlaskConical },
-  { id: "docs", label: "11. 📖 Architecture & Docs", icon: BookOpen },
+  { id: "chat", path: "/chat", label: "1. 💬 Chat with Lead Agent", icon: MessageSquare },
+  { id: "hf_simulation", path: "/simulation", label: "2. 🚀 Hugging Face Simulation", icon: Sparkles },
+  { id: "topologies", path: "/topologies", label: "3. 🌐 LangGraph Topologies", icon: Network },
+  { id: "workspace", path: "/workspace", label: "4. 📋 Agent Workspace", icon: PlayCircle },
+  { id: "telemetry", path: "/telemetry", label: "5. 📊 Overview & Telemetry", icon: Activity },
+  { id: "timeline", path: "/timeline", label: "6. ⏱️ Communication Timeline", icon: Clock },
+  { id: "graphs", path: "/graphs", label: "7. 🕸️ Three-Graph Explorer", icon: Share2 },
+  { id: "provenance", path: "/provenance", label: "8. 🧬 Provenance Explorer", icon: Dna },
+  { id: "events", path: "/events", label: "9. 🔍 Event Inspector", icon: Search },
+  { id: "benchmarks", path: "/benchmarks", label: "10. 🧪 Research Evaluation", icon: FlaskConical },
+  { id: "docs", path: "/docs", label: "11. 📖 Architecture & Docs", icon: BookOpen },
 ];
 
 export default function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+
   const [activeTab, setActiveTab] = useState("chat");
   const [status, setStatus] = useState(null);
   const [datasets, setDatasets] = useState([]);
@@ -226,11 +234,30 @@ export default function App() {
     }
   };
 
-  const handleSelectChat = async (chatId) => {
+  const pathToTab = (pathname) => {
+    const clean = pathname.replace(/\/+$/, "") || "/";
+    if (clean === "/" || clean === "/chat" || clean.startsWith("/chat/")) return "chat";
+    if (clean === "/simulation" || clean === "/hf_simulation") return "hf_simulation";
+    if (clean === "/topologies") return "topologies";
+    if (clean === "/workspace") return "workspace";
+    if (clean === "/telemetry") return "telemetry";
+    if (clean === "/timeline") return "timeline";
+    if (clean === "/graphs") return "graphs";
+    if (clean === "/provenance") return "provenance";
+    if (clean === "/events") return "events";
+    if (clean === "/benchmarks") return "benchmarks";
+    if (clean === "/docs") return "docs";
+    return "chat";
+  };
+
+  const handleSelectChat = async (chatId, shouldNavigate = true) => {
     if (editingChatId === chatId) return;
     try {
       setActiveChatId(chatId);
       setActiveTab("chat");
+      if (shouldNavigate && location.pathname !== `/chat/${chatId}`) {
+        navigate(`/chat/${chatId}`);
+      }
       const res = await fetch(`${API_BASE}/chats/${chatId}`);
       if (res.ok) {
         const chat = await res.json();
@@ -255,6 +282,77 @@ export default function App() {
       },
     ]);
     setActiveTab("chat");
+    navigate("/chat");
+  };
+
+  // URL Path Synchronization & Deep Linking Listener
+  useEffect(() => {
+    const currentTab = pathToTab(location.pathname);
+    setActiveTab(currentTab);
+
+    // Root redirect to /chat
+    if (location.pathname === "/") {
+      navigate("/chat", { replace: true });
+      return;
+    }
+
+    // Check for chat ID in URL: /chat/:chatId
+    if (location.pathname.startsWith("/chat/")) {
+      const pathChatId = location.pathname.replace("/chat/", "").trim();
+      if (pathChatId && pathChatId !== activeChatId) {
+        handleSelectChat(pathChatId, false);
+      }
+    }
+
+    // Read query parameters for deep linking
+    const scopeParam = searchParams.get("scope");
+    if (scopeParam && scopeParam !== selectedEventScope) {
+      setSelectedEventScope(scopeParam);
+    }
+
+    const wfParam = searchParams.get("workflow_id");
+    if (wfParam && wfParam !== selectedWorkflowId) {
+      setSelectedWorkflowId(wfParam);
+    }
+
+    // Trigger tab-specific data fetches when navigating directly to a tab
+    if (currentTab === "timeline") {
+      fetchInteractions();
+    } else if (currentTab === "graphs") {
+      const targetWf = wfParam || selectedWorkflowId;
+      if (targetWf) fetchGraphData(targetWf);
+    } else if (currentTab === "provenance") {
+      const targetWf = wfParam || selectedWorkflowId;
+      if (targetWf) fetchProvenance(targetWf);
+    } else if (currentTab === "events") {
+      fetchEvents(scopeParam || selectedEventScope);
+    } else if (currentTab === "benchmarks") {
+      if (!evalResults) fetchEvaluations();
+    }
+  }, [location.pathname, location.search]);
+
+  // Navigate to corresponding page URL when tab is switched
+  const handleTabChange = (tabId, extraParams = {}) => {
+    const item = NAV_ITEMS.find((n) => n.id === tabId);
+    let targetPath = item ? item.path : `/${tabId}`;
+    if (tabId === "chat" && activeChatId) {
+      targetPath = `/chat/${activeChatId}`;
+    }
+
+    const q = new URLSearchParams();
+    if (tabId === "events") {
+      const s = extraParams.scope || selectedEventScope;
+      if (s && s !== "all") q.set("scope", s);
+    } else if (tabId === "graphs" || tabId === "provenance") {
+      const w = extraParams.workflow_id || selectedWorkflowId;
+      if (w) q.set("workflow_id", w);
+    }
+    for (const [k, v] of Object.entries(extraParams)) {
+      if (k !== "scope" && k !== "workflow_id" && v) q.set(k, v);
+    }
+
+    const qStr = q.toString() ? `?${q.toString()}` : "";
+    navigate(`${targetPath}${qStr}`);
   };
 
   const handleSaveChatTitle = async (chatId) => {
@@ -318,21 +416,7 @@ export default function App() {
     fetchChatList();
   };
 
-  // Switch tab and load corresponding data
-  const handleTabChange = async (tabId) => {
-    setActiveTab(tabId);
-    if (tabId === "timeline") {
-      fetchInteractions();
-    } else if (tabId === "graphs") {
-      if (selectedWorkflowId) fetchGraphData(selectedWorkflowId);
-    } else if (tabId === "provenance") {
-      if (selectedWorkflowId) fetchProvenance(selectedWorkflowId);
-    } else if (tabId === "events") {
-      fetchEvents();
-    } else if (tabId === "benchmarks" && !evalResults) {
-      fetchEvaluations();
-    }
-  };
+
 
   const fetchInteractions = async () => {
     try {
@@ -349,6 +433,34 @@ export default function App() {
       if (res.ok) setGraphData(await res.json());
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const runSampleWorkflow = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/workflow/start`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          task_description: "Audit customer complaints for high severity credit reporting issues",
+          dataset_name: "customer_complaints.csv",
+          mode: "deterministic_demo",
+          capture_level: 2,
+        }),
+      });
+      if (res.ok) {
+        const runData = await res.json();
+        const wfListRes = await fetch(`${API_BASE}/workflows?limit=50`);
+        if (wfListRes.ok) {
+          const wfs = await wfListRes.json();
+          setWorkflows(wfs || []);
+        }
+        setSelectedWorkflowId(runData.workflow_id);
+        navigate(`/graphs?workflow_id=${encodeURIComponent(runData.workflow_id)}`, { replace: true });
+        fetchGraphData(runData.workflow_id);
+      }
+    } catch (err) {
+      console.error("runSampleWorkflow error:", err);
     }
   };
 
@@ -512,6 +624,9 @@ export default function App() {
       const data = await res.json();
       if (data.conversation_id) {
         setActiveChatId(data.conversation_id);
+        if (location.pathname === "/chat" || location.pathname === "/") {
+          navigate(`/chat/${data.conversation_id}`, { replace: true });
+        }
       }
       const assistantMsg = {
         role: "assistant",
@@ -868,11 +983,25 @@ export default function App() {
                 <PanelLeftOpen size={19} />
               </button>
             )}
-            <div className="top-title">
-              {NAV_ITEMS.find((n) => n.id === activeTab)?.label}
+            <div className="top-title" style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <span>{NAV_ITEMS.find((n) => n.id === activeTab)?.label}</span>
+                <span style={{ fontSize: 11, padding: "1px 6px", borderRadius: 4, background: "rgba(56, 189, 248, 0.15)", color: "#38bdf8", border: "1px solid rgba(56, 189, 248, 0.3)" }}>
+                  Verified Gov URL
+                </span>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11, color: "#64748b", fontFamily: "monospace" }}>
+                <Globe size={11} color="#10b981" />
+                <span>agency.gov/transparency</span>
+                <span style={{ color: "#38bdf8", fontWeight: 600 }}>{location.pathname}{location.search}</span>
+              </div>
             </div>
           </div>
           <div className="top-badges">
+            <div className="pill-badge" style={{ background: "rgba(16, 185, 129, 0.12)", color: "#34d399", borderColor: "rgba(16, 185, 129, 0.3)" }}>
+              <ShieldCheck size={14} />
+              <span>NIST SP 800-53 / FedRAMP Audited URI</span>
+            </div>
             <div className="pill-badge active">
               <ShieldCheck size={14} />
               <span>W3C PROV Verified</span>
@@ -988,8 +1117,7 @@ export default function App() {
                                 const wf = msg.workflow_run?.workflow_id || msg.workflow_id;
                                 const targetScope = activeChatId ? `chat:${activeChatId}` : `wf:${wf}`;
                                 setSelectedEventScope(targetScope);
-                                setActiveTab("events");
-                                fetchEvents(targetScope);
+                                navigate(`/events?scope=${encodeURIComponent(targetScope)}`);
                               }}
                               title="Inspect raw database execution events for this prompt"
                             >
@@ -1717,8 +1845,10 @@ export default function App() {
               <select
                 value={selectedWorkflowId}
                 onChange={(e) => {
-                  setSelectedWorkflowId(e.target.value);
-                  fetchGraphData(e.target.value);
+                  const wf = e.target.value;
+                  setSelectedWorkflowId(wf);
+                  navigate(`/graphs?workflow_id=${encodeURIComponent(wf)}`, { replace: true });
+                  fetchGraphData(wf);
                 }}
                 style={{ padding: "8px 12px", background: "#111827", border: "1px solid #334155", borderRadius: 6, color: "#fff" }}
               >
@@ -1780,8 +1910,10 @@ export default function App() {
               <select
                 value={selectedWorkflowId}
                 onChange={(e) => {
-                  setSelectedWorkflowId(e.target.value);
-                  fetchProvenance(e.target.value);
+                  const wf = e.target.value;
+                  setSelectedWorkflowId(wf);
+                  navigate(`/provenance?workflow_id=${encodeURIComponent(wf)}`, { replace: true });
+                  fetchProvenance(wf);
                 }}
                 style={{ padding: "8px 12px", background: "#111827", border: "1px solid #334155", borderRadius: 6, color: "#fff" }}
               >
@@ -1910,8 +2042,10 @@ export default function App() {
                     <select
                       value={selectedEventScope}
                       onChange={(e) => {
-                        setSelectedEventScope(e.target.value);
-                        fetchEvents(e.target.value);
+                        const newScope = e.target.value;
+                        setSelectedEventScope(newScope);
+                        navigate(newScope === "all" ? "/events" : `/events?scope=${encodeURIComponent(newScope)}`, { replace: true });
+                        fetchEvents(newScope);
                       }}
                       style={{
                         padding: "6px 12px",

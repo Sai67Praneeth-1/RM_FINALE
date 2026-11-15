@@ -302,3 +302,43 @@ class MongoChatStore:
         except Exception as e:
             logger.error(f"[MongoChatStore] delete_chat error: {e}")
             return False
+
+    def get_chat_telemetry_summary(self) -> Dict[str, Any]:
+        """
+        Returns aggregated telemetry metrics about saved chats and sessions in MongoDB.
+        Uses safe projections and avoids restricted Atlas free-tier pipeline commands.
+        """
+        if not self.is_connected() or self._collection is None:
+            return {
+                "mongodb_connected": False,
+                "database": self.db_name,
+                "total_chats": 0,
+                "total_messages": 0,
+                "recent_sessions": []
+            }
+        try:
+            total_chats = self._collection.count_documents({})
+            docs = list(self._collection.find({}, {"_id": 0, "message_count": 1}))
+            total_messages = sum(d.get("message_count", 0) for d in docs)
+            
+            recent = list(self._collection.find(
+                {},
+                {"_id": 0, "id": 1, "title": 1, "message_count": 1, "updated_at": 1}
+            ).sort("updated_at", -1).limit(6))
+            
+            return {
+                "mongodb_connected": True,
+                "database": self.db_name,
+                "total_chats": total_chats,
+                "total_messages": total_messages,
+                "recent_sessions": recent
+            }
+        except Exception as e:
+            logger.error(f"[MongoChatStore] get_chat_telemetry_summary error: {e}")
+            return {
+                "mongodb_connected": False,
+                "database": self.db_name,
+                "total_chats": 0,
+                "total_messages": 0,
+                "recent_sessions": []
+            }
