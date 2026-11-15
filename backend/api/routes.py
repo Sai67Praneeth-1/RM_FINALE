@@ -35,6 +35,32 @@ three_graphs = ThreeGraphCoordinator(store)
 prov_tracker = ProvenanceTracker(store)
 benchmark = BenchmarkRunner(store)
 
+def serialize_nx(g):
+    """Serializes a NetworkX graph or MultiDiGraph into JSON-ready nodes and edges."""
+    if g is None:
+        return {"nodes": [], "edges": []}
+    nodes = []
+    for n in g.nodes:
+        d = dict(g.nodes[n])
+        d["id"] = str(n)
+        nodes.append(d)
+    edges = []
+    is_multi = hasattr(g, "edges") and "Multi" in g.__class__.__name__
+    if is_multi:
+        for u, v, k, d in g.edges(keys=True, data=True):
+            ed = dict(d)
+            ed["source"] = str(u)
+            ed["target"] = str(v)
+            ed["key"] = str(k)
+            edges.append(ed)
+    else:
+        for u, v, d in g.edges(data=True):
+            ed = dict(d)
+            ed["source"] = str(u)
+            ed["target"] = str(v)
+            edges.append(ed)
+    return {"nodes": nodes, "edges": edges}
+
 class StartWorkflowRequest(BaseModel):
     task_description: str
     dataset_name: str = "customer_complaints.csv"
@@ -176,29 +202,6 @@ def get_graphs(workflow_id: str):
         raise HTTPException(status_code=404, detail="Workflow not found")
     
     graphs = three_graphs.get_graphs_for_workflow(workflow_id)
-    
-    def serialize_nx(g):
-        nodes = []
-        for n in g.nodes:
-            d = dict(g.nodes[n])
-            d["id"] = str(n)
-            nodes.append(d)
-        edges = []
-        is_multi = hasattr(g, "edges") and isinstance(g, getattr(g, "__class__")) and "Multi" in g.__class__.__name__
-        if is_multi:
-            for u, v, k, d in g.edges(keys=True, data=True):
-                ed = dict(d)
-                ed["source"] = str(u)
-                ed["target"] = str(v)
-                ed["key"] = str(k)
-                edges.append(ed)
-        else:
-            for u, v, d in g.edges(data=True):
-                ed = dict(d)
-                ed["source"] = str(u)
-                ed["target"] = str(v)
-                edges.append(ed)
-        return {"nodes": nodes, "edges": edges}
 
     return {
         "workflow_id": workflow_id,
@@ -232,7 +235,14 @@ def chat_with_coordinator(req: ChatRequest):
             "response": direct_ans,
             "workflow_run": None,
             "goal_flow_dot": None,
-            "goal_traceability": []
+            "goal_traceability": [],
+            "interaction_graph": {
+                "nodes": [
+                    {"id": "agent_coordinator", "label": "Coordinator", "node_type": "agent", "role": "Lead Orchestrator"}
+                ],
+                "edges": []
+            },
+            "interactions": []
         }
 
     # Automatically select dataset if mentioned in prompt or inferred dynamically
@@ -279,6 +289,7 @@ def chat_with_coordinator(req: ChatRequest):
     statemachine_dot = generate_langgraph_statemachine_dot()
 
     reply = format_direct_task_findings(req.message, target_dataset, run)
+    graphs = three_graphs.get_graphs_for_workflow(run.workflow_id)
 
     return {
         "response": reply,
@@ -286,6 +297,10 @@ def chat_with_coordinator(req: ChatRequest):
         "goal_flow_dot": goal_dot,
         "langgraph_topology_dot": statemachine_dot,
         "goal_traceability": matrix,
+        "interaction_graph": serialize_nx(graphs["interaction_graph"]),
+        "execution_graph": serialize_nx(graphs["execution_graph"]),
+        "authority_graph": serialize_nx(graphs["authority_graph"]),
+        "interactions": [i.model_dump() for i in interactions],
         "final_output": run.final_output
     }
 
@@ -395,6 +410,9 @@ def run_hf_simulation_endpoint(req: SimulationRequest):
         "final_output": result["final_output"],
         "interaction_nodes": result["three_graphs"]["interaction_graph"].number_of_nodes(),
         "interaction_edges": result["three_graphs"]["interaction_graph"].number_of_edges(),
+        "interaction_graph": serialize_nx(result["three_graphs"]["interaction_graph"]),
+        "authority_graph": serialize_nx(result["three_graphs"]["authority_graph"]),
+        "execution_graph": serialize_nx(result["three_graphs"]["execution_graph"]),
         "authority_nodes": result["three_graphs"]["authority_graph"].number_of_nodes(),
         "authority_edges": result["three_graphs"]["authority_graph"].number_of_edges(),
         "matrix": result["matrix"],

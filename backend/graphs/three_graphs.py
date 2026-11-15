@@ -28,7 +28,7 @@ class ThreeGraphCoordinator:
 
         g_exec = self.exec_builder.build_graph(workflow_id=workflow_id)
         g_auth = self.auth_builder.build_graph(root_delegation_id=root_del)
-        g_interact = self.interact_builder.build_graph(conversation_id=conversation_id)
+        g_interact = self.interact_builder.build_graph(conversation_id=conversation_id, workflow_id=workflow_id)
 
         return {
             "execution_graph": g_exec,

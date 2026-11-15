@@ -59,7 +59,7 @@ def answer_user_query_directly(user_prompt: str, run: Optional[Any] = None, stor
         "show all ticket", "list all ticket", "list all complaint"
     ])
     if asks_customer_data:
-        return format_direct_task_findings(user_prompt, "customer_complaints.csv", run), False
+        return format_direct_task_findings(user_prompt, "customer_complaints.csv", run), True
 
     # 4. Explicit Architecture / How Agents Work Questions
     asks_agent_architecture = any(k in p_lower for k in [

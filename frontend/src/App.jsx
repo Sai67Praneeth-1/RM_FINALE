@@ -27,6 +27,7 @@ import {
   CheckCircle2,
   AlertTriangle,
 } from "lucide-react";
+import AgentInteractionGraph from "./AgentInteractionGraph";
 
 const API_BASE = "http://127.0.0.1:8000/api";
 
@@ -244,6 +245,8 @@ export default function App() {
         workflow_run: data.workflow_run,
         goal_traceability: data.goal_traceability,
         final_output: data.final_output,
+        interaction_graph: data.interaction_graph,
+        interactions: data.interactions,
       };
       setMessages((prev) => [...prev, assistantMsg]);
       fetchInitialData();
@@ -437,6 +440,17 @@ export default function App() {
                     </div>
                     <div className={`msg-body ${msg.role}`}>
                       {renderFormattedText(msg.content)}
+
+                      {/* Dynamic Agent Interaction Graph rendered after response */}
+                      {msg.interaction_graph && msg.interaction_graph.nodes && msg.interaction_graph.nodes.length > 0 && (
+                        <AgentInteractionGraph
+                          graph={msg.interaction_graph}
+                          interactions={msg.interactions}
+                          workflowId={msg.workflow_run?.workflow_id}
+                          compact={true}
+                          title="Inter-Agent Interaction Graph (How Agents Communicated)"
+                        />
+                      )}
 
                       {/* Pure Data Response - Transparency available on-demand in dedicated tabs */}
                       {msg.final_output && (
@@ -696,6 +710,18 @@ export default function App() {
                     <span>Target Dataset: <code>{simResult.direct_answer?.dataset_grounding}</code></span>
                   </div>
                 </div>
+
+                {/* DYNAMIC INTERACTION GRAPH (HOW AGENTS COMMUNICATED) */}
+                {simResult.interaction_graph && (
+                  <div style={{ marginBottom: 20 }}>
+                    <AgentInteractionGraph
+                      graph={simResult.interaction_graph}
+                      interactions={simResult.communication_log}
+                      workflowId={simResult.workflow_id}
+                      title="Dynamic Multi-Agent Interaction Graph (4 LLM Agents)"
+                    />
+                  </div>
+                )}
 
                 {/* 2. DATA FLOW & COMMUNICATION TRACE SECOND */}
                 <div className="stat-card" style={{ marginBottom: 20 }}>
@@ -1191,6 +1217,18 @@ export default function App() {
                 <h4 style={{ color: "#60a5fa", marginBottom: 10 }}>
                   Nodes: {graphData[selectedGraphType].nodes?.length || 0} | Edges: {graphData[selectedGraphType].edges?.length || 0}
                 </h4>
+
+                {/* Visual Interactive Graph Render */}
+                {selectedGraphType === "interaction_graph" && (
+                  <div style={{ marginBottom: 16 }}>
+                    <AgentInteractionGraph
+                      graph={graphData.interaction_graph}
+                      workflowId={selectedWorkflowId}
+                      title="Interaction Graph (G_interact) Visual Topology"
+                    />
+                  </div>
+                )}
+
                 <div style={{ background: "#0b0f19", padding: 14, borderRadius: 8, maxHeight: 400, overflowY: "auto" }}>
                   <pre style={{ color: "#94a3b8", fontSize: 12 }}>
                     {JSON.stringify(graphData[selectedGraphType], null, 2)}

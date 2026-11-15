@@ -15,7 +15,8 @@ class InteractionGraphBuilder:
     def build_graph(
         self,
         conversation_id: Optional[str] = None,
-        delegation_id: Optional[str] = None
+        delegation_id: Optional[str] = None,
+        workflow_id: Optional[str] = None
     ) -> nx.MultiDiGraph:
         """
         Constructs a NetworkX MultiDiGraph preserving per-message identity.
@@ -24,6 +25,7 @@ class InteractionGraphBuilder:
         records = self.store.list_interactions(
             conversation_id=conversation_id,
             delegation_id=delegation_id,
+            workflow_id=workflow_id,
             limit=200
         )
         G = nx.MultiDiGraph()
