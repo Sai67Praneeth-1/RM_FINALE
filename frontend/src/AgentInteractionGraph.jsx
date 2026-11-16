@@ -281,7 +281,7 @@ export default function AgentInteractionGraph({
   workflowId,
   title = "Squad & Agent Interaction Topology",
   compact = false,
-  defaultCollapsed = false,
+  defaultCollapsed = true,
 }) {
   // View mode: "squad" (Squad-Level View) or "agent" (Granular Agent Detail View)
   const [viewMode, setViewMode] = useState("squad");
@@ -943,91 +943,38 @@ export default function AgentInteractionGraph({
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
           {!isCollapsed && (
             <>
-              {/* PRIMARY VIEW SWITCHER: Squad Interaction View vs Agent Detail View */}
-              <div
-                style={{
-                  display: "flex",
-                  background: "#0b1329",
-                  border: "1px solid #1e3a8a",
-                  borderRadius: 8,
-                  padding: 2,
-                }}
-              >
-                <button
-                  onClick={() => {
-                    setViewMode("squad");
-                    setSelectedNode(null);
-                    setSelectedEdge(null);
+              {/* PRIMARY VIEW SWITCHER: Dropdown for Squad Interaction vs Agent Detail */}
+              <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                <select
+                  value={viewMode}
+                  onChange={(e) => {
+                    const newMode = e.target.value;
+                    setViewMode(newMode);
+                    if (newMode === "squad") {
+                      setSelectedNode(null);
+                      setSelectedEdge(null);
+                    } else {
+                      setSelectedSquad(null);
+                      setSelectedSquadEdge(null);
+                    }
                   }}
                   style={{
-                    padding: "5px 12px",
+                    padding: "5px 10px",
                     borderRadius: 6,
-                    background: viewMode === "squad" ? "linear-gradient(135deg, #1d4ed8, #3b82f6)" : "transparent",
-                    color: viewMode === "squad" ? "#fff" : "#94a3b8",
-                    fontWeight: 700,
+                    background: "#0b1329",
+                    color: "#60a5fa",
+                    border: "1px solid #1e3a8a",
                     fontSize: 11.5,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    cursor: "pointer",
-                    border: "none",
-                    boxShadow: viewMode === "squad" ? "0 0 10px rgba(59, 130, 246, 0.4)" : "none",
-                  }}
-                  title="Switch to High-Level Squad Interaction Topology"
-                >
-                  <Building2 size={13} />
-                  <span>🏢 Squad View</span>
-                  <span
-                    style={{
-                      fontSize: 9.5,
-                      padding: "1px 5px",
-                      borderRadius: 10,
-                      background: viewMode === "squad" ? "#1e293b" : "#131b2e",
-                      color: viewMode === "squad" ? "#60a5fa" : "#64748b",
-                      fontWeight: 800,
-                    }}
-                  >
-                    {activeSquads.length}
-                  </span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setViewMode("agent");
-                    setSelectedSquad(null);
-                    setSelectedSquadEdge(null);
-                  }}
-                  style={{
-                    padding: "5px 12px",
-                    borderRadius: 6,
-                    background: viewMode === "agent" ? "linear-gradient(135deg, #1d4ed8, #3b82f6)" : "transparent",
-                    color: viewMode === "agent" ? "#fff" : "#94a3b8",
                     fontWeight: 700,
-                    fontSize: 11.5,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
                     cursor: "pointer",
-                    border: "none",
-                    boxShadow: viewMode === "agent" ? "0 0 10px rgba(59, 130, 246, 0.4)" : "none",
+                    outline: "none",
+                    boxShadow: "0 0 10px rgba(59, 130, 246, 0.2)",
                   }}
-                  title="Switch to Granular Agent Detail Topology"
+                  title="Switch between Squad-Level and Agent-Level interaction topology"
                 >
-                  <Users size={13} />
-                  <span>👥 Agent Detail</span>
-                  <span
-                    style={{
-                      fontSize: 9.5,
-                      padding: "1px 5px",
-                      borderRadius: 10,
-                      background: viewMode === "agent" ? "#1e293b" : "#131b2e",
-                      color: viewMode === "agent" ? "#60a5fa" : "#64748b",
-                      fontWeight: 800,
-                    }}
-                  >
-                    {localNodes.length}
-                  </span>
-                </button>
+                  <option value="squad">🏢 Squad View ({activeSquads.length} Squads)</option>
+                  <option value="agent">👥 Agent Detail View ({localNodes.length} Agents)</option>
+                </select>
               </div>
 
               {/* Dynamic Add Agent Button (only in Agent view) */}
@@ -1165,9 +1112,9 @@ export default function AgentInteractionGraph({
               alignItems: "center",
               gap: 5,
             }}
-            title={isCollapsed ? "Expand Graph" : "Collapse Graph"}
+            title={isCollapsed ? "Expand Squad Interaction View" : "Collapse Squad Interaction View"}
           >
-            <span>{isCollapsed ? "Expand" : "Collapse"}</span>
+            <span>{isCollapsed ? "Expand View" : "Collapse View"}</span>
             {isCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
           </button>
         </div>

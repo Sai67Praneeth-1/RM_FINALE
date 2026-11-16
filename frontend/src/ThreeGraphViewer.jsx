@@ -848,6 +848,7 @@ export default function ThreeGraphViewer({
                 <AgentInteractionGraph
                   graph={itrGraph}
                   workflowId={selectedWorkflowId}
+                  defaultCollapsed={false}
                   title="Inter-Agent Communication Graph (G_interact) Topology"
                 />
               </div>

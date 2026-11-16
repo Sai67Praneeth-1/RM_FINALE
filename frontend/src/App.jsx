@@ -1540,50 +1540,57 @@ export default function App() {
                   </div>
                 )}
 
-              {/* Hybrid Squad Architecture Selector */}
+              {/* Hybrid Squad Architecture Dropdown */}
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: 6,
-                  flexWrap: "wrap",
+                  justifyContent: "space-between",
                   marginBottom: 10,
-                  padding: "8px 12px",
+                  padding: "6px 12px",
                   background: "rgba(15, 23, 42, 0.75)",
                   borderRadius: 8,
                   border: "1px solid #1e293b",
+                  flexWrap: "wrap",
+                  gap: 8,
                 }}
               >
-                <span style={{ fontSize: 11.5, color: "#94a3b8", fontWeight: 700, display: "flex", alignItems: "center", gap: 5 }}>
-                  <Sparkles size={13} color="#38bdf8" /> Squad Architecture:
-                </span>
-                {[
-                  { id: "auto", label: "⚡ Auto (Hybrid Routing)", tip: "Auto-routes to single domain squad or cross-squad collaboration" },
-                  { id: "consumer_sentiment", label: "💬 Sentiment (5 Agents)", tip: "CFPB intake, NLP sentiment scoring, impact analysis, executive report" },
-                  { id: "security_forensics", label: "🛡️ SecOps (4 Agents)", tip: "Access log scanner, privilege escalation hunter, FedRAMP/NIST auditor" },
-                  { id: "cross_squad", label: "🌐 Cross-Squad (7 Agents)", tip: "Complaints Squad ➔ Security Squad inter-squad delegation bridge" },
-                  { id: "adversarial_critic", label: "🎯 Debate (5 Agents)", tip: "Bidirectional peer review between Analyst & Critic" },
-                  { id: "rapid_consensus", label: "⚡ Rapid (3 Agents)", tip: "High-speed closed triangular loop without reporter latency" },
-                ].map((sq) => (
-                  <button
-                    key={sq.id}
-                    onClick={() => setSelectedSquad(sq.id)}
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ fontSize: 11.5, color: "#94a3b8", fontWeight: 700, display: "flex", alignItems: "center", gap: 5 }}>
+                    <Sparkles size={13} color="#38bdf8" /> Squad Architecture:
+                  </span>
+                  <select
+                    value={selectedSquad}
+                    onChange={(e) => setSelectedSquad(e.target.value)}
                     style={{
-                      padding: "4px 9px",
+                      background: "#0b1329",
+                      border: "1px solid #1e3a8a",
                       borderRadius: 6,
+                      color: "#38bdf8",
+                      padding: "4px 10px",
                       fontSize: 11.5,
-                      fontWeight: selectedSquad === sq.id ? 700 : 500,
-                      background: selectedSquad === sq.id ? "rgba(56, 189, 248, 0.2)" : "rgba(30, 41, 59, 0.5)",
-                      color: selectedSquad === sq.id ? "#38bdf8" : "#94a3b8",
-                      border: selectedSquad === sq.id ? "1px solid #38bdf8" : "1px solid rgba(51, 65, 85, 0.6)",
+                      fontWeight: 700,
                       cursor: "pointer",
-                      transition: "all 0.15s ease",
+                      outline: "none",
                     }}
-                    title={sq.tip}
+                    title="Select autonomous squad architecture"
                   >
-                    {sq.label}
-                  </button>
-                ))}
+                    <option value="auto">⚡ Auto (Hybrid Routing)</option>
+                    <option value="consumer_sentiment">💬 Consumer Sentiment Squad (5 Agents)</option>
+                    <option value="security_forensics">🛡️ SecOps Forensics Squad (4 Agents)</option>
+                    <option value="cross_squad">🌐 Cross-Squad Enterprise Bridge (7 Agents)</option>
+                    <option value="adversarial_critic">🎯 Adversarial Debate Squad (5 Agents)</option>
+                    <option value="rapid_consensus">⚡ Rapid Consensus Squad (3 Agents)</option>
+                  </select>
+                </div>
+
+                <span style={{ fontSize: 11, color: "#64748b" }}>
+                  {selectedSquad === "cross_squad"
+                    ? "🌐 Cross-squad bridge active"
+                    : selectedSquad === "auto"
+                    ? "⚡ Dynamic multi-agent routing"
+                    : "🔒 Domain-specific squad"}
+                </span>
               </div>
 
               <div className="suggestion-pills">
@@ -1629,7 +1636,7 @@ export default function App() {
                           interactions={msg.interactions}
                           workflowId={msg.workflow_run?.workflow_id}
                           compact={true}
-                          defaultCollapsed={false}
+                          defaultCollapsed={true}
                           title="Dynamic Inter-Agent Communication Graph"
                         />
                       )}
