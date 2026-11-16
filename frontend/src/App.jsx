@@ -88,43 +88,43 @@ const NAV_SECTIONS = [
 const NAV_ITEMS = NAV_SECTIONS.flatMap((s) => s.items);
 
 const AGENT_META = {
-  agent_coordinator: { name: "Coordinator", label: "Agent A (Coordinator)", color: "#38bdf8", bg: "rgba(56, 189, 248, 0.12)", border: "#0284c7" },
-  agent_researcher: { name: "Researcher", label: "Agent B (Researcher)", color: "#c084fc", bg: "rgba(192, 132, 252, 0.12)", border: "#9333ea" },
-  agent_analyst: { name: "Analyst", label: "Agent C (Analyst)", color: "#34d399", bg: "rgba(52, 211, 153, 0.12)", border: "#059669" },
-  agent_reporter: { name: "Reporter", label: "Agent D (Reporter)", color: "#fbbf24", bg: "rgba(251, 191, 36, 0.12)", border: "#d97706" },
+  agent_coordinator: { name: "Coordinator", label: "Agent A (Coordinator)", color: "#1a73e8", bg: "#e8f0fe", border: "#dadce0" },
+  agent_researcher: { name: "Researcher", label: "Agent B (Researcher)", color: "#7627bb", bg: "#f3e8fd", border: "#dadce0" },
+  agent_analyst: { name: "Analyst", label: "Agent C (Analyst)", color: "#137333", bg: "#e6f4ea", border: "#dadce0" },
+  agent_reporter: { name: "Reporter", label: "Agent D (Reporter)", color: "#b06000", bg: "#fef7e0", border: "#dadce0" },
 };
 
 const getAgentMeta = (agentId) => {
-  if (!agentId) return { name: "Unknown", label: "Unknown Agent", color: "#94a3b8", bg: "rgba(148, 163, 184, 0.1)", border: "#475569" };
+  if (!agentId) return { name: "Unknown", label: "Unknown Agent", color: "#5f6368", bg: "#f1f3f4", border: "#dadce0" };
   const lower = String(agentId).toLowerCase();
   for (const [k, v] of Object.entries(AGENT_META)) {
     if (lower.includes(k) || k.includes(lower)) return v;
   }
-  return { name: agentId, label: agentId, color: "#94a3b8", bg: "rgba(148, 163, 184, 0.1)", border: "#475569" };
+  return { name: agentId, label: agentId, color: "#5f6368", bg: "#f1f3f4", border: "#dadce0" };
 };
 
 const TYPE_META = {
-  delegation: { color: "#60a5fa", bg: "rgba(96, 165, 250, 0.15)", border: "#2563eb", icon: "📋" },
-  request: { color: "#38bdf8", bg: "rgba(56, 189, 248, 0.15)", border: "#0284c7", icon: "❓" },
-  response: { color: "#4ade80", bg: "rgba(74, 222, 128, 0.15)", border: "#16a34a", icon: "💬" },
-  clarification: { color: "#fbbf24", bg: "rgba(251, 191, 36, 0.15)", border: "#d97706", icon: "⚡" },
-  information_transfer: { color: "#c084fc", bg: "rgba(192, 132, 252, 0.15)", border: "#9333ea", icon: "📦" },
-  result: { color: "#34d399", bg: "rgba(52, 211, 153, 0.15)", border: "#059669", icon: "✅" },
-  escalation: { color: "#f87171", bg: "rgba(248, 113, 113, 0.15)", border: "#dc2626", icon: "🚨" },
-  handoff: { color: "#e879f9", bg: "rgba(232, 121, 249, 0.15)", border: "#c026d3", icon: "🤝" },
-  warning: { color: "#fb923c", bg: "rgba(251, 146, 60, 0.15)", border: "#ea580c", icon: "⚠️" },
+  delegation: { color: "#1a73e8", bg: "#e8f0fe", border: "#dadce0", icon: "📋" },
+  request: { color: "#1a73e8", bg: "#e8f0fe", border: "#dadce0", icon: "❓" },
+  response: { color: "#137333", bg: "#e6f4ea", border: "#dadce0", icon: "💬" },
+  clarification: { color: "#b06000", bg: "#fef7e0", border: "#dadce0", icon: "⚡" },
+  information_transfer: { color: "#7627bb", bg: "#f3e8fd", border: "#dadce0", icon: "📦" },
+  result: { color: "#137333", bg: "#e6f4ea", border: "#dadce0", icon: "✅" },
+  escalation: { color: "#d93025", bg: "#fce8e6", border: "#dadce0", icon: "🚨" },
+  handoff: { color: "#7627bb", bg: "#f3e8fd", border: "#dadce0", icon: "🤝" },
+  warning: { color: "#d93025", bg: "#fce8e6", border: "#dadce0", icon: "⚠️" },
 };
 
 const ACTION_SEMANTIC_META = {
-  read: { color: "#38bdf8", bg: "rgba(56, 189, 248, 0.15)", border: "#0284c7", icon: "📖" },
-  write: { color: "#f59e0b", bg: "rgba(245, 158, 11, 0.15)", border: "#d97706", icon: "✍️" },
-  search: { color: "#a855f7", bg: "rgba(168, 85, 247, 0.15)", border: "#9333ea", icon: "🔍" },
-  share: { color: "#ec4899", bg: "rgba(236, 72, 153, 0.15)", border: "#db2777", icon: "📤" },
-  invoke: { color: "#10b981", bg: "rgba(16, 185, 129, 0.15)", border: "#059669", icon: "⚡" },
-  delegate: { color: "#60a5fa", bg: "rgba(96, 165, 250, 0.15)", border: "#2563eb", icon: "📋" },
-  spawn: { color: "#6366f1", bg: "rgba(99, 102, 241, 0.15)", border: "#4f46e5", icon: "🌱" },
-  enumerate: { color: "#14b8a6", bg: "rgba(20, 184, 166, 0.15)", border: "#0d9488", icon: "🔢" },
-  revoke: { color: "#ef4444", bg: "rgba(239, 68, 68, 0.15)", border: "#dc2626", icon: "🚫" },
+  read: { color: "#1a73e8", bg: "#e8f0fe", border: "#dadce0", icon: "📖" },
+  write: { color: "#b06000", bg: "#fef7e0", border: "#dadce0", icon: "✍️" },
+  search: { color: "#7627bb", bg: "#f3e8fd", border: "#dadce0", icon: "🔍" },
+  share: { color: "#7627bb", bg: "#f3e8fd", border: "#dadce0", icon: "📤" },
+  invoke: { color: "#137333", bg: "#e6f4ea", border: "#dadce0", icon: "⚡" },
+  delegate: { color: "#1a73e8", bg: "#e8f0fe", border: "#dadce0", icon: "📋" },
+  spawn: { color: "#1a73e8", bg: "#e8f0fe", border: "#dadce0", icon: "🌱" },
+  enumerate: { color: "#129eaf", bg: "#e0f2f1", border: "#dadce0", icon: "🔢" },
+  revoke: { color: "#d93025", bg: "#fce8e6", border: "#dadce0", icon: "🚫" },
 };
 
 export default function App() {
@@ -1139,11 +1139,11 @@ export default function App() {
       <div
         dangerouslySetInnerHTML={{
           __html: text
-            .replace(/### (.*?)\n/g, '<h3 style="color:#60a5fa;margin-top:14px;font-size:16px;">$1</h3>')
-            .replace(/#### (.*?)\n/g, '<h4 style="color:#93c5fd;margin-top:10px;font-size:14px;">$1</h4>')
+            .replace(/### (.*?)\n/g, '<h3 style="color:#1a73e8;margin-top:14px;font-size:16px;font-weight:600;">$1</h3>')
+            .replace(/#### (.*?)\n/g, '<h4 style="color:#202124;margin-top:10px;font-size:14px;font-weight:600;">$1</h4>')
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            .replace(/`([^`]+)`/g, '<code style="background:#0f172a;padding:2px 6px;border-radius:4px;color:#38bdf8;font-size:13px;">$1</code>')
+            .replace(/`([^`]+)`/g, '<code style="background:#f1f3f4;padding:2px 6px;border-radius:4px;color:#1a73e8;font-size:13px;border:1px solid #dadce0;">$1</code>')
             .replace(/\n\n/g, '<br/><br/>')
             .replace(/\n/g, '<br/>'),
         }}
@@ -1218,23 +1218,24 @@ export default function App() {
   }, [evalResults, evalScenarioFilter, evalBaselineFilter, evalSearchTerm]);
 
   return (
-    <div style={{ display: "flex", width: "100%", height: "100%", position: "relative", overflow: "hidden" }}>
-      {/* 12-Item Nav Sidebar (ChatGPT Style Collapsible & Scrollable) */}
-      <aside className={`sidebar ${isSidebarOpen ? "open" : "collapsed"}`}>
-        <div className="sidebar-inner">
-          <div className="brand">
-            <div className="brand-icon">
-              <Sparkles size={20} color="#fff" />
+    <div style={{ display: "flex", width: "100%", height: "100%", position: "relative", overflow: "hidden", background: "#f8f9fa" }}>
+      {/* 12-Item Nav Sidebar (Google M3 Clean White Surface with 1px border) */}
+      <aside className={`sidebar ${isSidebarOpen ? "open" : "collapsed"}`} style={{ background: "#ffffff", borderRight: "1px solid #dadce0" }}>
+        <div className="sidebar-inner" style={{ background: "#ffffff" }}>
+          <div className="brand" style={{ borderBottom: "1px solid #dadce0", paddingBottom: 14, marginBottom: 14 }}>
+            <div className="brand-icon" style={{ background: "#1a73e8", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Sparkles size={20} color="#ffffff" />
             </div>
             <div className="brand-text">
-              <div className="brand-title">Agentic AI Platform</div>
-              <div className="brand-sub">Autonomous Investigation</div>
+              <div className="brand-title" style={{ color: "#202124", fontWeight: 700 }}>Agentic AI Platform</div>
+              <div className="brand-sub" style={{ color: "#5f6368" }}>Autonomous Investigation</div>
             </div>
             <button
               className="sidebar-toggle-btn close-btn"
               onClick={toggleSidebar}
               title="Close sidebar (Ctrl+B)"
               aria-label="Close sidebar"
+              style={{ color: "#5f6368" }}
             >
               <PanelLeftClose size={18} />
             </button>
@@ -1243,17 +1244,24 @@ export default function App() {
           <nav className="nav-menu">
             {NAV_SECTIONS.map((section) => (
               <div key={section.title} className="nav-section">
-                <div className="nav-section-title">{section.title}</div>
+                <div className="nav-section-title" style={{ color: "#5f6368", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.04em" }}>{section.title}</div>
                 <div className="nav-section-items">
                   {section.items.map((item) => {
                     const Icon = item.icon;
+                    const isActive = activeTab === item.id;
                     return (
                       <button
                         key={item.id}
-                        className={`nav-item ${activeTab === item.id ? "active" : ""}`}
+                        className={`nav-item ${isActive ? "active" : ""}`}
+                        style={{
+                          background: isActive ? "#e8f0fe" : "transparent",
+                          color: isActive ? "#1a73e8" : "#202124",
+                          borderRadius: 8,
+                          fontWeight: isActive ? 600 : 500,
+                        }}
                         onClick={() => handleTabChange(item.id)}
                       >
-                        <Icon size={16} />
+                        <Icon size={16} color={isActive ? "#1a73e8" : "#5f6368"} />
                         <span>{item.label}</span>
                       </button>
                     );
@@ -1263,10 +1271,10 @@ export default function App() {
             ))}
           </nav>
 
-          {/* ChatGPT-Style Chat History Section (Under Options) */}
-          <div className="sidebar-chat-section">
-            <div className="sidebar-chat-header">
-              <span className="sidebar-chat-title">
+          {/* Google M3 Chat History Section */}
+          <div className="sidebar-chat-section" style={{ borderTop: "1px solid #dadce0", paddingTop: 12 }}>
+            <div className="sidebar-chat-header" style={{ marginBottom: 8 }}>
+              <span className="sidebar-chat-title" style={{ color: "#5f6368", fontWeight: 600, fontSize: 12 }}>
                 <MessageSquare size={13} />
                 Recent Chats
               </span>
@@ -1274,6 +1282,19 @@ export default function App() {
                 className="new-chat-btn"
                 onClick={handleStartNewChat}
                 title="Start a new chat (+)"
+                style={{
+                  borderRadius: 24,
+                  background: "#1a73e8",
+                  color: "#ffffff",
+                  border: "none",
+                  padding: "4px 12px",
+                  fontSize: 11.5,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4
+                }}
               >
                 <Plus size={13} />
                 <span>New Chat</span>
@@ -1282,124 +1303,147 @@ export default function App() {
 
             <div className="sidebar-chat-list">
               {chatListLoading && chatList.length === 0 ? (
-                <div className="sidebar-chat-loading">
+                <div className="sidebar-chat-loading" style={{ color: "#5f6368", fontSize: 12 }}>
                   <RefreshCw size={13} className="spin" />
                   <span>Loading MongoDB chats...</span>
                 </div>
               ) : chatList.length === 0 ? (
-                <div className="sidebar-chat-empty">
+                <div className="sidebar-chat-empty" style={{ color: "#5f6368", fontSize: 12 }}>
                   <span>No conversations yet. Start one!</span>
                 </div>
               ) : (
                 groupChatsByDate(chatList).map((group) => (
                   <div key={group.label} className="sidebar-chat-group">
-                    <div className="sidebar-chat-group-title">{group.label}</div>
-                    {group.items.map((chat) => (
-                      <div
-                        key={chat.id}
-                        className={`sidebar-chat-item ${activeChatId === chat.id ? "active" : ""}`}
-                        onClick={() => handleSelectChat(chat.id)}
-                        title={chat.title || "Untitled Chat"}
-                      >
-                        <MessageSquare size={14} className="chat-item-icon" />
-                        {editingChatId === chat.id ? (
-                          <input
-                            className="chat-item-edit-input"
-                            value={editTitleText}
-                            onChange={(e) => setEditTitleText(e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") handleSaveChatTitle(chat.id);
-                              if (e.key === "Escape") setEditingChatId(null);
-                            }}
-                            onBlur={() => handleSaveChatTitle(chat.id)}
-                            autoFocus
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                        ) : (
-                          <span className="chat-item-title">{chat.title || "Untitled Chat"}</span>
-                        )}
-
-                        <div className="chat-item-actions" onClick={(e) => e.stopPropagation()}>
+                    <div className="sidebar-chat-group-title" style={{ color: "#5f6368", fontSize: 11, fontWeight: 700 }}>{group.label}</div>
+                    {group.items.map((chat) => {
+                      const isActiveChat = activeChatId === chat.id;
+                      return (
+                        <div
+                          key={chat.id}
+                          className={`sidebar-chat-item ${isActiveChat ? "active" : ""}`}
+                          style={{
+                            background: isActiveChat ? "#e8f0fe" : "#ffffff",
+                            color: isActiveChat ? "#1a73e8" : "#202124",
+                            borderRadius: 8,
+                            border: isActiveChat ? "1px solid #dadce0" : "1px solid transparent",
+                            padding: "6px 10px",
+                            cursor: "pointer",
+                            transition: "background 0.15s ease",
+                          }}
+                          onClick={() => handleSelectChat(chat.id)}
+                          title={chat.title || "Untitled Chat"}
+                        >
+                          <MessageSquare size={14} className="chat-item-icon" color={isActiveChat ? "#1a73e8" : "#5f6368"} />
                           {editingChatId === chat.id ? (
-                            <button
-                              className="chat-action-btn"
-                              onClick={() => handleSaveChatTitle(chat.id)}
-                              title="Save title"
-                            >
-                              <Check size={13} />
-                            </button>
-                          ) : (
-                            <button
-                              className="chat-action-btn"
-                              onClick={() => {
-                                setEditingChatId(chat.id);
-                                setEditTitleText(chat.title || "");
+                            <input
+                              className="chat-item-edit-input"
+                              value={editTitleText}
+                              onChange={(e) => setEditTitleText(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") handleSaveChatTitle(chat.id);
+                                if (e.key === "Escape") setEditingChatId(null);
                               }}
-                              title="Rename chat"
-                            >
-                              <Edit3 size={13} />
-                            </button>
+                              onBlur={() => handleSaveChatTitle(chat.id)}
+                              autoFocus
+                              onClick={(e) => e.stopPropagation()}
+                              style={{
+                                background: "#ffffff",
+                                border: "1px solid #dadce0",
+                                color: "#202124",
+                                borderRadius: 6,
+                                padding: "2px 6px",
+                                fontSize: 12,
+                              }}
+                            />
+                          ) : (
+                            <span className="chat-item-title" style={{ color: isActiveChat ? "#1a73e8" : "#202124", fontSize: 12.5, fontWeight: isActiveChat ? 600 : 400 }}>{chat.title || "Untitled Chat"}</span>
                           )}
-                          <button
-                            className="chat-action-btn delete-btn"
-                            onClick={() => handleDeleteChat(chat.id)}
-                            title="Delete chat"
-                          >
-                            <Trash2 size={13} />
-                          </button>
+
+                          <div className="chat-item-actions" onClick={(e) => e.stopPropagation()}>
+                            {editingChatId === chat.id ? (
+                              <button
+                                className="chat-action-btn"
+                                onClick={() => handleSaveChatTitle(chat.id)}
+                                title="Save title"
+                                style={{ color: "#137333" }}
+                              >
+                                <Check size={13} />
+                              </button>
+                            ) : (
+                              <button
+                                className="chat-action-btn"
+                                onClick={() => {
+                                  setEditingChatId(chat.id);
+                                  setEditTitleText(chat.title || "");
+                                }}
+                                title="Rename chat"
+                                style={{ color: "#5f6368" }}
+                              >
+                                <Edit3 size={13} />
+                              </button>
+                            )}
+                            <button
+                              className="chat-action-btn delete-btn"
+                              onClick={() => handleDeleteChat(chat.id)}
+                              title="Delete chat"
+                              style={{ color: "#d93025" }}
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ))
               )}
             </div>
           </div>
 
-          <div className="sidebar-status">
+          <div className="sidebar-status" style={{ marginTop: "auto", paddingTop: 12 }}>
             <div style={{
-              background: "#0b0f19",
+              background: "#ffffff",
               padding: "10px 12px",
               borderRadius: 8,
-              border: "1px solid #1f2937",
+              border: "1px solid #dadce0",
               display: "flex",
               flexDirection: "column",
               gap: 6
             }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#38bdf8", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#1a73e8", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                   System Health
                 </span>
                 <span style={{
                   fontSize: 10,
-                  padding: "1px 6px",
-                  borderRadius: 4,
-                  background: "rgba(16, 185, 129, 0.15)",
-                  color: "#34d399",
-                  border: "1px solid rgba(16, 185, 129, 0.3)"
+                  padding: "1px 8px",
+                  borderRadius: 16,
+                  background: "#e6f4ea",
+                  color: "#137333",
+                  border: "1px solid #dadce0",
+                  fontWeight: 600
                 }}>
                   Online
                 </span>
               </div>
               <div className="status-indicator">
-                <div className="status-dot" />
-                <span style={{ fontSize: 11.5 }}>Backend API Ready</span>
+                <div className="status-dot" style={{ background: "#137333" }} />
+                <span style={{ fontSize: 11.5, color: "#202124" }}>Backend API Ready</span>
               </div>
               <div className="status-indicator">
                 <div
                   className="status-dot"
                   style={{
-                    background: status?.mongodb_connected ? "#10b981" : "#f59e0b",
-                    boxShadow: status?.mongodb_connected ? "0 0 8px rgba(16, 185, 129, 0.4)" : "none",
+                    background: status?.mongodb_connected ? "#137333" : "#b06000",
                   }}
                 />
-                <span style={{ color: status?.mongodb_connected ? "#34d399" : "#fbbf24", fontSize: 11.5 }}>
+                <span style={{ color: status?.mongodb_connected ? "#137333" : "#b06000", fontSize: 11.5, fontWeight: 500 }}>
                   {status?.mongodb_connected ? "MongoDB Atlas Synced" : "Resilient Cache Mode"}
                 </span>
               </div>
-              <div style={{ borderTop: "1px solid #1e293b", paddingTop: 6, marginTop: 2, display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 11, color: "#94a3b8" }}>
+              <div style={{ borderTop: "1px solid #dadce0", paddingTop: 6, marginTop: 2, display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 11, color: "#5f6368" }}>
                 <span>Engine:</span>
-                <span style={{ color: "#f8fafc", fontWeight: 600 }}>Gemini 3.5 Flash</span>
+                <span style={{ color: "#202124", fontWeight: 600 }}>Gemini 3.5 Flash</span>
               </div>
             </div>
           </div>
@@ -1407,8 +1451,8 @@ export default function App() {
       </aside>
 
       {/* Main Content Area */}
-      <div className="main-wrapper">
-        <header className="top-bar">
+      <div className="main-wrapper" style={{ background: "#f8f9fa", display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
+        <header className="top-bar" style={{ background: "#ffffff", borderBottom: "1px solid #dadce0" }}>
           <div className="top-left-section">
             {!isSidebarOpen && (
               <button
@@ -1416,44 +1460,45 @@ export default function App() {
                 onClick={toggleSidebar}
                 title="Open sidebar (Ctrl+B)"
                 aria-label="Open sidebar"
+                style={{ color: "#5f6368" }}
               >
                 <PanelLeftOpen size={19} />
               </button>
             )}
             <div className="top-title" style={{ display: "flex", flexDirection: "column", gap: 2 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 16, fontWeight: 700, color: "#f8fafc" }}>
+                <span style={{ fontSize: 16, fontWeight: 700, color: "#202124" }}>
                   {NAV_ITEMS.find((n) => n.id === activeTab)?.label}
                 </span>
                 <span style={{
                   fontSize: 11,
-                  padding: "2px 8px",
-                  borderRadius: 12,
-                  background: "rgba(56, 189, 248, 0.15)",
-                  color: "#38bdf8",
-                  border: "1px solid rgba(56, 189, 248, 0.3)",
+                  padding: "2px 10px",
+                  borderRadius: 16,
+                  background: "#e8f0fe",
+                  color: "#1a73e8",
+                  border: "1px solid #dadce0",
                   fontWeight: 600
                 }}>
                   Lead Orchestrator
                 </span>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: "#64748b" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: "#5f6368" }}>
                 <span>Autonomous Multi-Agent Investigation</span>
                 <span>&bull;</span>
-                <span style={{ color: "#94a3b8" }}>Google Gemini 3.5 Flash</span>
+                <span style={{ color: "#1a73e8", fontWeight: 500 }}>Google Gemini 3.5 Flash</span>
               </div>
             </div>
           </div>
           <div className="top-badges">
-            <div className="pill-badge" style={{ background: "rgba(56, 189, 248, 0.1)", color: "#38bdf8", borderColor: "rgba(56, 189, 248, 0.25)" }}>
+            <div className="pill-badge" style={{ background: "#e8f0fe", color: "#1a73e8", border: "1px solid #dadce0", borderRadius: 16 }}>
               <Bot size={13} />
               <span>4 Agents Active</span>
             </div>
-            <div className="pill-badge active" style={{ background: "rgba(16, 185, 129, 0.12)", color: "#34d399", borderColor: "rgba(16, 185, 129, 0.3)" }}>
+            <div className="pill-badge active" style={{ background: "#e6f4ea", color: "#137333", border: "1px solid #dadce0", borderRadius: 16 }}>
               <ShieldCheck size={13} />
               <span>W3C PROV Audited</span>
             </div>
-            <div className="pill-badge">
+            <div className="pill-badge" style={{ background: "#f1f3f4", color: "#202124", border: "1px solid #dadce0", borderRadius: 16 }}>
               <Database size={13} />
               <span>{status?.metrics_summary?.total_events || 0} Telemetry Events</span>
             </div>
@@ -1462,7 +1507,7 @@ export default function App() {
 
         {/* View 1: Chat with Lead Agent */}
         {activeTab === "chat" && (
-          <div className="content-panel" style={{ height: "calc(100vh - 90px)", minHeight: 0, padding: 16 }}>
+          <div className="content-panel" style={{ height: "calc(100vh - 90px)", minHeight: 0, padding: 16, background: "#f8f9fa" }}>
             <div
               style={{
                 display: "grid",
@@ -1492,19 +1537,19 @@ export default function App() {
                     alignItems: "center",
                     justifyContent: "space-between",
                     padding: "8px 14px",
-                    background: "#0b1329",
+                    background: "#ffffff",
                     borderRadius: 8,
                     marginBottom: 10,
-                    border: "1px solid #1e293b",
+                    border: "1px solid #dadce0",
                     flexWrap: "wrap",
                     gap: 8,
                   }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-                      <MessageSquare size={14} color="#38bdf8" />
-                      <span style={{ color: "#f8fafc", fontWeight: 600, fontSize: 13, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      <MessageSquare size={14} color="#1a73e8" />
+                      <span style={{ color: "#202124", fontWeight: 600, fontSize: 13, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         {chatList.find((c) => c.id === activeChatId)?.title || "Active Investigation"}
                       </span>
-                      <span style={{ fontSize: 10.5, color: "#34d399", background: "rgba(16, 185, 129, 0.12)", border: "1px solid rgba(16, 185, 129, 0.3)", padding: "1px 6px", borderRadius: 4 }}>
+                      <span style={{ fontSize: 10.5, color: "#137333", background: "#e6f4ea", border: "1px solid #dadce0", padding: "1px 8px", borderRadius: 16, fontWeight: 600 }}>
                         MongoDB Synced
                       </span>
                     </div>
@@ -1513,12 +1558,14 @@ export default function App() {
                         <button
                           className="pill-btn"
                           style={{
-                            padding: "3px 10px",
+                            padding: "4px 12px",
                             fontSize: 11.5,
-                            background: showCommandInspector ? "rgba(232, 164, 74, 0.2)" : "transparent",
-                            borderColor: "var(--accent-primary, #e8a44a)",
-                            color: "var(--accent-primary, #e8a44a)",
+                            borderRadius: 24,
+                            background: showCommandInspector ? "#e8f0fe" : "#ffffff",
+                            border: "1px solid #dadce0",
+                            color: "#1a73e8",
                             fontWeight: 600,
+                            cursor: "pointer",
                           }}
                           onClick={() => setShowCommandInspector((prev) => !prev)}
                           title="Toggle Command Telemetry & Backward Trace side panel"
@@ -1529,7 +1576,7 @@ export default function App() {
                       )}
                       <button
                         className="pill-btn"
-                        style={{ padding: "3px 8px", fontSize: 11.5 }}
+                        style={{ padding: "4px 12px", fontSize: 11.5, borderRadius: 24, background: "#ffffff", border: "1px solid #dadce0", color: "#3c4043", cursor: "pointer" }}
                         onClick={handleStartNewChat}
                         title="Start a new chat session (Alt+N)"
                       >
@@ -1548,28 +1595,28 @@ export default function App() {
                   justifyContent: "space-between",
                   marginBottom: 10,
                   padding: "6px 12px",
-                  background: "rgba(15, 23, 42, 0.75)",
+                  background: "#ffffff",
                   borderRadius: 8,
-                  border: "1px solid #1e293b",
+                  border: "1px solid #dadce0",
                   flexWrap: "wrap",
                   gap: 8,
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ fontSize: 11.5, color: "#94a3b8", fontWeight: 700, display: "flex", alignItems: "center", gap: 5 }}>
-                    <Sparkles size={13} color="#38bdf8" /> Squad Architecture:
+                  <span style={{ fontSize: 11.5, color: "#5f6368", fontWeight: 700, display: "flex", alignItems: "center", gap: 5 }}>
+                    <Sparkles size={13} color="#1a73e8" /> Squad Architecture:
                   </span>
                   <select
                     value={selectedSquad}
                     onChange={(e) => setSelectedSquad(e.target.value)}
                     style={{
-                      background: "#0b1329",
-                      border: "1px solid #1e3a8a",
-                      borderRadius: 6,
-                      color: "#38bdf8",
-                      padding: "4px 10px",
+                      background: "#ffffff",
+                      border: "1px solid #dadce0",
+                      borderRadius: 24,
+                      color: "#202124",
+                      padding: "4px 12px",
                       fontSize: 11.5,
-                      fontWeight: 700,
+                      fontWeight: 500,
                       cursor: "pointer",
                       outline: "none",
                     }}
@@ -1584,7 +1631,7 @@ export default function App() {
                   </select>
                 </div>
 
-                <span style={{ fontSize: 11, color: "#64748b" }}>
+                <span style={{ fontSize: 11, color: "#5f6368" }}>
                   {selectedSquad === "cross_squad"
                     ? "🌐 Cross-squad bridge active"
                     : selectedSquad === "auto"
@@ -1593,25 +1640,45 @@ export default function App() {
                 </span>
               </div>
 
-              <div className="suggestion-pills">
-                <button className="pill-btn" onClick={() => sendChatMessage("What are the customers mostly complaining of?", "consumer_sentiment")}>
+              <div className="suggestion-pills" style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 12 }}>
+                <button
+                  className="pill-btn"
+                  style={{ borderRadius: 24, background: "#ffffff", border: "1px solid #dadce0", color: "#3c4043", padding: "6px 14px", fontSize: 12, cursor: "pointer" }}
+                  onClick={() => sendChatMessage("What are the customers mostly complaining of?", "consumer_sentiment")}
+                >
                   💬 Consumer Sentiment (5 Agents)
                 </button>
-                <button className="pill-btn" onClick={() => sendChatMessage("Check system access logs for unauthorized root escalation and file sharing", "security_forensics")}>
+                <button
+                  className="pill-btn"
+                  style={{ borderRadius: 24, background: "#ffffff", border: "1px solid #dadce0", color: "#3c4043", padding: "6px 14px", fontSize: 12, cursor: "pointer" }}
+                  onClick={() => sendChatMessage("Check system access logs for unauthorized root escalation and file sharing", "security_forensics")}
+                >
                   🛡️ SecOps Forensics & Root Escalation (4 Agents)
                 </button>
-                <button className="pill-btn" onClick={() => sendChatMessage("Investigate customer complaint TKT-1004 and correlate with system access logs for root breach", "cross_squad")}>
+                <button
+                  className="pill-btn"
+                  style={{ borderRadius: 24, background: "#ffffff", border: "1px solid #dadce0", color: "#3c4043", padding: "6px 14px", fontSize: 12, cursor: "pointer" }}
+                  onClick={() => sendChatMessage("Investigate customer complaint TKT-1004 and correlate with system access logs for root breach", "cross_squad")}
+                >
                   🌐 Cross-Squad Enterprise Bridge (7 Agents)
                 </button>
-                <button className="pill-btn" onClick={() => sendChatMessage("Demonstrate adversarial critic debate between analyst and critic", "adversarial_critic")}>
+                <button
+                  className="pill-btn"
+                  style={{ borderRadius: 24, background: "#ffffff", border: "1px solid #dadce0", color: "#3c4043", padding: "6px 14px", fontSize: 12, cursor: "pointer" }}
+                  onClick={() => sendChatMessage("Demonstrate adversarial critic debate between analyst and critic", "adversarial_critic")}
+                >
                   🎯 Adversarial Critic Debate (5 Agents)
                 </button>
-                <button className="pill-btn" onClick={() => sendChatMessage("Run rapid 3-agent consensus check on records", "rapid_consensus")}>
+                <button
+                  className="pill-btn"
+                  style={{ borderRadius: 24, background: "#ffffff", border: "1px solid #dadce0", color: "#3c4043", padding: "6px 14px", fontSize: 12, cursor: "pointer" }}
+                  onClick={() => sendChatMessage("Run rapid 3-agent consensus check on records", "rapid_consensus")}
+                >
                   ⚡ Rapid 3-Agent Consensus (3 Agents)
                 </button>
                 <button
                   className="pill-btn"
-                  style={{ marginLeft: "auto", color: "#f87171" }}
+                  style={{ marginLeft: "auto", color: "#d93025", borderRadius: 24, background: "#ffffff", border: "1px solid #dadce0", padding: "6px 14px", fontSize: 12, cursor: "pointer" }}
                   onClick={handleStartNewChat}
                   title="Clear view and start a new conversation"
                 >
@@ -1620,13 +1687,39 @@ export default function App() {
                 </button>
               </div>
 
-              <div className="messages-list">
+              <div className="messages-list" style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 16, paddingRight: 4, marginBottom: 12 }}>
                 {messages.map((msg, idx) => (
-                  <div key={idx} className="msg-wrapper">
-                    <div className={`avatar ${msg.role === "assistant" ? "avatar-assistant" : "avatar-user"}`}>
+                  <div key={idx} className="msg-wrapper" style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                    <div
+                      className={`avatar ${msg.role === "assistant" ? "avatar-assistant" : "avatar-user"}`}
+                      style={{
+                        background: msg.role === "assistant" ? "#e8f0fe" : "#f1f3f4",
+                        color: msg.role === "assistant" ? "#1a73e8" : "#3c4043",
+                        borderRadius: "50%",
+                        width: 36,
+                        height: 36,
+                        minWidth: 36,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        border: "1px solid #dadce0",
+                      }}
+                    >
                       {msg.role === "assistant" ? <Bot size={20} /> : <User size={20} />}
                     </div>
-                    <div className={`msg-body ${msg.role}`}>
+                    <div
+                      className={`msg-body ${msg.role}`}
+                      style={{
+                        background: msg.role === "assistant" ? "#ffffff" : "#e8f0fe",
+                        color: "#202124",
+                        border: "1px solid #dadce0",
+                        borderRadius: 8,
+                        padding: "14px 18px",
+                        lineHeight: 1.6,
+                        maxWidth: "100%",
+                        flex: 1,
+                      }}
+                    >
                       {renderFormattedText(msg.content)}
 
                       {/* Dynamic Agent Interaction Graph rendered after response */}
@@ -1654,14 +1747,14 @@ export default function App() {
                               marginTop: 12,
                               padding: "10px 14px",
                               borderRadius: 8,
-                              background: isSelected ? "rgba(232, 164, 74, 0.14)" : "var(--bg-elevated, #22262c)",
-                              border: isSelected ? "1.5px solid var(--accent-primary, #e8a44a)" : "1px solid var(--border-subtle, #2a2f38)",
+                              background: isSelected ? "#e8f0fe" : "#f8f9fa",
+                              border: isSelected ? "1.5px solid #1a73e8" : "1px solid #dadce0",
                               display: "flex",
                               alignItems: "center",
                               justifyContent: "space-between",
                               flexWrap: "wrap",
                               gap: 10,
-                              boxShadow: isSelected ? "0 0 16px rgba(232, 164, 74, 0.2)" : "none",
+                              boxShadow: "none",
                               transition: "all 0.2s ease",
                             }}
                           >
@@ -1669,12 +1762,12 @@ export default function App() {
                               <span
                                 style={{
                                   fontSize: 11,
-                                  padding: "3px 8px",
-                                  borderRadius: 6,
-                                  background: "rgba(96, 165, 250, 0.15)",
-                                  border: "1px solid rgba(96, 165, 250, 0.35)",
-                                  color: "#60a5fa",
-                                  fontWeight: 700,
+                                  padding: "3px 10px",
+                                  borderRadius: 16,
+                                  background: "#e8f0fe",
+                                  border: "1px solid #dadce0",
+                                  color: "#1a73e8",
+                                  fontWeight: 600,
                                   display: "inline-flex",
                                   alignItems: "center",
                                   gap: 5,
@@ -1688,12 +1781,12 @@ export default function App() {
                               <span
                                 style={{
                                   fontSize: 11,
-                                  padding: "3px 8px",
-                                  borderRadius: 6,
-                                  background: "rgba(245, 158, 11, 0.15)",
-                                  border: "1px solid rgba(245, 158, 11, 0.35)",
-                                  color: "#fbbf24",
-                                  fontWeight: 700,
+                                  padding: "3px 10px",
+                                  borderRadius: 16,
+                                  background: "#fef7e0",
+                                  border: "1px solid #dadce0",
+                                  color: "#b06000",
+                                  fontWeight: 600,
                                   display: "inline-flex",
                                   alignItems: "center",
                                   gap: 5,
@@ -1704,8 +1797,8 @@ export default function App() {
                                 {toolCount} Tool Calls
                               </span>
 
-                              <span style={{ fontSize: 11, color: "var(--text-muted, #5c6472)" }}>
-                                Workflow: <code style={{ color: "var(--accent-primary, #e8a44a)" }}>{msgWfId}</code>
+                              <span style={{ fontSize: 11, color: "#5f6368" }}>
+                                Workflow: <code style={{ color: "#1a73e8", background: "#f1f3f4", padding: "2px 6px", borderRadius: 4, border: "1px solid #dadce0" }}>{msgWfId}</code>
                               </span>
                             </div>
 
@@ -1720,19 +1813,18 @@ export default function App() {
                                   }
                                 }}
                                 style={{
-                                  background: isSelected ? "var(--accent-primary, #e8a44a)" : "rgba(232, 164, 74, 0.18)",
-                                  color: isSelected ? "#111214" : "var(--accent-primary, #e8a44a)",
-                                  border: "1px solid var(--accent-primary, #e8a44a)",
-                                  borderRadius: 6,
-                                  padding: "6px 12px",
+                                  background: isSelected ? "#1a73e8" : "#ffffff",
+                                  color: isSelected ? "#ffffff" : "#1a73e8",
+                                  border: isSelected ? "1px solid #1a73e8" : "1px solid #dadce0",
+                                  borderRadius: 24,
+                                  padding: "6px 14px",
                                   fontSize: 12,
-                                  fontWeight: 700,
+                                  fontWeight: 600,
                                   display: "inline-flex",
                                   alignItems: "center",
                                   gap: 6,
                                   cursor: "pointer",
                                   transition: "all 0.15s ease",
-                                  boxShadow: isSelected ? "0 2px 8px rgba(232, 164, 74, 0.35)" : "none",
                                 }}
                                 title="Inspect end-to-start backward trace, data transfers & permissions side-by-side with chat"
                               >
@@ -1746,11 +1838,11 @@ export default function App() {
                                   navigate(`/graphs?workflow_id=${encodeURIComponent(msgWfId)}&auto_trace=true`);
                                 }}
                                 style={{
-                                  background: "transparent",
-                                  color: "var(--text-secondary, #9ba3b0)",
-                                  border: "1px solid var(--border-subtle, #2a2f38)",
-                                  borderRadius: 6,
-                                  padding: "6px 10px",
+                                  background: "#ffffff",
+                                  color: "#3c4043",
+                                  border: "1px solid #dadce0",
+                                  borderRadius: 24,
+                                  padding: "6px 12px",
                                   fontSize: 11.5,
                                   display: "inline-flex",
                                   alignItems: "center",
@@ -1773,7 +1865,7 @@ export default function App() {
                           {msg.final_output && (
                             <button
                               className="pill-btn"
-                              style={{ padding: "4px 10px", fontSize: "12px" }}
+                              style={{ padding: "4px 12px", fontSize: "12px", borderRadius: 24, background: "#ffffff", border: "1px solid #dadce0", color: "#3c4043", cursor: "pointer" }}
                               onClick={() => downloadFile(msg.final_output, `report_${msg.workflow_run?.workflow_id || "audit"}.md`)}
                             >
                               <Download size={13} style={{ display: "inline", marginRight: 5 }} />
@@ -1784,11 +1876,13 @@ export default function App() {
                             <button
                               className="pill-btn"
                               style={{
-                                padding: "4px 10px",
+                                padding: "4px 12px",
                                 fontSize: "12px",
-                                background: "rgba(59, 130, 246, 0.15)",
-                                borderColor: "#3b82f6",
-                                color: "#60a5fa"
+                                borderRadius: 24,
+                                background: "#e8f0fe",
+                                border: "1px solid #dadce0",
+                                color: "#1a73e8",
+                                cursor: "pointer",
                               }}
                               onClick={() => {
                                 const wf = msg.workflow_run?.workflow_id || msg.workflow_id;
@@ -1802,7 +1896,7 @@ export default function App() {
                               Inspect Events for this prompt →
                             </button>
                           )}
-                          <span style={{ fontSize: "11.5px", color: "#64748b" }}>
+                          <span style={{ fontSize: "11.5px", color: "#5f6368" }}>
                             Detailed multi-agent trace available in <strong>Communication Timeline</strong> &amp; <strong>Three-Graph Explorer</strong>
                           </span>
                         </div>
@@ -1811,9 +1905,11 @@ export default function App() {
                   </div>
                 ))}
                 {chatLoading && (
-                  <div className="msg-wrapper">
-                    <div className="avatar avatar-assistant"><Bot size={20} /></div>
-                    <div className="msg-body assistant" style={{ color: "#94a3b8" }}>
+                  <div className="msg-wrapper" style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                    <div className="avatar avatar-assistant" style={{ background: "#e8f0fe", color: "#1a73e8", borderRadius: "50%", width: 36, height: 36, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid #dadce0" }}>
+                      <Bot size={20} />
+                    </div>
+                    <div className="msg-body assistant" style={{ background: "#ffffff", border: "1px solid #dadce0", borderRadius: 8, padding: "12px 18px", color: "#5f6368" }}>
                       ✨ Thinking...
                     </div>
                   </div>
@@ -1821,11 +1917,34 @@ export default function App() {
                 <div ref={messagesEndRef} />
               </div>
 
-              <div className="chat-input-wrapper">
+              <div
+                className="chat-input-wrapper"
+                style={{
+                  borderRadius: 24,
+                  background: "#ffffff",
+                  border: "1px solid #dadce0",
+                  display: "flex",
+                  alignItems: "center",
+                  padding: "4px 8px 4px 16px",
+                  boxShadow: "0 1px 6px rgba(32, 33, 36, 0.28)",
+                  gap: 8,
+                }}
+              >
                 <button
                   className={`btn-icon btn-mic ${isListening ? "listening" : ""}`}
                   onClick={handleVoiceCommand}
                   title={isListening ? "Listening..." : "Click to speak voice command"}
+                  style={{
+                    borderRadius: "50%",
+                    background: isListening ? "#fce8e6" : "transparent",
+                    color: isListening ? "#d93025" : "#5f6368",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: 8,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
                 >
                   <Mic size={18} />
                 </button>
@@ -1836,13 +1955,35 @@ export default function App() {
                   value={inputPrompt}
                   onChange={(e) => setInputPrompt(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && sendChatMessage()}
+                  style={{
+                    flex: 1,
+                    background: "transparent",
+                    border: "none",
+                    outline: "none",
+                    color: "#202124",
+                    fontSize: 14,
+                    padding: "8px 4px",
+                  }}
                 />
-                <button className="btn-icon btn-send" onClick={() => sendChatMessage()}>
+                <button
+                  className="btn-icon btn-send"
+                  onClick={() => sendChatMessage()}
+                  style={{
+                    borderRadius: 24,
+                    background: "#1a73e8",
+                    color: "#ffffff",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: "8px 16px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
                   <Send size={16} />
                 </button>
               </div>
             </div>
-
             {/* Right Column: Command Telemetry & Three-Graph Inspector */}
             {showCommandInspector && selectedCommandWfId && (
               <div style={{ height: "100%", minHeight: 0, overflow: "hidden" }}>
@@ -1864,13 +2005,13 @@ export default function App() {
         {/* View 2: Hugging Face Multi-Agent Research Simulation */}
         {activeTab === "hf_simulation" && (
           <div className="content-panel">
-            <div className="stat-card" style={{ marginBottom: 20 }}>
+            <div className="stat-card" style={{ marginBottom: 20, background: "#ffffff", border: "1px solid #dadce0", borderRadius: 8 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                 <div>
-                  <h3 style={{ color: "#60a5fa", fontSize: 18, fontWeight: 700, marginBottom: 6 }}>
+                  <h3 style={{ color: "#1a73e8", fontSize: 18, fontWeight: 700, marginBottom: 6 }}>
                     Hugging Face Router Multi-Agent Research Simulation
                   </h3>
-                  <p style={{ color: "#94a3b8", fontSize: 13, lineHeight: 1.5 }}>
+                  <p style={{ color: "#5f6368", fontSize: 13, lineHeight: 1.5 }}>
                     Dynamic inter-agent dialogue between <strong>Coordinator_Agent</strong> (<code>meta-llama/Llama-3.1-8B-Instruct</code>) 
                     and <strong>Executor_Agent</strong> (<code>Qwen/Qwen2.5-7B-Instruct</code>) over the Hugging Face Router.
                   </p>
@@ -1887,7 +2028,7 @@ export default function App() {
                 </div>
               </div>
 
-              <div style={{ background: "rgba(59, 130, 246, 0.08)", border: "1px solid rgba(59, 130, 246, 0.25)", padding: 12, borderRadius: 8, fontSize: 12.5, color: "#bfdbfe", marginBottom: 16 }}>
+              <div style={{ background: "#e8f0fe", border: "1px solid #dadce0", padding: 12, borderRadius: 8, fontSize: 12.5, color: "#1a73e8", marginBottom: 16 }}>
                 🧠 <strong>Goal-Driven Multi-Agent Protocol:</strong> Agents collaborate dynamically across turns until the research goal is conclusively answered.
                 The <code>Safety Loop Limit</code> acts strictly as a circuit-breaker to stop runaway loops. 
                 Internal neural reasoning chains (<code>&lt;think&gt;...&lt;/think&gt;</code>) are automatically stripped before public logging.
@@ -1924,18 +2065,18 @@ export default function App() {
               {/* Controls */}
               <div style={{ display: "grid", gridTemplateColumns: "2.5fr 1fr 1fr", gap: 14, marginBottom: 14 }}>
                 <div>
-                  <label style={{ fontSize: 12.5, color: "#94a3b8", display: "block", marginBottom: 6, fontWeight: 600 }}>
+                  <label style={{ fontSize: 12.5, color: "#5f6368", display: "block", marginBottom: 6, fontWeight: 600 }}>
                     Research Directive / Goal (Type ANY Custom Arbitrary Task)
                   </label>
                   <input
                     type="text"
                     value={simPrompt}
                     onChange={(e) => setSimPrompt(e.target.value)}
-                    style={{ width: "100%", padding: "10px 12px", background: "#0b0f19", border: "1px solid #334155", borderRadius: 6, color: "#fff", fontSize: 13 }}
+                    style={{ width: "100%", padding: "10px 14px", background: "#ffffff", border: "1px solid #dadce0", borderRadius: 8, color: "#202124", fontSize: 13 }}
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: 12.5, color: "#94a3b8", display: "block", marginBottom: 6, fontWeight: 600 }}>
+                  <label style={{ fontSize: 12.5, color: "#5f6368", display: "block", marginBottom: 6, fontWeight: 600 }}>
                     Safety Loop Limit (max {maxTurnsLimit} turns)
                   </label>
                   <input
@@ -1947,16 +2088,16 @@ export default function App() {
                     onChange={(e) => setMaxTurnsLimit(Number(e.target.value))}
                     style={{ width: "100%", marginTop: 8 }}
                   />
-                  <span style={{ fontSize: 10, color: "#64748b" }}>Stops dynamically when solved</span>
+                  <span style={{ fontSize: 10, color: "#5f6368" }}>Stops dynamically when solved</span>
                 </div>
                 <div>
-                  <label style={{ fontSize: 12.5, color: "#94a3b8", display: "block", marginBottom: 6, fontWeight: 600 }}>
+                  <label style={{ fontSize: 12.5, color: "#5f6368", display: "block", marginBottom: 6, fontWeight: 600 }}>
                     Capture Level
                   </label>
                   <select
                     value={simCaptureLevel}
                     onChange={(e) => setSimCaptureLevel(Number(e.target.value))}
-                    style={{ width: "100%", padding: "10px", background: "#0b0f19", border: "1px solid #334155", borderRadius: 6, color: "#fff", fontSize: 13 }}
+                    style={{ width: "100%", padding: "10px 14px", background: "#ffffff", border: "1px solid #dadce0", borderRadius: 8, color: "#202124", fontSize: 13 }}
                   >
                     <option value="1">Level 1: Metadata Only</option>
                     <option value="2">Level 2: Metadata + Summary</option>
@@ -1969,11 +2110,11 @@ export default function App() {
                 onClick={() => runHfSimulation()}
                 disabled={simRunning}
                 style={{
-                  background: "linear-gradient(135deg, #2563eb, #7c3aed)",
-                  color: "#fff",
-                  padding: "12px 24px",
+                  background: "#1a73e8",
+                  color: "#ffffff",
+                  padding: "10px 24px",
                   border: "none",
-                  borderRadius: 8,
+                  borderRadius: 24,
                   fontWeight: 600,
                   fontSize: 14,
                   cursor: simRunning ? "not-allowed" : "pointer",
@@ -2004,21 +2145,22 @@ export default function App() {
                   className="stat-card"
                   style={{
                     marginBottom: 20,
-                    background: "linear-gradient(135deg, rgba(30, 58, 138, 0.25), rgba(16, 185, 129, 0.12))",
-                    border: "1px solid rgba(59, 130, 246, 0.4)",
-                    boxShadow: "0 8px 24px rgba(0, 0, 0, 0.4)",
+                    background: "#ffffff",
+                    border: "1px solid #dadce0",
+                    borderRadius: 8,
+                    boxShadow: "none",
                     padding: 20,
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#10b981", boxShadow: "0 0 10px #10b981" }} />
-                      <h3 style={{ color: "#38bdf8", fontSize: 17, fontWeight: 700, margin: 0 }}>
+                      <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#10b981", boxShadow: "none" }} />
+                      <h3 style={{ color: "#1a73e8", fontSize: 17, fontWeight: 700, margin: 0 }}>
                         1. Direct Synthesized Answer (Produced First from LLM APIs)
                       </h3>
                     </div>
                     <div style={{ display: "flex", gap: 8 }}>
-                      <span className="pill-badge active" style={{ fontSize: 11, background: "#065f46" }}>
+                      <span className="pill-badge active" style={{ fontSize: 11, background: "#e6f4ea", color: "#137333", border: "1px solid #dadce0", borderRadius: 16 }}>
                         Goal Satisfied Dynamically ({simResult.turns_executed} Turns)
                       </span>
                       <span className="pill-badge" style={{ fontSize: 11 }}>
@@ -2027,32 +2169,32 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div style={{ background: "#0b0f19", padding: 16, borderRadius: 8, border: "1px solid #1e293b", marginBottom: 14 }}>
-                    <div style={{ fontSize: 11, color: "#94a3b8", textTransform: "uppercase", fontWeight: 700, marginBottom: 4 }}>
+                  <div style={{ background: "#f8f9fa", padding: 16, borderRadius: 8, border: "1px solid #dadce0", marginBottom: 14 }}>
+                    <div style={{ fontSize: 11, color: "#5f6368", textTransform: "uppercase", fontWeight: 700, marginBottom: 4 }}>
                       Executive Resolution
                     </div>
-                    <div style={{ color: "#f8fafc", fontSize: 14, lineHeight: 1.6, fontWeight: 500 }}>
+                    <div style={{ color: "#202124", fontSize: 14, lineHeight: 1.6, fontWeight: 500 }}>
                       {simResult.direct_answer?.executive_summary}
                     </div>
                   </div>
 
                   <div style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 14 }}>
-                    <div style={{ background: "#0b0f19", padding: 14, borderRadius: 8, border: "1px solid #1e293b" }}>
-                      <div style={{ fontSize: 11, color: "#34d399", textTransform: "uppercase", fontWeight: 700, marginBottom: 6 }}>
+                    <div style={{ background: "#f8f9fa", padding: 14, borderRadius: 8, border: "1px solid #dadce0" }}>
+                      <div style={{ fontSize: 11, color: "#137333", textTransform: "uppercase", fontWeight: 700, marginBottom: 6 }}>
                         📊 Discovered Evidence & Quantitative Metrics
                       </div>
-                      <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: "#cbd5e1", lineHeight: 1.6 }}>
+                      <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: "#202124", lineHeight: 1.6 }}>
                         {simResult.direct_answer?.key_findings?.map((f, i) => (
                           <li key={i}>{f}</li>
                         ))}
                       </ul>
                     </div>
 
-                    <div style={{ background: "#0b0f19", padding: 14, borderRadius: 8, border: "1px solid #1e293b" }}>
-                      <div style={{ fontSize: 11, color: "#fbbf24", textTransform: "uppercase", fontWeight: 700, marginBottom: 6 }}>
+                    <div style={{ background: "#f8f9fa", padding: 14, borderRadius: 8, border: "1px solid #dadce0" }}>
+                      <div style={{ fontSize: 11, color: "#b06000", textTransform: "uppercase", fontWeight: 700, marginBottom: 6 }}>
                         💡 Actionable Recommendations
                       </div>
-                      <ol style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: "#cbd5e1", lineHeight: 1.6 }}>
+                      <ol style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, color: "#202124", lineHeight: 1.6 }}>
                         {simResult.direct_answer?.recommendations?.map((r, i) => (
                           <li key={i}>{r}</li>
                         ))}
@@ -2060,7 +2202,7 @@ export default function App() {
                     </div>
                   </div>
 
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14, fontSize: 11, color: "#64748b" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14, fontSize: 11, color: "#5f6368" }}>
                     <span>Inference Models: <code>meta-llama/Llama-3.1-8B-Instruct</code> & <code>Qwen/Qwen2.5-7B-Instruct</code></span>
                     <span>Target Dataset: <code>{simResult.direct_answer?.dataset_grounding}</code></span>
                   </div>
@@ -2068,7 +2210,7 @@ export default function App() {
 
                 {/* DYNAMIC INTERACTION GRAPH (HOW AGENTS COMMUNICATED) */}
                 {simResult.interaction_graph && (
-                  <div style={{ marginBottom: 20 }}>
+                  <div style={{ marginBottom: 20, background: "#ffffff", border: "1px solid #dadce0", borderRadius: 8 }}>
                     <AgentInteractionGraph
                       graph={simResult.interaction_graph}
                       interactions={simResult.communication_log}
@@ -2079,24 +2221,24 @@ export default function App() {
                 )}
 
                 {/* 2. DATA FLOW & COMMUNICATION TRACE SECOND */}
-                <div className="stat-card" style={{ marginBottom: 20 }}>
+                <div className="stat-card" style={{ marginBottom: 20, background: "#ffffff", border: "1px solid #dadce0", borderRadius: 8 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                     <div>
-                      <h3 style={{ color: "#60a5fa", fontSize: 17, fontWeight: 700, marginBottom: 4 }}>
+                      <h3 style={{ color: "#1a73e8", fontSize: 17, fontWeight: 700, marginBottom: 4 }}>
                         2. End-to-End Data Flow & Multi-Agent Communication Architecture
                       </h3>
-                      <p style={{ color: "#94a3b8", fontSize: 12.5, margin: 0 }}>
+                      <p style={{ color: "#5f6368", fontSize: 12.5, margin: 0 }}>
                         Step-by-step trace showing how authority was delegated, how CIM tools queried data, and how agents communicated.
                       </p>
                     </div>
                   </div>
 
                   {/* ASCII / Visual Flow Banner */}
-                  <div style={{ background: "#0b0f19", padding: 14, borderRadius: 8, border: "1px solid #1e293b", marginBottom: 16 }}>
-                    <div style={{ fontSize: 11, color: "#38bdf8", textTransform: "uppercase", fontWeight: 700, marginBottom: 6 }}>
+                  <div style={{ background: "#f8f9fa", padding: 14, borderRadius: 8, border: "1px solid #dadce0", marginBottom: 16 }}>
+                    <div style={{ fontSize: 11, color: "#1a73e8", textTransform: "uppercase", fontWeight: 700, marginBottom: 6 }}>
                       Visual Data Flow Pipeline
                     </div>
-                    <pre style={{ color: "#a5b4fc", fontSize: 11.5, margin: 0, overflowX: "auto" }}>
+                    <pre style={{ color: "#202124", fontSize: 11.5, margin: 0, overflowX: "auto" }}>
                       {simResult.data_flow?.ascii_flow}
                     </pre>
                   </div>
@@ -2107,25 +2249,25 @@ export default function App() {
                       <div
                         key={st.stage}
                         style={{
-                          background: "#0f172a",
-                          border: "1px solid #1e293b",
+                          background: "#ffffff",
+                          border: "1px solid #dadce0",
                           borderLeft: "4px solid #3b82f6",
                           padding: 12,
                           borderRadius: 6,
                         }}
                       >
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                          <span style={{ fontSize: 12.5, fontWeight: 700, color: "#f8fafc" }}>
+                          <span style={{ fontSize: 12.5, fontWeight: 700, color: "#202124" }}>
                             Stage {st.stage}: {st.name}
                           </span>
-                          <span style={{ fontSize: 11, fontFamily: "monospace", color: "#38bdf8" }}>
+                          <span style={{ fontSize: 11, fontFamily: "monospace", color: "#1a73e8" }}>
                             Token: {st.authority_token}
                           </span>
                         </div>
-                        <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 4 }}>
+                        <div style={{ fontSize: 12, color: "#5f6368", marginBottom: 4 }}>
                           <strong>{st.sender}</strong> &rarr; <strong>{st.receiver}</strong> (Scope: <code>{st.scope}</code>)
                         </div>
-                        <div style={{ fontSize: 12, color: "#cbd5e1" }}>
+                        <div style={{ fontSize: 12, color: "#202124" }}>
                           {st.description}
                         </div>
                       </div>
@@ -2134,7 +2276,7 @@ export default function App() {
                 </div>
 
                 {/* Sub-tab navigation for Detailed Logs & Graphs */}
-                <div style={{ display: "flex", gap: 10, marginBottom: 16, borderBottom: "1px solid #1f2937", paddingBottom: 10 }}>
+                <div style={{ display: "flex", gap: 10, marginBottom: 16, borderBottom: "1px solid #dadce0", paddingBottom: 10 }}>
                   {[
                     { id: "dialogue", label: "💬 Public Dialogue Log", count: `${simResult.communication_log?.length} turns` },
                     { id: "inter", label: "🕸️ Interaction Graph (G_inter)", count: `${simResult.interaction_nodes || 2} nodes` },
@@ -2145,11 +2287,11 @@ export default function App() {
                       key={st.id}
                       onClick={() => setActiveSimTab(st.id)}
                       style={{
-                        background: activeSimTab === st.id ? "#1e293b" : "transparent",
-                        color: activeSimTab === st.id ? "#38bdf8" : "#94a3b8",
-                        border: activeSimTab === st.id ? "1px solid #38bdf8" : "1px solid transparent",
-                        padding: "8px 14px",
-                        borderRadius: 6,
+                        background: activeSimTab === st.id ? "#e8f0fe" : "#ffffff",
+                        color: activeSimTab === st.id ? "#1a73e8" : "#5f6368",
+                        border: "1px solid #dadce0",
+                        padding: "6px 16px",
+                        borderRadius: 24,
                         cursor: "pointer",
                         fontSize: 13,
                         fontWeight: activeSimTab === st.id ? 600 : 400,
@@ -2185,8 +2327,8 @@ export default function App() {
                         <div
                           key={idx}
                           style={{
-                            background: isCoord ? "rgba(37, 99, 235, 0.08)" : isExec ? "rgba(16, 185, 129, 0.08)" : "#1e293b",
-                            border: `1px solid ${isCoord ? "#2563eb40" : isExec ? "#10b98140" : "#334155"}`,
+                            background: isCoord ? "#e8f0fe" : isExec ? "#e6f4ea" : "#ffffff",
+                            border: "1px solid #dadce0",
                             borderRadius: 8,
                             padding: 14,
                           }}
@@ -2195,8 +2337,10 @@ export default function App() {
                             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                               <span
                                 style={{
-                                  background: isCoord ? "#2563eb" : isExec ? "#10b981" : "#64748b",
-                                  color: "#fff",
+                                  background: isCoord ? "#1a73e8" : isExec ? "#137333" : "#5f6368",
+                                  color: "#ffffff",
+                                  borderRadius: 16,
+                                  padding: "2px 10px",
                                   padding: "2px 8px",
                                   borderRadius: 4,
                                   fontSize: 11,
@@ -2205,13 +2349,13 @@ export default function App() {
                               >
                                 {isCoord ? "COORDINATOR" : isExec ? "EXECUTOR" : "PRINCIPAL"}
                               </span>
-                              <span style={{ fontSize: 12, color: "#94a3b8" }}>
+                              <span style={{ fontSize: 12, color: "#5f6368" }}>
                                 {isCoord ? "meta-llama/Llama-3.1-8B-Instruct" : isExec ? "Qwen/Qwen2.5-7B-Instruct" : "User Principal"}
                               </span>
                             </div>
-                            <span style={{ fontSize: 11, color: "#64748b" }}>Turn {idx + 1} • Public Envelope</span>
+                            <span style={{ fontSize: 11, color: "#5f6368" }}>Turn {idx + 1} • Public Envelope</span>
                           </div>
-                          <div style={{ color: "#e2e8f0", fontSize: 13.5, lineHeight: 1.5 }}>
+                          <div style={{ color: "#202124", fontSize: 13.5, lineHeight: 1.5 }}>
                             {cleanText}
                           </div>
                         </div>
@@ -2223,26 +2367,26 @@ export default function App() {
                 {/* Interaction Graph View */}
                 {activeSimTab === "inter" && (
                   <div className="stat-card">
-                    <h4 style={{ color: "#60a5fa", marginBottom: 8 }}>Interaction Graph Structure (G_inter)</h4>
-                    <p style={{ color: "#94a3b8", fontSize: 13, marginBottom: 14 }}>
+                    <h4 style={{ color: "#1a73e8", marginBottom: 8 }}>Interaction Graph Structure (G_inter)</h4>
+                    <p style={{ color: "#5f6368", fontSize: 13, marginBottom: 14 }}>
                       Captures observable message nodes, sender/receiver endpoints, and reply-to causal links across turns.
                     </p>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
-                      <div style={{ background: "#0b0f19", padding: 12, borderRadius: 6 }}>
-                        <div style={{ color: "#38bdf8", fontWeight: 600 }}>Total Nodes</div>
-                        <div style={{ fontSize: 20, fontWeight: 700, color: "#fff", marginTop: 4 }}>{simResult.interaction_nodes || 2}</div>
+                      <div style={{ background: "#f8f9fa", padding: 12, borderRadius: 8, border: "1px solid #dadce0" }}>
+                        <div style={{ color: "#1a73e8", fontWeight: 600 }}>Total Nodes</div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: "#202124", marginTop: 4 }}>{simResult.interaction_nodes || 2}</div>
                         <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>Agents + Message Envelopes</div>
                       </div>
-                      <div style={{ background: "#0b0f19", padding: 12, borderRadius: 6 }}>
-                        <div style={{ color: "#34d399", fontWeight: 600 }}>Directed Causal Edges</div>
-                        <div style={{ fontSize: 20, fontWeight: 700, color: "#fff", marginTop: 4 }}>{simResult.interaction_edges || 4}</div>
+                      <div style={{ background: "#f8f9fa", padding: 12, borderRadius: 8, border: "1px solid #dadce0" }}>
+                        <div style={{ color: "#137333", fontWeight: 600 }}>Directed Causal Edges</div>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: "#202124", marginTop: 4 }}>{simResult.interaction_edges || 4}</div>
                         <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>Turn reply-to dependencies</div>
                       </div>
                     </div>
                     {simResult.goal_dot && (
-                      <div style={{ background: "#0b0f19", padding: 14, borderRadius: 6 }}>
-                        <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 6 }}>Graphviz Topology Representation:</div>
-                        <pre style={{ fontSize: 11, color: "#a5b4fc", maxHeight: 220, overflowY: "auto" }}>{simResult.goal_dot}</pre>
+                      <div style={{ background: "#f8f9fa", padding: 14, borderRadius: 8, border: "1px solid #dadce0" }}>
+                        <div style={{ fontSize: 12, color: "#5f6368", marginBottom: 6 }}>Graphviz Topology Representation:</div>
+                        <pre style={{ fontSize: 11, color: "#202124", maxHeight: 220, overflowY: "auto" }}>{simResult.goal_dot}</pre>
                       </div>
                     )}
                   </div>
@@ -2251,22 +2395,22 @@ export default function App() {
                 {/* Authority Graph View */}
                 {activeSimTab === "auth" && (
                   <div className="stat-card">
-                    <h4 style={{ color: "#fbbf24", marginBottom: 8 }}>Authority Graph Hierarchy (G_auth)</h4>
-                    <p style={{ color: "#94a3b8", fontSize: 13, marginBottom: 14 }}>
+                    <h4 style={{ color: "#b06000", marginBottom: 8 }}>Authority Graph Hierarchy (G_auth)</h4>
+                    <p style={{ color: "#5f6368", fontSize: 13, marginBottom: 14 }}>
                       Cryptographic delegation tree ensuring every executor action is backed by verifiable parent authorization.
                     </p>
                     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                      <div style={{ background: "#0b0f19", padding: 12, borderRadius: 6, borderLeft: "4px solid #3b82f6" }}>
+                      <div style={{ background: "#f8f9fa", padding: 12, borderRadius: 8, border: "1px solid #dadce0", borderLeft: "4px solid #1a73e8" }}>
                         <div style={{ fontSize: 11, color: "#94a3b8" }}>ROOT DELEGATION TOKEN</div>
-                        <div style={{ fontSize: 14, fontFamily: "monospace", color: "#60a5fa", fontWeight: 600 }}>{simResult.root_delegation_id}</div>
-                        <div style={{ fontSize: 12, color: "#cbd5e1", marginTop: 4 }}>
+                        <div style={{ fontSize: 14, fontFamily: "monospace", color: "#1a73e8", fontWeight: 600 }}>{simResult.root_delegation_id}</div>
+                        <div style={{ fontSize: 12, color: "#202124", marginTop: 4 }}>
                           Principal: <code>principal_researcher</code> &rarr; Agent: <code>agent_coordinator</code> (Scope: research_coordination)
                         </div>
                       </div>
-                      <div style={{ background: "#0b0f19", padding: 12, borderRadius: 6, borderLeft: "4px solid #10b981", marginLeft: 24 }}>
+                      <div style={{ background: "#f8f9fa", padding: 12, borderRadius: 8, border: "1px solid #dadce0", borderLeft: "4px solid #137333", marginLeft: 24 }}>
                         <div style={{ fontSize: 11, color: "#94a3b8" }}>SUB-DELEGATION TOKEN (EXECUTOR)</div>
-                        <div style={{ fontSize: 14, fontFamily: "monospace", color: "#34d399", fontWeight: 600 }}>{simResult.executor_delegation_id}</div>
-                        <div style={{ fontSize: 12, color: "#cbd5e1", marginTop: 4 }}>
+                        <div style={{ fontSize: 14, fontFamily: "monospace", color: "#137333", fontWeight: 600 }}>{simResult.executor_delegation_id}</div>
+                        <div style={{ fontSize: 12, color: "#202124", marginTop: 4 }}>
                           Principal: <code>agent_coordinator</code> &rarr; Agent: <code>agent_executor</code> (Scope: technical_execution)
                         </div>
                         <div style={{ fontSize: 11, color: "#64748b", marginTop: 2 }}>
@@ -2280,25 +2424,25 @@ export default function App() {
                 {/* Traceability Matrix View */}
                 {activeSimTab === "matrix" && (
                   <div className="stat-card">
-                    <h4 style={{ color: "#38bdf8", marginBottom: 8 }}>End-to-End Traceability Matrix</h4>
-                    <p style={{ color: "#94a3b8", fontSize: 13, marginBottom: 14 }}>
+                    <h4 style={{ color: "#1a73e8", marginBottom: 8 }}>End-to-End Traceability Matrix</h4>
+                    <p style={{ color: "#5f6368", fontSize: 13, marginBottom: 14 }}>
                       Correlates research goals, delegated authorities, observable messages, and downstream execution consequences.
                     </p>
                     {simResult.matrix && simResult.matrix.length > 0 ? (
                       <div style={{ overflowX: "auto" }}>
                         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
                           <thead>
-                            <tr style={{ background: "#0b0f19", borderBottom: "1px solid #334155" }}>
+                            <tr style={{ background: "#f8f9fa", borderBottom: "1px solid #dadce0" }}>
                               {Object.keys(simResult.matrix[0]).map((h) => (
-                                <th key={h} style={{ padding: "8px 10px", textAlign: "left", color: "#94a3b8" }}>{h}</th>
+                                <th key={h} style={{ padding: "8px 10px", textAlign: "left", color: "#5f6368" }}>{h}</th>
                               ))}
                             </tr>
                           </thead>
                           <tbody>
                             {simResult.matrix.map((row, rIdx) => (
-                              <tr key={rIdx} style={{ borderBottom: "1px solid #1f2937" }}>
+                              <tr key={rIdx} style={{ borderBottom: "1px solid #dadce0" }}>
                                 {Object.values(row).map((val, vIdx) => (
-                                  <td key={vIdx} style={{ padding: "8px 10px", color: "#e2e8f0" }}>{String(val)}</td>
+                                  <td key={vIdx} style={{ padding: "8px 10px", color: "#202124" }}>{String(val)}</td>
                                 ))}
                               </tr>
                             ))}
@@ -2306,7 +2450,7 @@ export default function App() {
                         </table>
                       </div>
                     ) : (
-                      <div style={{ color: "#94a3b8", fontSize: 13 }}>Matrix telemetry synchronized with EventStore.</div>
+                      <div style={{ color: "#5f6368", fontSize: 13 }}>Matrix telemetry synchronized with EventStore.</div>
                     )}
                   </div>
                 )}
@@ -2324,22 +2468,22 @@ export default function App() {
                 <div style={{ flex: 1, minWidth: 280 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <ShieldCheck size={22} color="#10b981" />
-                    <h2 style={{ margin: 0, fontSize: 20, color: "#f8fafc", fontWeight: 700 }}>
+                    <h2 style={{ margin: 0, fontSize: 20, color: "#202124", fontWeight: 700 }}>
                       Observability Gateway
                     </h2>
-                    <span className="pill-badge" style={{ background: "rgba(16, 185, 129, 0.15)", color: "#34d399", borderColor: "rgba(16, 185, 129, 0.3)", fontSize: 11 }}>
+                    <span className="pill-badge" style={{ background: "#e6f4ea", color: "#137333", borderColor: "#dadce0", fontSize: 11 }}>
                       ● Auto-Capture Active
                     </span>
                   </div>
-                  <p style={{ margin: "4px 0 0 0", fontSize: 12.5, color: "#94a3b8" }}>
+                  <p style={{ margin: "4px 0 0 0", fontSize: 12.5, color: "#5f6368" }}>
                     Authoritative mediation boundary automatically intercepting all inter-agent messages and tool operations with Common Information Model (CIM) invariants.
                   </p>
                 </div>
 
                 {/* Controls: Live Sync, Manual Refresh & Privacy Tier Selector */}
                 <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#111827", padding: "4px 8px", borderRadius: 6, border: "1px solid #1f2937" }}>
-                    <span style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600 }}>Privacy Capture Tier:</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#f8f9fa", padding: "4px 8px", borderRadius: 6, border: "1px solid #dadce0" }}>
+                    <span style={{ fontSize: 11, color: "#5f6368", fontWeight: 600 }}>Privacy Capture Tier:</span>
                     {[
                       { level: 1, label: "L1: Metadata", desc: "Headers only" },
                       { level: 2, label: "L2: Summary", desc: "Metadata + Semantic Summary" },
@@ -2354,9 +2498,9 @@ export default function App() {
                             padding: "3px 8px",
                             fontSize: 11,
                             borderRadius: 4,
-                            background: isActive ? "#0284c7" : "transparent",
-                            color: isActive ? "#fff" : "#cbd5e1",
-                            border: isActive ? "1px solid #38bdf8" : "1px solid #334155",
+                            background: isActive ? "#1a73e8" : "transparent",
+                            color: isActive ? "#ffffff" : "#5f6368",
+                            border: isActive ? "1px solid #1a73e8" : "1px solid transparent",
                           }}
                           disabled={gatewayUpdatingCapture}
                           onClick={() => handleUpdateCaptureLevel(t.level)}
@@ -2373,9 +2517,10 @@ export default function App() {
                     style={{
                       padding: "6px 12px",
                       fontSize: 12,
-                      background: isGatewayLiveSync ? "rgba(16, 185, 129, 0.15)" : "#1e293b",
-                      color: isGatewayLiveSync ? "#34d399" : "#94a3b8",
-                      border: isGatewayLiveSync ? "1px solid rgba(16, 185, 129, 0.3)" : "1px solid #334155",
+                      background: isGatewayLiveSync ? "#e6f4ea" : "#ffffff",
+                      color: isGatewayLiveSync ? "#137333" : "#5f6368",
+                      border: "1px solid #dadce0",
+                      borderRadius: 24,
                     }}
                     onClick={() => setIsGatewayLiveSync(!isGatewayLiveSync)}
                     title="Toggle automatic background stream polling"
@@ -2398,113 +2543,113 @@ export default function App() {
 
               {/* 4 Metric KPI Cards */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, marginBottom: 20 }}>
-                <div className="stat-card" style={{ borderLeft: "4px solid #38bdf8" }}>
+                <div className="stat-card" style={{ borderLeft: "4px solid #1a73e8" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: 12, color: "#94a3b8", fontWeight: 600 }}>CAPTURED COMMUNICATIONS</span>
+                    <span style={{ fontSize: 12, color: "#5f6368", fontWeight: 600 }}>CAPTURED COMMUNICATIONS</span>
                     <MessageSquare size={16} color="#38bdf8" />
                   </div>
-                  <div style={{ fontSize: 26, fontWeight: 700, color: "#f8fafc", margin: "6px 0 2px 0" }}>
+                  <div style={{ fontSize: 26, fontWeight: 700, color: "#202124", margin: "6px 0 2px 0" }}>
                     {gatewayOverview?.total_interactions_captured ?? gatewayFeed.filter((i) => i.category === "communication").length}
                   </div>
-                  <div style={{ fontSize: 11, color: "#38bdf8" }}>
+                  <div style={{ fontSize: 11, color: "#1a73e8" }}>
                     9 interaction types intercepted at boundary
                   </div>
                 </div>
 
-                <div className="stat-card" style={{ borderLeft: "4px solid #10b981" }}>
+                <div className="stat-card" style={{ borderLeft: "4px solid #137333" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: 12, color: "#94a3b8", fontWeight: 600 }}>NORMALIZED TOOL ACTIVITIES</span>
+                    <span style={{ fontSize: 12, color: "#5f6368", fontWeight: 600 }}>NORMALIZED TOOL ACTIVITIES</span>
                     <Activity size={16} color="#10b981" />
                   </div>
-                  <div style={{ fontSize: 26, fontWeight: 700, color: "#f8fafc", margin: "6px 0 2px 0" }}>
+                  <div style={{ fontSize: 26, fontWeight: 700, color: "#202124", margin: "6px 0 2px 0" }}>
                     {gatewayOverview?.total_tool_events_captured ?? gatewayFeed.filter((i) => i.category === "tool").length}
                   </div>
-                  <div style={{ fontSize: 11, color: "#10b981" }}>
+                  <div style={{ fontSize: 11, color: "#137333" }}>
                     Mapped to Tier-1 verbs (READ, WRITE, INVOKE)
                   </div>
                 </div>
 
-                <div className="stat-card" style={{ borderLeft: "4px solid #a855f7" }}>
+                <div className="stat-card" style={{ borderLeft: "4px solid #7627bb" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: 12, color: "#94a3b8", fontWeight: 600 }}>DELEGATIONS MINTED</span>
+                    <span style={{ fontSize: 12, color: "#5f6368", fontWeight: 600 }}>DELEGATIONS MINTED</span>
                     <ShieldCheck size={16} color="#a855f7" />
                   </div>
-                  <div style={{ fontSize: 26, fontWeight: 700, color: "#f8fafc", margin: "6px 0 2px 0" }}>
+                  <div style={{ fontSize: 26, fontWeight: 700, color: "#202124", margin: "6px 0 2px 0" }}>
                     {gatewayOverview?.total_delegations_minted ?? 0}
                   </div>
-                  <div style={{ fontSize: 11, color: "#c084fc" }}>
+                  <div style={{ fontSize: 11, color: "#7627bb" }}>
                     Cryptographic authority tokens bound to actions
                   </div>
                 </div>
 
-                <div className="stat-card" style={{ borderLeft: "4px solid #f59e0b" }}>
+                <div className="stat-card" style={{ borderLeft: "4px solid #b06000" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: 12, color: "#94a3b8", fontWeight: 600 }}>GATEWAY OVERHEAD</span>
+                    <span style={{ fontSize: 12, color: "#5f6368", fontWeight: 600 }}>GATEWAY OVERHEAD</span>
                     <Zap size={16} color="#f59e0b" />
                   </div>
-                  <div style={{ fontSize: 26, fontWeight: 700, color: "#f8fafc", margin: "6px 0 2px 0" }}>
+                  <div style={{ fontSize: 26, fontWeight: 700, color: "#202124", margin: "6px 0 2px 0" }}>
                     &lt; 0.3 ms
                   </div>
-                  <div style={{ fontSize: 11, color: "#fbbf24" }}>
+                  <div style={{ fontSize: 11, color: "#b06000" }}>
                     p95 interception latency &amp; PII regex active
                   </div>
                 </div>
               </div>
 
               {/* Gateway Invariants & Mediation Architecture Banner */}
-              <div className="stat-card" style={{ marginBottom: 20, background: "linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.8))", border: "1px solid #1e293b" }}>
+              <div className="stat-card" style={{ marginBottom: 20, background: "#ffffff", border: "1px solid #dadce0" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12, flexWrap: "wrap", gap: 8 }}>
                   <div>
-                    <h4 style={{ margin: 0, fontSize: 14, color: "#f8fafc", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+                    <h4 style={{ margin: 0, fontSize: 14, color: "#202124", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
                       <Server size={15} color="#38bdf8" />
                       Observability Gateway Mediation Boundary &amp; Invariants
                     </h4>
-                    <span style={{ fontSize: 12, color: "#94a3b8" }}>
+                    <span style={{ fontSize: 12, color: "#5f6368" }}>
                       Every agent communication envelope and external tool execution must pass through the Gateway before reaching peers or SQLite persistence.
                     </span>
                   </div>
-                  <span className="pill-badge" style={{ background: "rgba(56, 189, 248, 0.12)", color: "#38bdf8", borderColor: "#0284c7", fontSize: 11 }}>
+                  <span className="pill-badge" style={{ background: "#e8f0fe", color: "#1a73e8", borderColor: "#dadce0", fontSize: 11 }}>
                     Mishra &amp; Sharad Invariants Enforced
                   </span>
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
-                  <div style={{ background: "#0b0f19", padding: "10px 12px", borderRadius: 6, border: "1px solid #1f2937" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#38bdf8", fontWeight: 600, fontSize: 12 }}>
+                  <div style={{ background: "#f8f9fa", padding: "10px 12px", borderRadius: 6, border: "1px solid #dadce0" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#1a73e8", fontWeight: 600, fontSize: 12 }}>
                       <CheckCircle2 size={13} />
                       Invariant I1: Authority Minting
                     </div>
-                    <div style={{ fontSize: 11.5, color: "#94a3b8", marginTop: 4 }}>
+                    <div style={{ fontSize: 11.5, color: "#5f6368", marginTop: 4 }}>
                       Authoritatively mints durable <code>del_...</code> credentials; agents cannot self-authorize.
                     </div>
                   </div>
 
-                  <div style={{ background: "#0b0f19", padding: "10px 12px", borderRadius: 6, border: "1px solid #1f2937" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#34d399", fontWeight: 600, fontSize: 12 }}>
+                  <div style={{ background: "#f8f9fa", padding: "10px 12px", borderRadius: 6, border: "1px solid #dadce0" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#137333", fontWeight: 600, fontSize: 12 }}>
                       <CheckCircle2 size={13} />
                       Invariant I3: Lineage Closure
                     </div>
-                    <div style={{ fontSize: 11.5, color: "#94a3b8", marginTop: 4 }}>
+                    <div style={{ fontSize: 11.5, color: "#5f6368", marginTop: 4 }}>
                       Every sub-delegation strictly links to a parent delegation in the Authority Graph (G_auth).
                     </div>
                   </div>
 
-                  <div style={{ background: "#0b0f19", padding: "10px 12px", borderRadius: 6, border: "1px solid #1f2937" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#fbbf24", fontWeight: 600, fontSize: 12 }}>
+                  <div style={{ background: "#f8f9fa", padding: "10px 12px", borderRadius: 6, border: "1px solid #dadce0" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#b06000", fontWeight: 600, fontSize: 12 }}>
                       <CheckCircle2 size={13} />
                       Invariant I4: Action Normalization
                     </div>
-                    <div style={{ fontSize: 11.5, color: "#94a3b8", marginTop: 4 }}>
+                    <div style={{ fontSize: 11.5, color: "#5f6368", marginTop: 4 }}>
                       Maps native tool calls into audited Tier-1 verbs (READ, WRITE, SEARCH, INVOKE).
                     </div>
                   </div>
 
-                  <div style={{ background: "#0b0f19", padding: "10px 12px", borderRadius: 6, border: "1px solid #1f2937" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#c084fc", fontWeight: 600, fontSize: 12 }}>
+                  <div style={{ background: "#f8f9fa", padding: "10px 12px", borderRadius: 6, border: "1px solid #dadce0" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, color: "#7627bb", fontWeight: 600, fontSize: 12 }}>
                       <CheckCircle2 size={13} />
                       Invariant I5: Delegation Binding
                     </div>
-                    <div style={{ fontSize: 11.5, color: "#94a3b8", marginTop: 4 }}>
+                    <div style={{ fontSize: 11.5, color: "#5f6368", marginTop: 4 }}>
                       Zero unassigned execution; every tool event and message envelope binds to active delegation context.
                     </div>
                   </div>
@@ -2542,7 +2687,7 @@ export default function App() {
                 <div style={{ display: "flex", gap: 10, alignItems: "center", flex: 1, justifyContent: "flex-end", minWidth: 280 }}>
                   <select
                     className="select-input"
-                    style={{ width: "auto", fontSize: 12, padding: "5px 10px", background: "#111827", color: "#cbd5e1", border: "1px solid #1f2937", borderRadius: 6 }}
+                    style={{ width: "auto", fontSize: 12, padding: "5px 10px", background: "#f8f9fa", color: "#202124", border: "1px solid #dadce0", borderRadius: 6 }}
                     value={gatewayAgentFilter}
                     onChange={(e) => setGatewayAgentFilter(e.target.value)}
                   >
@@ -2554,7 +2699,7 @@ export default function App() {
                   </select>
 
                   <div style={{ position: "relative", width: 220 }}>
-                    <Search size={14} style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", color: "#64748b" }} />
+                    <Search size={14} style={{ position: "absolute", left: 9, top: "50%", transform: "translateY(-50%)", color: "#5f6368" }} />
                     <input
                       type="text"
                       placeholder="Search activities..."
@@ -2564,9 +2709,9 @@ export default function App() {
                         width: "100%",
                         padding: "5px 10px 5px 28px",
                         fontSize: 12,
-                        background: "#111827",
-                        color: "#f8fafc",
-                        border: "1px solid #1f2937",
+                        background: "#f8f9fa",
+                        color: "#202124",
+                        border: "1px solid #dadce0",
                         borderRadius: 6,
                         outline: "none",
                       }}
@@ -2600,9 +2745,9 @@ export default function App() {
 
                   if (items.length === 0) {
                     return (
-                      <div className="stat-card" style={{ textAlign: "center", padding: "40px 20px", color: "#64748b" }}>
-                        <ShieldCheck size={36} color="#334155" style={{ margin: "0 auto 10px auto" }} />
-                        <div style={{ fontSize: 14, color: "#94a3b8", fontWeight: 600 }}>No gateway activities match the filter</div>
+                      <div className="stat-card" style={{ textAlign: "center", padding: "40px 20px", color: "#5f6368" }}>
+                        <ShieldCheck size={36} color="#5f6368" style={{ margin: "0 auto 10px auto" }} />
+                        <div style={{ fontSize: 14, color: "#5f6368", fontWeight: 600 }}>No gateway activities match the filter</div>
                         <div style={{ fontSize: 12, marginTop: 4 }}>
                           Interact with the Coordinator in Chat or run a workflow in Agent Workspace to observe live automated interception.
                         </div>
@@ -2615,8 +2760,8 @@ export default function App() {
                     const srcMeta = getAgentMeta(item.source_agent);
                     const tgtMeta = isComm ? getAgentMeta(item.target) : null;
                     const typeStyle = isComm
-                      ? (TYPE_META[item.action_type] || { color: "#38bdf8", bg: "rgba(56, 189, 248, 0.15)", border: "#0284c7", icon: "💬" })
-                      : (ACTION_SEMANTIC_META[item.action_type] || { color: "#34d399", bg: "rgba(52, 211, 153, 0.15)", border: "#059669", icon: "⚙️" });
+                      ? (TYPE_META[item.action_type] || { color: "#1a73e8", bg: "rgba(56, 189, 248, 0.15)", border: "#0284c7", icon: "💬" })
+                      : (ACTION_SEMANTIC_META[item.action_type] || { color: "#137333", bg: "rgba(52, 211, 153, 0.15)", border: "#059669", icon: "⚙️" });
 
                     return (
                       <div
@@ -2702,9 +2847,9 @@ export default function App() {
                                   style={{
                                     padding: "2px 6px",
                                     borderRadius: 4,
-                                    background: "#0f172a",
-                                    color: "#34d399",
-                                    border: "1px solid #1e293b",
+                                    background: "#ffffff",
+                                    color: "#137333",
+                                    border: "1px solid #dadce0",
                                     fontSize: 11.5,
                                   }}
                                 >
@@ -2721,22 +2866,22 @@ export default function App() {
                                 fontSize: 11,
                                 padding: "2px 6px",
                                 borderRadius: 4,
-                                background: "#0b0f19",
-                                color: "#a5b4fc",
-                                border: "1px solid #1e293b",
+                                background: "#f8f9fa",
+                                color: "#1a73e8",
+                                border: "1px solid #dadce0",
                               }}
                               title={`Delegation context: ${item.delegation_id}`}
                             >
                               {item.delegation_id}
                             </code>
-                            <span style={{ fontSize: 11, color: "#64748b" }}>
+                            <span style={{ fontSize: 11, color: "#5f6368" }}>
                               {item.timestamp ? new Date(item.timestamp).toLocaleTimeString() : ""}
                             </span>
                           </div>
                         </div>
 
                         {/* Body Summary */}
-                        <div style={{ fontSize: 12.5, color: "#cbd5e1", lineHeight: 1.5, background: "#0b0f19", padding: "8px 12px", borderRadius: 6, border: "1px solid #1f2937" }}>
+                        <div style={{ fontSize: 12.5, color: "#202124", lineHeight: 1.5, background: "#f8f9fa", padding: "8px 12px", borderRadius: 6, border: "1px solid #dadce0" }}>
                           {item.summary}
                         </div>
 
@@ -2745,14 +2890,14 @@ export default function App() {
                           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
                             {isComm ? (
                               <>
-                                <span style={{ color: "#94a3b8" }}>
-                                  Capture: <strong style={{ color: "#38bdf8" }}>Level {item.capture_level}</strong>
+                                <span style={{ color: "#5f6368" }}>
+                                  Capture: <strong style={{ color: "#1a73e8" }}>Level {item.capture_level}</strong>
                                 </span>
-                                <span style={{ color: "#94a3b8" }}>
-                                  Sensitivity: <strong style={{ color: "#f8fafc" }}>{item.sensitivity_label}</strong>
+                                <span style={{ color: "#5f6368" }}>
+                                  Sensitivity: <strong style={{ color: "#202124" }}>{item.sensitivity_label}</strong>
                                 </span>
                                 {item.downstream_actions && item.downstream_actions.length > 0 && (
-                                  <span style={{ color: "#10b981", background: "rgba(16, 185, 129, 0.1)", padding: "1px 6px", borderRadius: 4, border: "1px solid rgba(16, 185, 129, 0.2)" }}>
+                                  <span style={{ color: "#137333", background: "#e6f4ea", padding: "1px 6px", borderRadius: 4, border: "1px solid rgba(16, 185, 129, 0.2)" }}>
                                     ⚡ Triggers {item.downstream_actions.length} tool action(s)
                                   </span>
                                 )}
@@ -2762,11 +2907,11 @@ export default function App() {
                                 <span style={{ color: item.outcome === "success" ? "#34d399" : "#f87171" }}>
                                   Outcome: <strong>{item.outcome ? item.outcome.toUpperCase() : "SUCCESS"}</strong>
                                 </span>
-                                <span style={{ color: "#94a3b8" }}>
-                                  Latency: <strong style={{ color: "#fbbf24" }}>&lt; 2.5ms</strong>
+                                <span style={{ color: "#5f6368" }}>
+                                  Latency: <strong style={{ color: "#b06000" }}>&lt; 2.5ms</strong>
                                 </span>
                                 {item.resource_id && (
-                                  <span style={{ color: "#64748b" }}>
+                                  <span style={{ color: "#5f6368" }}>
                                     Resource: <code>{item.resource_id}</code>
                                   </span>
                                 )}
@@ -2798,9 +2943,9 @@ export default function App() {
                     bottom: 0,
                     width: "500px",
                     maxWidth: "92vw",
-                    background: "#0f172a",
-                    borderLeft: "1px solid #334155",
-                    boxShadow: "-8px 0 24px rgba(0,0,0,0.5)",
+                    background: "#ffffff",
+                    borderLeft: "1px solid #dadce0",
+                    boxShadow: "-4px 0 20px rgba(60,64,67,0.15)",
                     zIndex: 9999,
                     display: "flex",
                     flexDirection: "column",
@@ -2808,13 +2953,13 @@ export default function App() {
                     animation: "fadeIn 0.15s ease",
                   }}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, borderBottom: "1px solid #1e293b", paddingBottom: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, borderBottom: "1px solid #dadce0", paddingBottom: 12 }}>
                     <div>
-                      <h3 style={{ margin: 0, fontSize: 16, color: "#f8fafc", fontWeight: 700 }}>
+                      <h3 style={{ margin: 0, fontSize: 16, color: "#202124", fontWeight: 700 }}>
                         {inspectedGatewayItem.category === "communication" ? "💬 Inter-Agent Message" : "⚙️ CIM Tool Execution"}
                       </h3>
-                      <span style={{ fontSize: 11, color: "#94a3b8" }}>
-                        ID: <code style={{ color: "#38bdf8" }}>{inspectedGatewayItem.activity_id}</code>
+                      <span style={{ fontSize: 11, color: "#5f6368" }}>
+                        ID: <code style={{ color: "#1a73e8" }}>{inspectedGatewayItem.activity_id}</code>
                       </span>
                     </div>
                     <button
@@ -2827,31 +2972,31 @@ export default function App() {
                   </div>
 
                   <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12 }}>
-                    <div style={{ background: "#1e293b", padding: 12, borderRadius: 6, fontSize: 12 }}>
+                    <div style={{ background: "#f8f9fa", padding: 12, borderRadius: 6, fontSize: 12 }}>
                       <div style={{ display: "grid", gridTemplateColumns: "120px 1fr", rowGap: 6 }}>
-                        <span style={{ color: "#94a3b8" }}>Category:</span>
-                        <strong style={{ color: "#f8fafc", textTransform: "capitalize" }}>{inspectedGatewayItem.category}</strong>
-                        <span style={{ color: "#94a3b8" }}>Action / Type:</span>
-                        <code style={{ color: "#34d399" }}>{inspectedGatewayItem.action_type}</code>
-                        <span style={{ color: "#94a3b8" }}>Source Agent:</span>
-                        <strong style={{ color: "#38bdf8" }}>{inspectedGatewayItem.source_agent}</strong>
-                        <span style={{ color: "#94a3b8" }}>Target:</span>
-                        <strong style={{ color: "#cbd5e1" }}>{inspectedGatewayItem.target}</strong>
-                        <span style={{ color: "#94a3b8" }}>Delegation ID:</span>
-                        <code style={{ color: "#a5b4fc" }}>{inspectedGatewayItem.delegation_id}</code>
+                        <span style={{ color: "#5f6368" }}>Category:</span>
+                        <strong style={{ color: "#202124", textTransform: "capitalize" }}>{inspectedGatewayItem.category}</strong>
+                        <span style={{ color: "#5f6368" }}>Action / Type:</span>
+                        <code style={{ color: "#137333" }}>{inspectedGatewayItem.action_type}</code>
+                        <span style={{ color: "#5f6368" }}>Source Agent:</span>
+                        <strong style={{ color: "#1a73e8" }}>{inspectedGatewayItem.source_agent}</strong>
+                        <span style={{ color: "#5f6368" }}>Target:</span>
+                        <strong style={{ color: "#202124" }}>{inspectedGatewayItem.target}</strong>
+                        <span style={{ color: "#5f6368" }}>Delegation ID:</span>
+                        <code style={{ color: "#1a73e8" }}>{inspectedGatewayItem.delegation_id}</code>
                         {inspectedGatewayItem.delegation_parent_id && (
                           <>
-                            <span style={{ color: "#94a3b8" }}>Parent Del ID:</span>
-                            <code style={{ color: "#64748b" }}>{inspectedGatewayItem.delegation_parent_id}</code>
+                            <span style={{ color: "#5f6368" }}>Parent Del ID:</span>
+                            <code style={{ color: "#5f6368" }}>{inspectedGatewayItem.delegation_parent_id}</code>
                           </>
                         )}
-                        <span style={{ color: "#94a3b8" }}>Timestamp:</span>
-                        <span style={{ color: "#94a3b8" }}>{inspectedGatewayItem.timestamp}</span>
+                        <span style={{ color: "#5f6368" }}>Timestamp:</span>
+                        <span style={{ color: "#5f6368" }}>{inspectedGatewayItem.timestamp}</span>
                       </div>
                     </div>
 
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ color: "#94a3b8", fontSize: 12, fontWeight: 600 }}>Raw Observability Gateway Telemetry:</span>
+                      <span style={{ color: "#5f6368", fontSize: 12, fontWeight: 600 }}>Raw Observability Gateway Telemetry:</span>
                       <button
                         className="pill-btn"
                         style={{ padding: "3px 8px", fontSize: 11 }}
@@ -2864,12 +3009,12 @@ export default function App() {
 
                     <pre
                       style={{
-                        background: "#020617",
-                        border: "1px solid #1e293b",
+                        background: "#f8f9fa",
+                        border: "1px solid #dadce0",
                         borderRadius: 6,
                         padding: 12,
                         fontSize: 11.5,
-                        color: "#94a3b8",
+                        color: "#5f6368",
                         overflowX: "auto",
                         whiteSpace: "pre-wrap",
                         wordBreak: "break-all",
@@ -2888,32 +3033,40 @@ export default function App() {
 
         {/* View 4: LangGraph Topologies */}
         {activeTab === "topologies" && (
-          <div className="content-panel">
-            <div style={{ display: "flex", gap: 10, marginBottom: 20 }}>
-              {Object.keys(topologies).map((key) => (
-                <button
-                  key={key}
-                  className={`pill-btn ${selectedTopology === key ? "active" : ""}`}
-                  style={{
-                    background: selectedTopology === key ? "#2563eb" : "#1e293b",
-                    color: selectedTopology === key ? "#fff" : "#94a3b8",
-                  }}
-                  onClick={() => setSelectedTopology(key)}
-                >
-                  {topologies[key]?.name || key}
-                </button>
-              ))}
+          <div className="content-panel" style={{ background: "#f8f9fa" }}>
+            <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
+              {Object.keys(topologies).map((key) => {
+                const isSel = selectedTopology === key;
+                return (
+                  <button
+                    key={key}
+                    className={`pill-btn ${isSel ? "active" : ""}`}
+                    style={{
+                      background: isSel ? "#1a73e8" : "#ffffff",
+                      color: isSel ? "#ffffff" : "#5f6368",
+                      border: "1px solid #dadce0",
+                      borderRadius: 24,
+                      padding: "6px 16px",
+                      fontWeight: isSel ? 600 : 500,
+                      cursor: "pointer",
+                    }}
+                    onClick={() => setSelectedTopology(key)}
+                  >
+                    {topologies[key]?.name || key}
+                  </button>
+                );
+              })}
             </div>
 
             {topologies[selectedTopology] && (
-              <div className="stat-card">
-                <h3 style={{ color: "#60a5fa", marginBottom: 8 }}>{topologies[selectedTopology].name}</h3>
-                <p style={{ color: "#94a3b8", marginBottom: 12 }}>{topologies[selectedTopology].description}</p>
-                <div style={{ fontSize: 13, color: "#38bdf8", marginBottom: 16 }}>
+              <div className="stat-card" style={{ background: "#ffffff", border: "1px solid #dadce0", borderRadius: 8, padding: 20 }}>
+                <h3 style={{ color: "#1a73e8", marginBottom: 8, fontSize: 18, fontWeight: 700 }}>{topologies[selectedTopology].name}</h3>
+                <p style={{ color: "#5f6368", marginBottom: 12, fontSize: 13, lineHeight: 1.5 }}>{topologies[selectedTopology].description}</p>
+                <div style={{ fontSize: 13, color: "#1a73e8", marginBottom: 16, fontWeight: 500 }}>
                   Paper Reference: {topologies[selectedTopology].paper_ref}
                 </div>
-                <div style={{ background: "#0b0f19", padding: 16, borderRadius: 8, overflowX: "auto" }}>
-                  <pre style={{ color: "#a5b4fc", fontSize: 13 }}>{topologies[selectedTopology].mermaid_code}</pre>
+                <div style={{ background: "#f8f9fa", padding: 16, borderRadius: 8, border: "1px solid #dadce0", overflowX: "auto" }}>
+                  <pre style={{ color: "#202124", fontSize: 13, margin: 0 }}>{topologies[selectedTopology].mermaid_code}</pre>
                 </div>
               </div>
             )}
@@ -2922,27 +3075,27 @@ export default function App() {
 
         {/* View 3: Agent Workspace (Task Runner) */}
         {activeTab === "workspace" && (
-          <div className="content-panel">
-            <div className="stat-card" style={{ marginBottom: 20 }}>
-              <h3 style={{ color: "#60a5fa", marginBottom: 14 }}>Configure & Launch Multi-Agent Workflow</h3>
+          <div className="content-panel" style={{ background: "#f8f9fa" }}>
+            <div className="stat-card" style={{ marginBottom: 20, background: "#ffffff", border: "1px solid #dadce0", borderRadius: 8, padding: 20 }}>
+              <h3 style={{ color: "#1a73e8", marginBottom: 14, fontSize: 18, fontWeight: 700 }}>Configure & Launch Multi-Agent Workflow</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 <div>
-                  <label style={{ fontSize: 13, color: "#94a3b8", display: "block", marginBottom: 6 }}>Task Description</label>
+                  <label style={{ fontSize: 13, color: "#5f6368", display: "block", marginBottom: 6, fontWeight: 600 }}>Task Description</label>
                   <input
                     type="text"
                     value={taskDesc}
                     onChange={(e) => setTaskDesc(e.target.value)}
-                    style={{ width: "100%", padding: "10px 14px", background: "#0b0f19", border: "1px solid #334155", borderRadius: 6, color: "#fff" }}
+                    style={{ width: "100%", padding: "10px 14px", background: "#ffffff", border: "1px solid #dadce0", borderRadius: 8, color: "#202124" }}
                   />
                 </div>
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 14 }}>
                   <div>
-                    <label style={{ fontSize: 13, color: "#94a3b8", display: "block", marginBottom: 6 }}>Target Dataset</label>
+                    <label style={{ fontSize: 13, color: "#5f6368", display: "block", marginBottom: 6, fontWeight: 600 }}>Target Dataset</label>
                     <select
                       value={selectedDataset}
                       onChange={(e) => setSelectedDataset(e.target.value)}
-                      style={{ width: "100%", padding: "10px", background: "#0b0f19", border: "1px solid #334155", borderRadius: 6, color: "#fff" }}
+                      style={{ width: "100%", padding: "10px", background: "#ffffff", border: "1px solid #dadce0", borderRadius: 8, color: "#202124" }}
                     >
                       {datasets.map((d) => (
                         <option key={d.name} value={d.name}>{d.name} ({d.size_bytes} B)</option>
@@ -2951,11 +3104,11 @@ export default function App() {
                   </div>
 
                   <div>
-                    <label style={{ fontSize: 13, color: "#94a3b8", display: "block", marginBottom: 6 }}>Workflow Architecture</label>
+                    <label style={{ fontSize: 13, color: "#5f6368", display: "block", marginBottom: 6, fontWeight: 600 }}>Workflow Architecture</label>
                     <select
                       value={workflowType}
                       onChange={(e) => setWorkflowType(e.target.value)}
-                      style={{ width: "100%", padding: "10px", background: "#0b0f19", border: "1px solid #334155", borderRadius: 6, color: "#fff" }}
+                      style={{ width: "100%", padding: "10px", background: "#ffffff", border: "1px solid #dadce0", borderRadius: 8, color: "#202124" }}
                     >
                       <option value="adaptive">Adaptive Multi-Agent</option>
                       <option value="w1_parallel">W1 Parallel Subtasks (Sec 7.2.1)</option>
@@ -2964,11 +3117,11 @@ export default function App() {
                   </div>
 
                   <div>
-                    <label style={{ fontSize: 13, color: "#94a3b8", display: "block", marginBottom: 6 }}>Inference Engine</label>
+                    <label style={{ fontSize: 13, color: "#5f6368", display: "block", marginBottom: 6, fontWeight: 600 }}>Inference Engine</label>
                     <select
                       value={runMode}
                       onChange={(e) => setRunMode(e.target.value)}
-                      style={{ width: "100%", padding: "10px", background: "#0b0f19", border: "1px solid #334155", borderRadius: 6, color: "#fff" }}
+                      style={{ width: "100%", padding: "10px", background: "#ffffff", border: "1px solid #dadce0", borderRadius: 8, color: "#202124" }}
                     >
                       <option value="live_api">🌐 Live Cloud API (OpenAI / Groq / Router)</option>
                       <option value="live_huggingface">🤗 Hugging Face Router</option>
@@ -2977,11 +3130,11 @@ export default function App() {
                   </div>
 
                   <div>
-                    <label style={{ fontSize: 13, color: "#94a3b8", display: "block", marginBottom: 6 }}>Privacy Capture Level</label>
+                    <label style={{ fontSize: 13, color: "#5f6368", display: "block", marginBottom: 6, fontWeight: 600 }}>Privacy Capture Level</label>
                     <select
                       value={captureLevel}
                       onChange={(e) => setCaptureLevel(e.target.value)}
-                      style={{ width: "100%", padding: "10px", background: "#0b0f19", border: "1px solid #334155", borderRadius: 6, color: "#fff" }}
+                      style={{ width: "100%", padding: "10px", background: "#ffffff", border: "1px solid #dadce0", borderRadius: 8, color: "#202124" }}
                     >
                       <option value="1">Level 1: Metadata Only</option>
                       <option value="2">Level 2: Metadata + Semantic Summary</option>
@@ -2994,13 +3147,13 @@ export default function App() {
                   onClick={startCustomWorkflow}
                   disabled={workspaceRunning}
                   style={{
-                    background: "#2563eb",
-                    color: "#fff",
-                    padding: "12px 20px",
+                    background: "#1a73e8",
+                    color: "#ffffff",
+                    padding: "12px 24px",
                     border: "none",
-                    borderRadius: 8,
+                    borderRadius: 24,
                     fontWeight: 600,
-                    cursor: "pointer",
+                    cursor: workspaceRunning ? "not-allowed" : "pointer",
                     marginTop: 6,
                   }}
                 >
@@ -3010,13 +3163,13 @@ export default function App() {
             </div>
 
             {latestRunResult && (
-              <div className="stat-card">
-                <h4 style={{ color: "#10b981", marginBottom: 10 }}>✅ Workflow Completed Successfully</h4>
-                <div style={{ fontSize: 13, color: "#94a3b8", marginBottom: 12 }}>
-                  Run ID: <code>{latestRunResult.workflow_id}</code> | Authority Token: <code>{latestRunResult.root_delegation_id}</code>
+              <div className="stat-card" style={{ background: "#ffffff", border: "1px solid #dadce0", borderRadius: 8, padding: 20 }}>
+                <h4 style={{ color: "#137333", marginBottom: 10, fontSize: 16, fontWeight: 700 }}>✅ Workflow Completed Successfully</h4>
+                <div style={{ fontSize: 13, color: "#5f6368", marginBottom: 12 }}>
+                  Run ID: <code style={{ color: "#1a73e8", background: "#f1f3f4", padding: "2px 6px", borderRadius: 4, border: "1px solid #dadce0" }}>{latestRunResult.workflow_id}</code> | Authority Token: <code style={{ color: "#1a73e8", background: "#f1f3f4", padding: "2px 6px", borderRadius: 4, border: "1px solid #dadce0" }}>{latestRunResult.root_delegation_id}</code>
                 </div>
-                <div style={{ background: "#0b0f19", padding: 14, borderRadius: 6, maxHeight: 300, overflowY: "auto" }}>
-                  <pre style={{ color: "#e2e8f0", fontSize: 13 }}>{latestRunResult.final_output}</pre>
+                <div style={{ background: "#f8f9fa", padding: 14, borderRadius: 8, border: "1px solid #dadce0", maxHeight: 300, overflowY: "auto" }}>
+                  <pre style={{ color: "#202124", fontSize: 13, margin: 0 }}>{latestRunResult.final_output}</pre>
                 </div>
               </div>
             )}
@@ -3031,7 +3184,7 @@ export default function App() {
               <div className="telemetry-header-bar">
                 <div>
                   <div className="telemetry-header-title">
-                    <Activity size={22} style={{ color: "#38bdf8" }} />
+                    <Activity size={22} style={{ color: "#1a73e8" }} />
                     Multi-Agent System Observability & Telemetry Control Plane
                   </div>
                   <div className="telemetry-header-subtitle">
@@ -3102,7 +3255,7 @@ export default function App() {
                   <div className="telemetry-kpi-val">
                     {telemetryData?.metrics?.active_agents ?? 4} Specialized
                   </div>
-                  <div className="telemetry-kpi-sub" style={{ color: "#94a3b8" }}>
+                  <div className="telemetry-kpi-sub" style={{ color: "#5f6368" }}>
                     Coordinator, Researcher, Analyst, Reporter
                   </div>
                 </div>
@@ -3164,7 +3317,7 @@ export default function App() {
                     </div>
                   </div>
                   <div className="telemetry-kpi-val" style={{ fontSize: 22 }}>
-                    {telemetryData?.metrics?.mongodb_chats_count ?? 0} <span style={{ fontSize: 13, fontWeight: 400, color: "#94a3b8" }}>chats</span> / {telemetryData?.metrics?.mongodb_messages_count ?? 0} <span style={{ fontSize: 13, fontWeight: 400, color: "#94a3b8" }}>msgs</span>
+                    {telemetryData?.metrics?.mongodb_chats_count ?? 0} <span style={{ fontSize: 13, fontWeight: 400, color: "#5f6368" }}>chats</span> / {telemetryData?.metrics?.mongodb_messages_count ?? 0} <span style={{ fontSize: 13, fontWeight: 400, color: "#5f6368" }}>msgs</span>
                   </div>
                   <div className="telemetry-kpi-sub">
                     MongoDB Atlas ({telemetryData?.mongodb_telemetry?.mongodb_connected ? "Online" : "Standby/Offline"})
@@ -3175,8 +3328,8 @@ export default function App() {
               {/* Infrastructure & Gateway Status Envelope */}
               <div className="telemetry-infra-strip">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "#e2e8f0", display: "flex", alignItems: "center", gap: 8 }}>
-                    <Server size={16} style={{ color: "#38bdf8" }} />
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#202124", display: "flex", alignItems: "center", gap: 8 }}>
+                    <Server size={16} style={{ color: "#1a73e8" }} />
                     Distributed Gateway & Infrastructure Health
                   </div>
                   <span className={`telemetry-infra-badge ${telemetryData?.infrastructure?.mongodb?.connected ? "online" : "standby"}`}>
@@ -3216,7 +3369,7 @@ export default function App() {
                     <div className="telemetry-infra-label">Privacy & Audit Storage</div>
                     <div className="telemetry-infra-val">
                       <span style={{ fontSize: 12 }}>Level 2 (Semantic)</span>
-                      <span style={{ fontSize: 12, color: "#94a3b8" }}>SQLite: {telemetryData?.storage?.file_size_formatted || "45.59 MB"}</span>
+                      <span style={{ fontSize: 12, color: "#5f6368" }}>SQLite: {telemetryData?.storage?.file_size_formatted || "45.59 MB"}</span>
                     </div>
                   </div>
                 </div>
@@ -3227,7 +3380,7 @@ export default function App() {
                 {/* Panel 1: Multi-Agent Workload Distribution */}
                 <div className="telemetry-panel-card">
                   <div className="telemetry-panel-title">
-                    <BarChart3 size={16} style={{ color: "#38bdf8" }} />
+                    <BarChart3 size={16} style={{ color: "#1a73e8" }} />
                     Specialized Multi-Agent Workload Distribution
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 12, flex: 1 }}>
@@ -3246,7 +3399,7 @@ export default function App() {
                           </div>
                           <div className="telemetry-agent-stats">
                             <span style={{ fontWeight: 700, color: ag.color }}>{ag.activity_pct}%</span>
-                            <span style={{ color: "#64748b", marginLeft: 6 }}>({ag.events_count} events / {ag.interactions_sent} msgs)</span>
+                            <span style={{ color: "#5f6368", marginLeft: 6 }}>({ag.events_count} events / {ag.interactions_sent} msgs)</span>
                           </div>
                         </div>
                         <div className="telemetry-agent-track">
@@ -3275,12 +3428,12 @@ export default function App() {
                         <div className="telemetry-agent-meta">
                           <div className="telemetry-agent-name">
                             <span style={{ width: 8, height: 8, borderRadius: 2, background: it.color, display: "inline-block" }}></span>
-                            <span style={{ color: "#e2e8f0" }}>{it.label}</span>
-                            <code style={{ fontSize: 11, color: "#94a3b8" }}>{it.type}</code>
+                            <span style={{ color: "#202124" }}>{it.label}</span>
+                            <code style={{ fontSize: 11, color: "#5f6368" }}>{it.type}</code>
                           </div>
                           <div className="telemetry-agent-stats">
-                            <span style={{ fontWeight: 700, color: "#f8fafc" }}>{it.count}</span>
-                            <span style={{ color: "#64748b", marginLeft: 4 }}>({it.percentage}%)</span>
+                            <span style={{ fontWeight: 700, color: "#202124" }}>{it.count}</span>
+                            <span style={{ color: "#5f6368", marginLeft: 4 }}>({it.percentage}%)</span>
                           </div>
                         </div>
                         <div className="telemetry-agent-track" style={{ height: 6 }}>
@@ -3302,11 +3455,11 @@ export default function App() {
               <div className="telemetry-section-card">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
                   <div>
-                    <h3 style={{ color: "#60a5fa", margin: 0, display: "flex", alignItems: "center", gap: 8, fontSize: 16 }}>
+                    <h3 style={{ color: "#1a73e8", margin: 0, display: "flex", alignItems: "center", gap: 8, fontSize: 16 }}>
                       <PlayCircle size={18} />
                       Live Recent Workflow Executions
                     </h3>
-                    <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>
+                    <div style={{ fontSize: 12, color: "#5f6368", marginTop: 2 }}>
                       Recent multi-agent collaborative workflows with duration, execution outcomes, and graph linkage.
                     </div>
                   </div>
@@ -3318,10 +3471,10 @@ export default function App() {
                         key={f}
                         onClick={() => setTelemetryWorkflowFilter(f)}
                         style={{
-                          background: telemetryWorkflowFilter === f ? "#2563eb" : "#1e293b",
-                          color: telemetryWorkflowFilter === f ? "#ffffff" : "#94a3b8",
+                          background: telemetryWorkflowFilter === f ? "#1a73e8" : "#ffffff",
+                          color: telemetryWorkflowFilter === f ? "#ffffff" : "#5f6368",
                           border: "1px solid",
-                          borderColor: telemetryWorkflowFilter === f ? "#3b82f6" : "#334155",
+                          borderColor: "#dadce0", borderRadius: 24,
                           padding: "4px 10px",
                           borderRadius: 5,
                           fontSize: 12,
@@ -3339,15 +3492,15 @@ export default function App() {
                 <div className="telemetry-table-wrapper">
                   <table style={{ width: "100%", fontSize: 12.5, borderCollapse: "collapse" }}>
                     <thead>
-                      <tr style={{ background: "#111827", textAlign: "left" }}>
-                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Workflow ID</th>
-                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Task / Goal</th>
-                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Dataset</th>
-                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Mode</th>
-                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Status</th>
-                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Duration</th>
-                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Events / Msgs</th>
-                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937", textAlign: "right" }}>Action</th>
+                      <tr style={{ background: "#f8f9fa", textAlign: "left" }}>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #dadce0" }}>Workflow ID</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #dadce0" }}>Task / Goal</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #dadce0" }}>Dataset</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #dadce0" }}>Mode</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #dadce0" }}>Status</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #dadce0" }}>Duration</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #dadce0" }}>Events / Msgs</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #dadce0", textAlign: "right" }}>Action</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -3358,19 +3511,19 @@ export default function App() {
                           return s === telemetryWorkflowFilter;
                         })
                         .map((wf) => (
-                          <tr key={wf.workflow_id} style={{ borderBottom: "1px solid #1e293b" }}>
+                          <tr key={wf.workflow_id} style={{ borderBottom: "1px solid #dadce0" }}>
                             <td style={{ padding: "9px 12px" }}>
-                              <code style={{ color: "#38bdf8", fontWeight: 600 }}>{wf.workflow_id}</code>
+                              <code style={{ color: "#1a73e8", fontWeight: 600 }}>{wf.workflow_id}</code>
                             </td>
                             <td style={{ padding: "9px 12px", maxWidth: 260 }}>
-                              <span style={{ color: "#e2e8f0", display: "inline-block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 260 }} title={wf.name || wf.task_description}>
+                              <span style={{ color: "#202124", display: "inline-block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 260 }} title={wf.name || wf.task_description}>
                                 {wf.name || wf.task_description || "Workflow Execution"}
                               </span>
                             </td>
                             <td style={{ padding: "9px 12px" }}>
                               <code style={{ fontSize: 11 }}>{wf.dataset_name || "N/A"}</code>
                             </td>
-                            <td style={{ padding: "9px 12px", color: "#94a3b8", fontSize: 11.5 }}>
+                            <td style={{ padding: "9px 12px", color: "#5f6368", fontSize: 11.5 }}>
                               {wf.mode || "adaptive"}
                             </td>
                             <td style={{ padding: "9px 12px" }}>
@@ -3379,10 +3532,10 @@ export default function App() {
                                 {wf.status || "completed"}
                               </span>
                             </td>
-                            <td style={{ padding: "9px 12px", color: "#94a3b8" }}>
+                            <td style={{ padding: "9px 12px", color: "#5f6368" }}>
                               {wf.duration_seconds !== undefined && wf.duration_seconds !== null ? `${wf.duration_seconds}s` : "0.0s"}
                             </td>
-                            <td style={{ padding: "9px 12px", color: "#cbd5e1" }}>
+                            <td style={{ padding: "9px 12px", color: "#202124" }}>
                               {wf.event_count ?? 3} ev / {wf.interaction_count ?? 7} msgs
                             </td>
                             <td style={{ padding: "9px 12px", textAlign: "right" }}>
@@ -3415,11 +3568,11 @@ export default function App() {
                       <Zap size={18} />
                       Real-Time Continuous Inspection Mechanism (CIM) Event Stream
                     </h3>
-                    <div style={{ fontSize: 12, color: "#94a3b8", marginTop: 2 }}>
+                    <div style={{ fontSize: 12, color: "#5f6368", marginTop: 2 }}>
                       Live verifiable audit trail of tool invocations, state updates, and cryptographic delegation IDs.
                     </div>
                   </div>
-                  <div style={{ fontSize: 12, color: "#64748b" }}>
+                  <div style={{ fontSize: 12, color: "#5f6368" }}>
                     Showing latest {(telemetryData?.live_event_stream || []).length} events
                   </div>
                 </div>
@@ -3427,27 +3580,27 @@ export default function App() {
                 <div className="telemetry-table-wrapper">
                   <table style={{ width: "100%", fontSize: 12.5, borderCollapse: "collapse" }}>
                     <thead>
-                      <tr style={{ background: "#111827", textAlign: "left" }}>
-                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Event ID</th>
-                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Time</th>
-                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Agent</th>
-                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Tool Invoked</th>
-                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Outcome</th>
-                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Sensitivity</th>
-                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Delegation ID</th>
+                      <tr style={{ background: "#f8f9fa", textAlign: "left" }}>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #dadce0" }}>Event ID</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #dadce0" }}>Time</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #dadce0" }}>Agent</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #dadce0" }}>Tool Invoked</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #dadce0" }}>Outcome</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #dadce0" }}>Sensitivity</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #dadce0" }}>Delegation ID</th>
                       </tr>
                     </thead>
                     <tbody>
                       {(telemetryData?.live_event_stream || []).map((ev) => (
-                        <tr key={ev.event_id} style={{ borderBottom: "1px solid #1e293b" }}>
+                        <tr key={ev.event_id} style={{ borderBottom: "1px solid #dadce0" }}>
                           <td style={{ padding: "8px 12px" }}>
                             <code style={{ color: "#93c5fd" }}>{ev.event_id}</code>
                           </td>
-                          <td style={{ padding: "8px 12px", color: "#94a3b8", fontSize: 11.5 }}>
+                          <td style={{ padding: "8px 12px", color: "#5f6368", fontSize: 11.5 }}>
                             {ev.time ? ev.time.substring(11, 19) : "N/A"}
                           </td>
                           <td style={{ padding: "8px 12px" }}>
-                            <span style={{ fontWeight: 600, color: "#e2e8f0" }}>{ev.agent_id}</span>
+                            <span style={{ fontWeight: 600, color: "#202124" }}>{ev.agent_id}</span>
                           </td>
                           <td style={{ padding: "8px 12px" }}>
                             <code style={{ color: "#f59e0b", background: "rgba(245, 158, 11, 0.1)", padding: "2px 6px", borderRadius: 4 }}>
@@ -3480,7 +3633,7 @@ export default function App() {
                             </span>
                           </td>
                           <td style={{ padding: "8px 12px" }}>
-                            <code style={{ fontSize: 11, color: "#64748b" }}>
+                            <code style={{ fontSize: 11, color: "#5f6368" }}>
                               {ev.delegation_id ? ev.delegation_id.substring(0, 16) + "..." : "root"}
                             </code>
                           </td>
@@ -3493,33 +3646,33 @@ export default function App() {
 
               {/* Allowlisted Datasets Inventory */}
               <div className="telemetry-section-card" style={{ marginBottom: 20 }}>
-                <h3 style={{ color: "#60a5fa", margin: "0 0 12px 0", display: "flex", alignItems: "center", gap: 8, fontSize: 16 }}>
+                <h3 style={{ color: "#1a73e8", margin: "0 0 12px 0", display: "flex", alignItems: "center", gap: 8, fontSize: 16 }}>
                   <Database size={18} />
                   Available Allowlisted Datasets Inventory
                 </h3>
-                <div style={{ fontSize: 12, color: "#94a3b8", marginBottom: 12 }}>
+                <div style={{ fontSize: 12, color: "#5f6368", marginBottom: 12 }}>
                   Datasets approved for ingestion by Researcher (Agent B) and statistical inspection by Analyst (Agent C).
                 </div>
                 <div className="telemetry-table-wrapper" style={{ maxHeight: 240, marginTop: 0 }}>
                   <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
                     <thead>
-                      <tr style={{ background: "#111827", textAlign: "left" }}>
-                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Dataset Name</th>
-                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Size</th>
-                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #1f2937" }}>Local Storage Path</th>
+                      <tr style={{ background: "#f8f9fa", textAlign: "left" }}>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #dadce0" }}>Dataset Name</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #dadce0" }}>Size</th>
+                        <th style={{ padding: "10px 12px", borderBottom: "1px solid #dadce0" }}>Local Storage Path</th>
                       </tr>
                     </thead>
                     <tbody>
                       {(telemetryData?.datasets || datasets || []).map((d) => (
-                        <tr key={d.name} style={{ borderBottom: "1px solid #1e293b" }}>
+                        <tr key={d.name} style={{ borderBottom: "1px solid #dadce0" }}>
                           <td style={{ padding: "9px 12px" }}>
-                            <strong style={{ color: "#f8fafc" }}>{d.name}</strong>
+                            <strong style={{ color: "#202124" }}>{d.name}</strong>
                           </td>
-                          <td style={{ padding: "9px 12px", color: "#94a3b8" }}>
+                          <td style={{ padding: "9px 12px", color: "#5f6368" }}>
                             {d.size_bytes ? `${(d.size_bytes / 1024).toFixed(1)} KB` : "N/A"}
                           </td>
                           <td style={{ padding: "9px 12px" }}>
-                            <code style={{ color: "#38bdf8", fontSize: 11 }}>{d.path}</code>
+                            <code style={{ color: "#1a73e8", fontSize: 11 }}>{d.path}</code>
                           </td>
                         </tr>
                       ))}
@@ -3538,11 +3691,11 @@ export default function App() {
             <div className="stat-card" style={{ marginBottom: 16 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12 }}>
                 <div>
-                  <h3 style={{ color: "#60a5fa", margin: 0, display: "flex", alignItems: "center", gap: 8, fontSize: 18 }}>
+                  <h3 style={{ color: "#1a73e8", margin: 0, display: "flex", alignItems: "center", gap: 8, fontSize: 18 }}>
                     <Clock size={20} />
                     Inter-Agent Communication Timeline
                   </h3>
-                  <p style={{ color: "#94a3b8", fontSize: 13, margin: "6px 0 0 0" }}>
+                  <p style={{ color: "#5f6368", fontSize: 13, margin: "6px 0 0 0" }}>
                     Chronological, observable message transfers captured at the Observability Gateway boundary between autonomous agents.
                   </p>
                 </div>
@@ -3551,7 +3704,7 @@ export default function App() {
                     <span>Showing: <strong>{filteredInteractions.length}</strong> Messages</span>
                   </div>
                   <div className="pill-badge" style={{ fontSize: 12 }}>
-                    <span>Scope: <code style={{ color: "#38bdf8" }}>{timelineScope === "all" ? "All Workflows (Latest)" : timelineScope}</code></span>
+                    <span>Scope: <code style={{ color: "#1a73e8" }}>{timelineScope === "all" ? "All Workflows (Latest)" : timelineScope}</code></span>
                   </div>
                 </div>
               </div>
@@ -3563,14 +3716,14 @@ export default function App() {
                   gap: 12,
                   marginTop: 16,
                   paddingTop: 14,
-                  borderTop: "1px solid #1f2937",
+                  borderTop: "1px solid #dadce0",
                   flexWrap: "wrap",
                   alignItems: "flex-end",
                 }}
               >
                 {/* Workflow Selector */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 230, flex: "1 1 200px" }}>
-                  <label style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600 }}>WORKFLOW SCOPE</label>
+                  <label style={{ fontSize: 11, color: "#5f6368", fontWeight: 600 }}>WORKFLOW SCOPE</label>
                   <select
                     value={timelineScope}
                     onChange={(e) => {
@@ -3578,7 +3731,7 @@ export default function App() {
                       setTimelineScope(val);
                       fetchInteractions(val, timelineAgentFilter, timelineTypeFilter);
                     }}
-                    style={{ padding: "8px 12px", background: "#0b0f19", border: "1px solid #334155", borderRadius: 6, color: "#fff", fontSize: 13 }}
+                    style={{ padding: "8px 12px", background: "#ffffff", border: "1px solid #dadce0", borderRadius: 6, color: "#fff", fontSize: 13 }}
                   >
                     <option value="all">🌐 All Workflows (Latest Activity)</option>
                     {workflows.map((w) => (
@@ -3591,7 +3744,7 @@ export default function App() {
 
                 {/* Agent Filter */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 180, flex: "1 1 160px" }}>
-                  <label style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600 }}>FILTER BY AGENT</label>
+                  <label style={{ fontSize: 11, color: "#5f6368", fontWeight: 600 }}>FILTER BY AGENT</label>
                   <select
                     value={timelineAgentFilter}
                     onChange={(e) => {
@@ -3599,7 +3752,7 @@ export default function App() {
                       setTimelineAgentFilter(val);
                       fetchInteractions(timelineScope, val, timelineTypeFilter);
                     }}
-                    style={{ padding: "8px 12px", background: "#0b0f19", border: "1px solid #334155", borderRadius: 6, color: "#fff", fontSize: 13 }}
+                    style={{ padding: "8px 12px", background: "#ffffff", border: "1px solid #dadce0", borderRadius: 6, color: "#fff", fontSize: 13 }}
                   >
                     <option value="all">👥 All Agents</option>
                     <option value="agent_coordinator">👑 Coordinator (Agent A)</option>
@@ -3611,7 +3764,7 @@ export default function App() {
 
                 {/* Interaction Type Filter */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 170, flex: "1 1 150px" }}>
-                  <label style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600 }}>INTERACTION TYPE</label>
+                  <label style={{ fontSize: 11, color: "#5f6368", fontWeight: 600 }}>INTERACTION TYPE</label>
                   <select
                     value={timelineTypeFilter}
                     onChange={(e) => {
@@ -3619,7 +3772,7 @@ export default function App() {
                       setTimelineTypeFilter(val);
                       fetchInteractions(timelineScope, timelineAgentFilter, val);
                     }}
-                    style={{ padding: "8px 12px", background: "#0b0f19", border: "1px solid #334155", borderRadius: 6, color: "#fff", fontSize: 13 }}
+                    style={{ padding: "8px 12px", background: "#ffffff", border: "1px solid #dadce0", borderRadius: 6, color: "#fff", fontSize: 13 }}
                   >
                     <option value="all">⚡ All Types</option>
                     <option value="delegation">📋 Delegation</option>
@@ -3636,15 +3789,15 @@ export default function App() {
 
                 {/* Keyword Search */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: "2 1 200px" }}>
-                  <label style={{ fontSize: 11, color: "#94a3b8", fontWeight: 600 }}>KEYWORD SEARCH</label>
+                  <label style={{ fontSize: 11, color: "#5f6368", fontWeight: 600 }}>KEYWORD SEARCH</label>
                   <div style={{ position: "relative" }}>
-                    <Search size={14} style={{ position: "absolute", left: 10, top: 11, color: "#64748b" }} />
+                    <Search size={14} style={{ position: "absolute", left: 10, top: 11, color: "#5f6368" }} />
                     <input
                       type="text"
                       placeholder="Search summaries, agents, IDs..."
                       value={timelineSearch}
                       onChange={(e) => setTimelineSearch(e.target.value)}
-                      style={{ width: "100%", padding: "8px 12px 8px 32px", background: "#0b0f19", border: "1px solid #334155", borderRadius: 6, color: "#fff", fontSize: 13 }}
+                      style={{ width: "100%", padding: "8px 12px 8px 32px", background: "#ffffff", border: "1px solid #dadce0", borderRadius: 6, color: "#fff", fontSize: 13 }}
                     />
                   </div>
                 </div>
@@ -3683,16 +3836,16 @@ export default function App() {
                   <div
                     key={n}
                     style={{
-                      background: "#0d1322",
-                      border: "1px solid #1e293b",
+                      background: "#ffffff",
+                      border: "1px solid #dadce0",
                       borderRadius: 8,
                       padding: 20,
                       opacity: 0.6,
                     }}
                   >
-                    <div style={{ height: 14, width: 200, background: "#1e293b", borderRadius: 4, marginBottom: 10 }} />
-                    <div style={{ height: 18, width: "80%", background: "#1e293b", borderRadius: 4, marginBottom: 8 }} />
-                    <div style={{ height: 12, width: 140, background: "#1e293b", borderRadius: 4 }} />
+                    <div style={{ height: 14, width: 200, background: "#f1f3f4", borderRadius: 4, marginBottom: 10 }} />
+                    <div style={{ height: 18, width: "80%", background: "#f1f3f4", borderRadius: 4, marginBottom: 8 }} />
+                    <div style={{ height: 12, width: 140, background: "#f1f3f4", borderRadius: 4 }} />
                   </div>
                 ))}
               </div>
@@ -3701,14 +3854,14 @@ export default function App() {
                 style={{
                   textAlign: "center",
                   padding: "48px 24px",
-                  background: "#0f172a",
-                  border: "1px dashed #334155",
+                  background: "#ffffff",
+                  border: "1px dashed #dadce0",
                   borderRadius: 10,
                 }}
               >
-                <Clock size={40} style={{ color: "#64748b", margin: "0 auto 14px", display: "block" }} />
-                <h4 style={{ color: "#f8fafc", marginBottom: 6, fontSize: 16 }}>No Inter-Agent Messages Found</h4>
-                <p style={{ color: "#94a3b8", fontSize: 13, maxWidth: 480, margin: "0 auto 18px", lineHeight: 1.5 }}>
+                <Clock size={40} style={{ color: "#5f6368", margin: "0 auto 14px", display: "block" }} />
+                <h4 style={{ color: "#202124", marginBottom: 6, fontSize: 16 }}>No Inter-Agent Messages Found</h4>
+                <p style={{ color: "#5f6368", fontSize: 13, maxWidth: 480, margin: "0 auto 18px", lineHeight: 1.5 }}>
                   {timelineScope !== "all" || timelineAgentFilter !== "all" || timelineTypeFilter !== "all" || timelineSearch
                     ? "No inter-agent messages match your current filters. Try resetting the filters or switching to 'All Workflows'."
                     : "No inter-agent messages have been recorded yet. Launch a workflow or send a chat prompt to trigger live multi-agent communication."}
@@ -3722,7 +3875,7 @@ export default function App() {
                     fetchInteractions("all", "all", "all");
                   }}
                   className="pill-btn"
-                  style={{ background: "#1e293b", color: "#38bdf8", padding: "8px 18px", border: "1px solid #334155", borderRadius: 6, cursor: "pointer" }}
+                  style={{ background: "#f1f3f4", color: "#1a73e8", padding: "8px 18px", border: "1px solid #dadce0", borderRadius: 6, cursor: "pointer" }}
                 >
                   Reset All Filters
                 </button>
@@ -3732,7 +3885,7 @@ export default function App() {
                 {filteredInteractions.map((it, idx) => {
                   const sender = getAgentMeta(it.sender_id || it.sender_agent_id);
                   const receiver = getAgentMeta(it.recipient_id || it.receiver_agent_id);
-                  const typeInfo = TYPE_META[it.interaction_type] || { color: "#94a3b8", bg: "rgba(148, 163, 184, 0.15)", border: "#475569", icon: "💬" };
+                  const typeInfo = TYPE_META[it.interaction_type] || { color: "#5f6368", bg: "rgba(148, 163, 184, 0.15)", border: "#dadce0", icon: "💬" };
                   const isExpanded = expandedInteractionId === it.interaction_id;
                   const timeStr = it.timestamp
                     ? it.timestamp.includes("T")
@@ -3744,8 +3897,8 @@ export default function App() {
                     <div
                       key={it.interaction_id || idx}
                       style={{
-                        background: "#0d1322",
-                        border: `1px solid ${isExpanded ? typeInfo.border : "#1e293b"}`,
+                        background: "#ffffff",
+                        border: `1px solid ${isExpanded ? typeInfo.border : "#dadce0"}`,
                         borderLeft: `4px solid ${typeInfo.color}`,
                         borderRadius: 8,
                         padding: "14px 18px",
@@ -3755,7 +3908,7 @@ export default function App() {
                       {/* Top Bar: Timestamp, Sender -> Receiver, Type Badge, Action count */}
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                          <span style={{ fontSize: 11, color: "#64748b", fontFamily: "monospace", display: "flex", alignItems: "center", gap: 4 }}>
+                          <span style={{ fontSize: 11, color: "#5f6368", fontFamily: "monospace", display: "flex", alignItems: "center", gap: 4 }}>
                             <Clock size={12} />
                             {timeStr}
                           </span>
@@ -3774,7 +3927,7 @@ export default function App() {
                             >
                               {sender.label}
                             </span>
-                            <ArrowRight size={13} style={{ color: "#64748b" }} />
+                            <ArrowRight size={13} style={{ color: "#5f6368" }} />
                             <span
                               style={{
                                 fontSize: 11,
@@ -3814,9 +3967,9 @@ export default function App() {
                             <span
                               style={{
                                 fontSize: 11,
-                                color: "#10b981",
-                                background: "rgba(16, 185, 129, 0.1)",
-                                border: "1px solid #059669",
+                                color: "#137333",
+                                background: "#e6f4ea",
+                                border: "1px solid #dadce0",
                                 padding: "2px 7px",
                                 borderRadius: 4,
                               }}
@@ -3830,9 +3983,9 @@ export default function App() {
                             style={{
                               fontSize: 11,
                               padding: "3px 9px",
-                              background: isExpanded ? "#1e293b" : "transparent",
-                              color: isExpanded ? "#38bdf8" : "#94a3b8",
-                              border: "1px solid #334155",
+                              background: isExpanded ? "#e8f0fe" : "#ffffff",
+                              color: isExpanded ? "#1a73e8" : "#5f6368",
+                              border: "1px solid #dadce0",
                               display: "flex",
                               alignItems: "center",
                               gap: 4,
@@ -3847,15 +4000,15 @@ export default function App() {
                       </div>
 
                       {/* Semantic Summary Text */}
-                      <div style={{ fontSize: 13, color: "#e2e8f0", lineHeight: 1.5, marginBottom: 4 }}>
+                      <div style={{ fontSize: 13, color: "#202124", lineHeight: 1.5, marginBottom: 4 }}>
                         {it.semantic_summary || "No semantic summary available for this interaction."}
                       </div>
 
                       {/* Inline Causal Identifiers */}
-                      <div style={{ fontSize: 11, color: "#64748b", display: "flex", gap: 14, flexWrap: "wrap", marginTop: 6 }}>
+                      <div style={{ fontSize: 11, color: "#5f6368", display: "flex", gap: 14, flexWrap: "wrap", marginTop: 6 }}>
                         {it.delegation_id && (
                           <span>
-                            Delegation: <code style={{ color: "#38bdf8" }}>{it.delegation_id}</code>
+                            Delegation: <code style={{ color: "#1a73e8" }}>{it.delegation_id}</code>
                           </span>
                         )}
                         {it.task_id && (
@@ -3865,20 +4018,20 @@ export default function App() {
                         )}
                         {it.trace_id && (
                           <span>
-                            Trace: <code style={{ color: "#94a3b8" }}>{it.trace_id}</code>
+                            Trace: <code style={{ color: "#5f6368" }}>{it.trace_id}</code>
                           </span>
                         )}
                       </div>
 
                       {/* Expandable Details Drawer */}
                       {isExpanded && (
-                        <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #1e293b" }}>
+                        <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #dadce0" }}>
                           <div
                             style={{
                               display: "grid",
                               gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
                               gap: 8,
-                              background: "#080c14",
+                              background: "#f8f9fa",
                               padding: 12,
                               borderRadius: 6,
                               fontSize: 12,
@@ -3886,24 +4039,24 @@ export default function App() {
                             }}
                           >
                             <div>
-                              <span style={{ color: "#64748b" }}>Interaction ID:</span>{" "}
-                              <code style={{ color: "#cbd5e1" }}>{it.interaction_id}</code>
+                              <span style={{ color: "#5f6368" }}>Interaction ID:</span>{" "}
+                              <code style={{ color: "#202124" }}>{it.interaction_id}</code>
                             </div>
                             <div>
-                              <span style={{ color: "#64748b" }}>Message ID:</span>{" "}
-                              <code style={{ color: "#cbd5e1" }}>{it.message_id}</code>
+                              <span style={{ color: "#5f6368" }}>Message ID:</span>{" "}
+                              <code style={{ color: "#202124" }}>{it.message_id}</code>
                             </div>
                             <div>
-                              <span style={{ color: "#64748b" }}>Parent Delegation:</span>{" "}
-                              <code style={{ color: "#cbd5e1" }}>{it.delegation_parent_id || "None (Root)"}</code>
+                              <span style={{ color: "#5f6368" }}>Parent Delegation:</span>{" "}
+                              <code style={{ color: "#202124" }}>{it.delegation_parent_id || "None (Root)"}</code>
                             </div>
                             <div>
-                              <span style={{ color: "#64748b" }}>Capture Level:</span>{" "}
+                              <span style={{ color: "#5f6368" }}>Capture Level:</span>{" "}
                               <span style={{ color: "#f59e0b" }}>Level {it.capture_level} (Metadata Summary)</span>
                             </div>
                             {it.resource_refs && it.resource_refs.length > 0 && (
                               <div style={{ gridColumn: "1 / -1" }}>
-                                <span style={{ color: "#64748b" }}>Referenced Resources:</span>{" "}
+                                <span style={{ color: "#5f6368" }}>Referenced Resources:</span>{" "}
                                 {it.resource_refs.map((r, i) => (
                                   <code key={i} style={{ color: "#34d399", marginRight: 6 }}>
                                     {r}
@@ -3913,7 +4066,7 @@ export default function App() {
                             )}
                             {it.downstream_action_ids && it.downstream_action_ids.length > 0 && (
                               <div style={{ gridColumn: "1 / -1" }}>
-                                <span style={{ color: "#64748b" }}>Downstream Action IDs:</span>{" "}
+                                <span style={{ color: "#5f6368" }}>Downstream Action IDs:</span>{" "}
                                 {it.downstream_action_ids.map((act, i) => (
                                   <code key={i} style={{ color: "#10b981", marginRight: 6 }}>
                                     {act}
@@ -3924,13 +4077,13 @@ export default function App() {
                           </div>
 
                           {/* Raw JSON Accordion */}
-                          <details style={{ fontSize: 11, color: "#64748b" }}>
-                            <summary style={{ cursor: "pointer", color: "#38bdf8", marginBottom: 6 }}>
+                          <details style={{ fontSize: 11, color: "#5f6368" }}>
+                            <summary style={{ cursor: "pointer", color: "#1a73e8", marginBottom: 6 }}>
                               Inspect Raw InteractionRecord JSON
                             </summary>
                             <pre
                               style={{
-                                background: "#050810",
+                                background: "#f8f9fa",
                                 padding: 10,
                                 borderRadius: 6,
                                 color: "#a5b4fc",
@@ -3984,14 +4137,14 @@ export default function App() {
                 justifyContent: "space-between",
                 gap: 16,
                 padding: "14px 18px",
-                background: "var(--bg-surface, #1a1d21)",
-                border: "1px solid var(--border-subtle, #2a2f38)",
+                background: "#ffffff",
+                border: "1px solid #dadce0",
               }}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <Dna size={18} color="var(--accent-primary, #e8a44a)" />
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary, #f0f2f5)" }}>
+                  <Dna size={18} color="#1a73e8" />
+                  <span style={{ fontSize: 13, fontWeight: 700, color: "#202124" }}>
                     Target Workflow:
                   </span>
                 </div>
@@ -4005,10 +4158,10 @@ export default function App() {
                   }}
                   style={{
                     padding: "8px 14px",
-                    background: "var(--bg-base, #111214)",
-                    border: "1px solid var(--border-subtle, #2a2f38)",
-                    borderRadius: "var(--radius-md, 8px)",
-                    color: "var(--text-primary, #f0f2f5)",
+                    background: "#f8f9fa",
+                    border: "1px solid #dadce0",
+                    borderRadius: 8,
+                    color: "#202124",
                     fontSize: 13,
                     fontFamily: "monospace",
                     cursor: "pointer",
@@ -4039,10 +4192,10 @@ export default function App() {
               <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 260 }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11.5 }}>
-                    <span style={{ color: "var(--text-secondary, #9ba3b0)", fontWeight: 500 }}>
+                    <span style={{ color: "#5f6368", fontWeight: 500 }}>
                       Provenance Completeness
                     </span>
-                    <span style={{ color: "var(--accent-primary, #e8a44a)", fontWeight: 700 }}>
+                    <span style={{ color: "#1a73e8", fontWeight: 700 }}>
                       {(provCompleteness * 100).toFixed(0)}%
                     </span>
                   </div>
@@ -4050,10 +4203,10 @@ export default function App() {
                     style={{
                       width: "100%",
                       height: 6,
-                      background: "var(--bg-base, #111214)",
+                      background: "#f8f9fa",
                       borderRadius: 3,
                       overflow: "hidden",
-                      border: "1px solid var(--border-subtle, #2a2f38)",
+                      border: "1px solid #dadce0",
                     }}
                   >
                     <div
@@ -4062,10 +4215,10 @@ export default function App() {
                         height: "100%",
                         background:
                           provCompleteness >= 0.8
-                            ? "var(--color-success, #34d399)"
+                            ? "#137333"
                             : provCompleteness >= 0.5
-                            ? "var(--color-warning, #fbbf24)"
-                            : "var(--color-error, #f87171)",
+                            ? "#b06000"
+                            : "#d93025",
                         borderRadius: 3,
                         transition: "width 0.4s ease",
                       }}
@@ -4079,12 +4232,12 @@ export default function App() {
                     borderRadius: 4,
                     background:
                       provCompleteness >= 0.8
-                        ? "rgba(52, 211, 153, 0.15)"
-                        : "rgba(251, 191, 36, 0.15)",
+                        ? "#e6f4ea"
+                        : "#fef7e0",
                     color:
                       provCompleteness >= 0.8
-                        ? "var(--color-success, #34d399)"
-                        : "var(--color-warning, #fbbf24)",
+                        ? "#137333"
+                        : "#b06000",
                     fontWeight: 700,
                   }}
                 >
@@ -4119,15 +4272,15 @@ export default function App() {
                 justifyContent: "space-between",
                 gap: 14,
                 padding: "14px 18px",
-                background: "var(--bg-surface, #1a1d21)",
-                border: "1px solid var(--border-subtle, #2a2f38)",
+                background: "#ffffff",
+                border: "1px solid #dadce0",
               }}
             >
               <div>
-                <h5 style={{ margin: "0 0 3px 0", color: "var(--text-primary, #f0f2f5)", fontSize: 13.5 }}>
+                <h5 style={{ margin: "0 0 3px 0", color: "#202124", fontSize: 13.5 }}>
                   W3C PROV Export & Interoperability
                 </h5>
-                <p style={{ margin: 0, color: "var(--text-secondary, #9ba3b0)", fontSize: 12 }}>
+                <p style={{ margin: 0, color: "#5f6368", fontSize: 12 }}>
                   Download formal lineage proofs formatted in W3C PROV-JSON and PROV-N notation.
                 </p>
               </div>
@@ -4137,9 +4290,9 @@ export default function App() {
                   className="pill-btn"
                   onClick={handleExportProvJson}
                   style={{
-                    background: "rgba(232, 164, 74, 0.12)",
-                    borderColor: "var(--accent-primary, #e8a44a)",
-                    color: "var(--accent-primary, #e8a44a)",
+                    background: "#e8f0fe",
+                    borderColor: "#1a73e8",
+                    color: "#1a73e8",
                     display: "flex",
                     alignItems: "center",
                     gap: 6,
@@ -4155,9 +4308,9 @@ export default function App() {
                   className="pill-btn"
                   onClick={handleExportProvN}
                   style={{
-                    background: "rgba(45, 212, 191, 0.12)",
-                    borderColor: "var(--accent-secondary, #2dd4bf)",
-                    color: "var(--accent-secondary, #2dd4bf)",
+                    background: "#e6f4ea",
+                    borderColor: "#137333",
+                    color: "#137333",
                     display: "flex",
                     alignItems: "center",
                     gap: 6,
@@ -4179,11 +4332,11 @@ export default function App() {
             <div className="stat-card" style={{ marginBottom: 16 }}>
               <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 16 }}>
                 <div>
-                  <h3 style={{ color: "#60a5fa", margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
+                  <h3 style={{ color: "#1a73e8", margin: 0, display: "flex", alignItems: "center", gap: 8 }}>
                     <Activity size={20} color="#38bdf8" />
                     <span>Live Database Execution Event Inspector (CIM)</span>
                   </h3>
-                  <p style={{ color: "#94a3b8", fontSize: 13, margin: "4px 0 0 0" }}>
+                  <p style={{ color: "#5f6368", fontSize: 13, margin: "4px 0 0 0" }}>
                     Real-time Common Information Model telemetry capturing agent tool calls, W3C PROV links, and cryptographic delegations.
                   </p>
                 </div>
@@ -4194,9 +4347,9 @@ export default function App() {
                     className="pill-btn"
                     onClick={() => setIsLiveSync(!isLiveSync)}
                     style={{
-                      background: isLiveSync ? "rgba(16, 185, 129, 0.12)" : "rgba(100, 116, 139, 0.15)",
-                      borderColor: isLiveSync ? "#10b981" : "#475569",
-                      color: isLiveSync ? "#34d399" : "#94a3b8",
+                      background: isLiveSync ? "#e6f4ea" : "#ffffff",
+                      borderColor: "#dadce0", borderRadius: 24,
+                      color: isLiveSync ? "#137333" : "#5f6368",
                       display: "flex",
                       alignItems: "center",
                       gap: 6
@@ -4233,7 +4386,7 @@ export default function App() {
               <div className="eval-filter-bar" style={{ marginBottom: 16 }}>
                 <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <label style={{ fontSize: 12.5, color: "#94a3b8", fontWeight: 600 }}>Filter Scope:</label>
+                    <label style={{ fontSize: 12.5, color: "#5f6368", fontWeight: 600 }}>Filter Scope:</label>
                     <select
                       value={selectedEventScope}
                       onChange={(e) => {
@@ -4244,8 +4397,8 @@ export default function App() {
                       }}
                       style={{
                         padding: "6px 12px",
-                        background: "#111827",
-                        border: "1px solid #334155",
+                        background: "#ffffff",
+                        border: "1px solid #dadce0",
                         borderRadius: 6,
                         color: "#fff",
                         fontSize: 12.5,
@@ -4280,7 +4433,7 @@ export default function App() {
                   </div>
 
                   <div style={{ position: "relative", flex: 1, minWidth: 200, maxWidth: 360 }}>
-                    <Search size={13} style={{ position: "absolute", left: 10, top: 10, color: "#64748b" }} />
+                    <Search size={13} style={{ position: "absolute", left: 10, top: 10, color: "#5f6368" }} />
                     <input
                       type="text"
                       placeholder="Search by ID, agent, verb, resource..."
@@ -4289,8 +4442,8 @@ export default function App() {
                       style={{
                         width: "100%",
                         padding: "6px 10px 6px 30px",
-                        background: "#111827",
-                        border: "1px solid #334155",
+                        background: "#ffffff",
+                        border: "1px solid #dadce0",
                         borderRadius: 6,
                         color: "#fff",
                         fontSize: 12.5
@@ -4299,8 +4452,8 @@ export default function App() {
                   </div>
                 </div>
 
-                <div style={{ fontSize: 12, color: "#94a3b8" }}>
-                  Showing <strong style={{ color: "#38bdf8" }}>
+                <div style={{ fontSize: 12, color: "#5f6368" }}>
+                  Showing <strong style={{ color: "#1a73e8" }}>
                     {eventsList.filter((ev) => !eventFilter || JSON.stringify(ev).toLowerCase().includes(eventFilter.toLowerCase())).length}
                   </strong> of {eventsList.length} events
                 </div>
@@ -4310,7 +4463,7 @@ export default function App() {
               <div style={{ maxHeight: 580, overflowY: "auto", overflowX: "auto" }}>
                 <table style={{ width: "100%", fontSize: 12.5, borderCollapse: "collapse" }}>
                   <thead>
-                    <tr style={{ borderBottom: "1px solid #1e293b", textAlign: "left" }}>
+                    <tr style={{ borderBottom: "1px solid #dadce0", textAlign: "left", background: "#f8f9fa" }}>
                       <th style={{ padding: "10px 8px" }}>Timestamp</th>
                       <th style={{ padding: "10px 8px" }}>Event ID</th>
                       <th style={{ padding: "10px 8px" }}>Agent</th>
@@ -4337,12 +4490,12 @@ export default function App() {
                             ? "#f59e0b"
                             : "#34d399";
                         return (
-                          <tr key={ev.event_id} style={{ borderBottom: "1px solid #1e293b" }}>
-                            <td style={{ padding: "10px 8px", color: "#94a3b8", whiteSpace: "nowrap" }}>
+                          <tr key={ev.event_id} style={{ borderBottom: "1px solid #dadce0" }}>
+                            <td style={{ padding: "10px 8px", color: "#5f6368", whiteSpace: "nowrap" }}>
                               {ev.time ? new Date(ev.time).toLocaleTimeString([], { hour12: false }) : "-"}
                             </td>
                             <td style={{ padding: "10px 8px" }}>
-                              <code style={{ color: "#38bdf8" }}>{ev.event_id}</code>
+                              <code style={{ color: "#1a73e8" }}>{ev.event_id}</code>
                             </td>
                             <td style={{ padding: "10px 8px" }}>
                               <span style={{
@@ -4366,15 +4519,15 @@ export default function App() {
                             </td>
                             <td style={{ padding: "10px 8px" }}>
                               <code style={{
-                                color: "#10b981",
-                                background: "rgba(16, 185, 129, 0.12)",
+                                color: "#137333",
+                                background: "#e6f4ea",
                                 padding: "2px 6px",
                                 borderRadius: 4
                               }}>
                                 {ev.action_semantic || ev.tool_operation || "execute"}
                               </code>
                             </td>
-                            <td style={{ padding: "10px 8px", color: "#e2e8f0" }}>
+                            <td style={{ padding: "10px 8px", color: "#202124" }}>
                               {ev.resource_id || ev.resource_type || ev.tool_name || "-"}
                             </td>
                             <td style={{ padding: "10px 8px" }}>
@@ -4391,24 +4544,24 @@ export default function App() {
                             </td>
                             <td style={{ padding: "10px 8px" }}>
                               {ev.action_outcome === "success" || !ev.action_outcome ? (
-                                <span style={{ color: "#34d399", fontSize: 11.5, display: "flex", alignItems: "center", gap: 3 }}>
+                                <span style={{ color: "#137333", fontSize: 11.5, display: "flex", alignItems: "center", gap: 3 }}>
                                   <CheckCircle2 size={12} />
                                   <span>Success</span>
                                 </span>
                               ) : (
-                                <span style={{ color: "#f87171", fontSize: 11.5, display: "flex", alignItems: "center", gap: 3 }}>
+                                <span style={{ color: "#d93025", fontSize: 11.5, display: "flex", alignItems: "center", gap: 3 }}>
                                   <AlertTriangle size={12} />
                                   <span>{ev.action_outcome}</span>
                                 </span>
                               )}
                             </td>
                             <td style={{ padding: "10px 8px" }}>
-                              <code style={{ color: "#94a3b8" }}>{ev.delegation_id || "-"}</code>
+                              <code style={{ color: "#5f6368" }}>{ev.delegation_id || "-"}</code>
                             </td>
                             <td style={{ padding: "10px 8px", textAlign: "right" }}>
                               <button
                                 className="pill-btn"
-                                style={{ padding: "2px 8px", fontSize: 11 }}
+                                style={{ padding: "4px 12px", fontSize: 11, borderRadius: 24, background: "#ffffff", border: "1px solid #dadce0", color: "#1a73e8", cursor: "pointer" }}
                                 onClick={() => setInspectedEvent(ev)}
                               >
                                 View CIM
@@ -4419,7 +4572,7 @@ export default function App() {
                       })}
                     {eventsList.length === 0 && (
                       <tr>
-                        <td colSpan={9} style={{ textAlign: "center", padding: "30px", color: "#64748b" }}>
+                        <td colSpan={9} style={{ textAlign: "center", padding: "30px", color: "#5f6368" }}>
                           No execution events found for the selected scope. Chat with the Lead Agent to trigger live agent telemetry.
                         </td>
                       </tr>
@@ -4438,9 +4591,9 @@ export default function App() {
                 bottom: 0,
                 width: "480px",
                 maxWidth: "90vw",
-                background: "#0f172a",
-                borderLeft: "1px solid #334155",
-                boxShadow: "-8px 0 24px rgba(0,0,0,0.5)",
+                background: "#ffffff",
+                borderLeft: "1px solid #dadce0",
+                boxShadow: "-4px 0 20px rgba(60,64,67,0.15)",
                 zIndex: 1000,
                 display: "flex",
                 flexDirection: "column",
@@ -4449,8 +4602,8 @@ export default function App() {
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                     <Activity size={18} color="#38bdf8" />
-                    <h3 style={{ color: "#f8fafc", margin: 0, fontSize: 16 }}>
-                      Event: <code style={{ color: "#38bdf8" }}>{inspectedEvent.event_id}</code>
+                    <h3 style={{ color: "#202124", margin: 0, fontSize: 16 }}>
+                      Event: <code style={{ color: "#1a73e8" }}>{inspectedEvent.event_id}</code>
                     </h3>
                   </div>
                   <button
@@ -4463,34 +4616,34 @@ export default function App() {
                 </div>
 
                 <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12 }}>
-                  <div style={{ background: "#1e293b", padding: 12, borderRadius: 6, fontSize: 12.5 }}>
+                  <div style={{ background: "#f8f9fa", padding: 12, borderRadius: 6, fontSize: 12.5 }}>
                     <div style={{ display: "grid", gridTemplateColumns: "110px 1fr", rowGap: 6 }}>
-                      <span style={{ color: "#94a3b8" }}>Agent:</span>
-                      <strong style={{ color: "#f8fafc" }}>{inspectedEvent.agent_id}</strong>
-                      <span style={{ color: "#94a3b8" }}>Operation:</span>
-                      <code style={{ color: "#34d399" }}>{inspectedEvent.tool_operation || inspectedEvent.action_semantic}</code>
-                      <span style={{ color: "#94a3b8" }}>Workflow ID:</span>
-                      <code style={{ color: "#60a5fa" }}>{inspectedEvent.workflow_id}</code>
-                      <span style={{ color: "#94a3b8" }}>Delegation ID:</span>
-                      <code style={{ color: "#a5b4fc" }}>{inspectedEvent.delegation_id}</code>
-                      <span style={{ color: "#94a3b8" }}>Parent Del:</span>
-                      <code style={{ color: "#64748b" }}>{inspectedEvent.delegation_parent_id || "None (Root)"}</code>
-                      <span style={{ color: "#94a3b8" }}>Trace ID:</span>
-                      <code style={{ color: "#fbbf24" }}>{inspectedEvent.trace_id}</code>
-                      <span style={{ color: "#94a3b8" }}>Span ID:</span>
-                      <code style={{ color: "#fbbf24" }}>{inspectedEvent.span_id}</code>
-                      <span style={{ color: "#94a3b8" }}>Resource URI:</span>
-                      <span style={{ color: "#cbd5e1", wordBreak: "break-all" }}>{inspectedEvent.resource_uri || inspectedEvent.resource_id}</span>
-                      <span style={{ color: "#94a3b8" }}>Summary:</span>
-                      <span style={{ color: "#cbd5e1" }}>{inspectedEvent.output_summary || "Executed successfully"}</span>
+                      <span style={{ color: "#5f6368" }}>Agent:</span>
+                      <strong style={{ color: "#202124" }}>{inspectedEvent.agent_id}</strong>
+                      <span style={{ color: "#5f6368" }}>Operation:</span>
+                      <code style={{ color: "#137333" }}>{inspectedEvent.tool_operation || inspectedEvent.action_semantic}</code>
+                      <span style={{ color: "#5f6368" }}>Workflow ID:</span>
+                      <code style={{ color: "#1a73e8" }}>{inspectedEvent.workflow_id}</code>
+                      <span style={{ color: "#5f6368" }}>Delegation ID:</span>
+                      <code style={{ color: "#1a73e8" }}>{inspectedEvent.delegation_id}</code>
+                      <span style={{ color: "#5f6368" }}>Parent Del:</span>
+                      <code style={{ color: "#5f6368" }}>{inspectedEvent.delegation_parent_id || "None (Root)"}</code>
+                      <span style={{ color: "#5f6368" }}>Trace ID:</span>
+                      <code style={{ color: "#b06000" }}>{inspectedEvent.trace_id}</code>
+                      <span style={{ color: "#5f6368" }}>Span ID:</span>
+                      <code style={{ color: "#b06000" }}>{inspectedEvent.span_id}</code>
+                      <span style={{ color: "#5f6368" }}>Resource URI:</span>
+                      <span style={{ color: "#202124", wordBreak: "break-all" }}>{inspectedEvent.resource_uri || inspectedEvent.resource_id}</span>
+                      <span style={{ color: "#5f6368" }}>Summary:</span>
+                      <span style={{ color: "#202124" }}>{inspectedEvent.output_summary || "Executed successfully"}</span>
                     </div>
                   </div>
 
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ color: "#94a3b8", fontSize: 12 }}>Full CIM Invariant Payload:</span>
+                    <span style={{ color: "#5f6368", fontSize: 12 }}>Full CIM Invariant Payload:</span>
                     <button
                       className="pill-btn"
-                      style={{ padding: "2px 8px", fontSize: 11 }}
+                      style={{ padding: "4px 12px", fontSize: 11, borderRadius: 24, background: "#ffffff", border: "1px solid #dadce0", color: "#1a73e8", cursor: "pointer" }}
                       onClick={() => downloadFile(JSON.stringify(inspectedEvent, null, 2), `${inspectedEvent.event_id}.json`, "application/json")}
                     >
                       <Download size={11} style={{ display: "inline", marginRight: 3 }} />
@@ -4499,11 +4652,11 @@ export default function App() {
                   </div>
 
                   <pre style={{
-                    background: "#020617",
-                    border: "1px solid #1e293b",
+                    background: "#f8f9fa",
+                    border: "1px solid #dadce0",
                     borderRadius: 6,
                     padding: 12,
-                    color: "#a5b4fc",
+                    color: "#1a73e8",
                     fontSize: 11.5,
                     overflowX: "auto",
                     flex: 1
@@ -4523,11 +4676,11 @@ export default function App() {
             <div className="stat-card" style={{ marginBottom: 20 }}>
               <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 14 }}>
                 <div>
-                  <h3 style={{ color: "#60a5fa", margin: 0, display: "flex", alignItems: "center", gap: 10 }}>
+                  <h3 style={{ color: "#1a73e8", margin: 0, display: "flex", alignItems: "center", gap: 10 }}>
                     <FlaskConical size={22} color="#38bdf8" />
                     <span>Research Evaluation & Baseline Benchmark Suite</span>
                   </h3>
-                  <p style={{ color: "#94a3b8", fontSize: 13, margin: "6px 0 0 0", lineHeight: 1.5 }}>
+                  <p style={{ color: "#5f6368", fontSize: 13, margin: "6px 0 0 0", lineHeight: 1.5 }}>
                     Empirical validation across 8 multi-agent experimental scenarios and 5 baseline architectures (Mishra &amp; Sharad, arXiv:2606.09692 Tables 5 &amp; 6).
                   </p>
                 </div>
@@ -4555,7 +4708,7 @@ export default function App() {
                     className="pill-btn"
                     onClick={fetchEvaluations}
                     disabled={evalLoading}
-                    style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    style={{ display: "flex", alignItems: "center", gap: 6, borderRadius: 24, background: "#ffffff", border: "1px solid #dadce0", color: "#3c4043" }}
                   >
                     <RefreshCw size={13} />
                     <span>Refresh</span>
@@ -4565,7 +4718,7 @@ export default function App() {
                     className="pill-btn"
                     onClick={exportEvaluationCSV}
                     disabled={!evalResults || evalResults.length === 0}
-                    style={{ display: "flex", alignItems: "center", gap: 6 }}
+                    style={{ display: "flex", alignItems: "center", gap: 6, borderRadius: 24, background: "#ffffff", border: "1px solid #dadce0", color: "#3c4043" }}
                   >
                     <Download size={13} />
                     <span>Export CSV</span>
@@ -4581,9 +4734,9 @@ export default function App() {
                   <Activity size={14} color="#10b981" />
                   <span>Interaction Completeness</span>
                 </div>
-                <div className="eval-kpi-value" style={{ color: "#34d399" }}>100.0%</div>
+                <div className="eval-kpi-value" style={{ color: "#137333" }}>100.0%</div>
                 <div className="eval-kpi-sub">
-                  <span style={{ color: "#10b981", fontWeight: 700 }}>B4 Proposed</span> vs 0.0% in B0–B3
+                  <span style={{ color: "#137333", fontWeight: 700 }}>B4 Proposed</span> vs 0.0% in B0–B3
                 </div>
               </div>
 
@@ -4592,9 +4745,9 @@ export default function App() {
                   <ShieldCheck size={14} color="#38bdf8" />
                   <span>Delegation Accuracy</span>
                 </div>
-                <div className="eval-kpi-value" style={{ color: "#38bdf8" }}>100.0%</div>
+                <div className="eval-kpi-value" style={{ color: "#1a73e8" }}>100.0%</div>
                 <div className="eval-kpi-sub">
-                  <span style={{ color: "#38bdf8", fontWeight: 700 }}>CIM Lineage</span> Token Identified
+                  <span style={{ color: "#1a73e8", fontWeight: 700 }}>CIM Lineage</span> Token Identified
                 </div>
               </div>
 
@@ -4603,9 +4756,9 @@ export default function App() {
                   <Target size={14} color="#a855f7" />
                   <span>Ambiguity Amb(E)</span>
                 </div>
-                <div className="eval-kpi-value" style={{ color: "#c084fc" }}>1.0</div>
+                <div className="eval-kpi-value" style={{ color: "#7627bb" }}>1.0</div>
                 <div className="eval-kpi-sub">
-                  <span style={{ color: "#10b981", fontWeight: 700 }}>Optimal Target</span> (vs 6.4 in B1)
+                  <span style={{ color: "#137333", fontWeight: 700 }}>Optimal Target</span> (vs 6.4 in B1)
                 </div>
               </div>
 
@@ -4614,9 +4767,9 @@ export default function App() {
                   <TrendingUp size={14} color="#f59e0b" />
                   <span>Forensic Query Ops</span>
                 </div>
-                <div className="eval-kpi-value" style={{ color: "#fbbf24" }}>1 Op</div>
+                <div className="eval-kpi-value" style={{ color: "#b06000" }}>1 Op</div>
                 <div className="eval-kpi-sub">
-                  <span style={{ color: "#10b981", fontWeight: 700 }}>90% Simpler</span> (vs 10 ops in B1)
+                  <span style={{ color: "#137333", fontWeight: 700 }}>90% Simpler</span> (vs 10 ops in B1)
                 </div>
               </div>
 
@@ -4625,9 +4778,9 @@ export default function App() {
                   <Clock size={14} color="#6366f1" />
                   <span>Gateway Latency (p95)</span>
                 </div>
-                <div className="eval-kpi-value" style={{ color: "#818cf8" }}>+0.29 ms</div>
+                <div className="eval-kpi-value" style={{ color: "#1a73e8" }}>+0.29 ms</div>
                 <div className="eval-kpi-sub">
-                  <span style={{ color: "#38bdf8", fontWeight: 700 }}>Sub-Millisecond</span> Telemetry Overhead
+                  <span style={{ color: "#1a73e8", fontWeight: 700 }}>Sub-Millisecond</span> Telemetry Overhead
                 </div>
               </div>
             </div>
@@ -4636,11 +4789,11 @@ export default function App() {
             <div className="eval-graphic-container">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
                 <div>
-                  <h4 style={{ color: "#f8fafc", margin: 0, fontSize: 16, display: "flex", alignItems: "center", gap: 8 }}>
+                  <h4 style={{ color: "#202124", margin: 0, fontSize: 16, display: "flex", alignItems: "center", gap: 8 }}>
                     <BarChart3 size={18} color="#38bdf8" />
                     <span>Academic Benchmark Graphical Visualizer</span>
                   </h4>
-                  <p style={{ color: "#94a3b8", fontSize: 12.5, margin: "4px 0 0 0" }}>
+                  <p style={{ color: "#5f6368", fontSize: 12.5, margin: "4px 0 0 0" }}>
                     Select an evaluation metric to inspect the empirical comparative distribution across all 5 baselines.
                   </p>
                 </div>
@@ -4681,9 +4834,9 @@ export default function App() {
               {/* Graphic 1: Interaction Record Completeness */}
               {activeGraphicTab === "interaction" && (
                 <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: "#94a3b8", marginBottom: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: "#5f6368", marginBottom: 12 }}>
                     <span>Proportion of ground-truth inter-agent messages captured in persistent telemetry (|I_captured| / |I_ground_truth|):</span>
-                    <span style={{ color: "#10b981", fontWeight: 700 }}>Ideal Target: 100%</span>
+                    <span style={{ color: "#137333", fontWeight: 700 }}>Ideal Target: 100%</span>
                   </div>
 
                   <div className="eval-bar-group">
@@ -4709,8 +4862,8 @@ export default function App() {
                               style={{
                                 width: `${Math.max(pct, isProposed ? 100 : 3)}%`,
                                 background: isProposed
-                                  ? "linear-gradient(90deg, #059669, #10b981)"
-                                  : "linear-gradient(90deg, #dc2626, #f87171)",
+                                  ? "#137333"
+                                  : "#d93025",
                                 boxShadow: isProposed ? "0 0 14px rgba(16, 185, 129, 0.45)" : "none",
                               }}
                             >
@@ -4724,9 +4877,9 @@ export default function App() {
 
                           <div className="eval-bar-tag">
                             {isProposed ? (
-                              <span style={{ color: "#10b981", fontWeight: 600 }}>✨ 100% Complete Capture</span>
+                              <span style={{ color: "#137333", fontWeight: 600 }}>✨ 100% Complete Capture</span>
                             ) : (
-                              <span style={{ color: "#f87171" }}>🚨 0% Blindspot</span>
+                              <span style={{ color: "#d93025" }}>🚨 0% Blindspot</span>
                             )}
                           </div>
                         </div>
@@ -4743,9 +4896,9 @@ export default function App() {
               {/* Graphic 2: Delegation Ambiguity */}
               {activeGraphicTab === "ambiguity" && (
                 <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: "#94a3b8", marginBottom: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: "#5f6368", marginBottom: 12 }}>
                     <span>Delegation Ambiguity Amb(E) = max(1, |P_pred(E)| - |D_true| + 1):</span>
-                    <span style={{ color: "#10b981", fontWeight: 700 }}>Lower is Better (Ideal = 1.0)</span>
+                    <span style={{ color: "#137333", fontWeight: 700 }}>Lower is Better (Ideal = 1.0)</span>
                   </div>
 
                   <div className="eval-bar-group">
@@ -4773,8 +4926,8 @@ export default function App() {
                               style={{
                                 width: `${barWidth}%`,
                                 background: isIdeal
-                                  ? "linear-gradient(90deg, #059669, #10b981)"
-                                  : "linear-gradient(90deg, #ea580c, #f97316)",
+                                  ? "#137333"
+                                  : "#b06000",
                                 boxShadow: isIdeal ? "0 0 10px rgba(16, 185, 129, 0.4)" : "none",
                               }}
                             >
@@ -4788,9 +4941,9 @@ export default function App() {
 
                           <div className="eval-bar-tag">
                             {isIdeal ? (
-                              <span style={{ color: "#10b981", fontWeight: 600 }}>🎯 Target Optimal (1.0)</span>
+                              <span style={{ color: "#137333", fontWeight: 600 }}>🎯 Target Optimal (1.0)</span>
                             ) : (
-                              <span style={{ color: "#fb923c" }}>⚠️ Ambiguous Partitions ({val.toFixed(1)})</span>
+                              <span style={{ color: "#b06000" }}>⚠️ Ambiguous Partitions ({val.toFixed(1)})</span>
                             )}
                           </div>
                         </div>
@@ -4807,9 +4960,9 @@ export default function App() {
               {/* Graphic 3: Query Operations Burden */}
               {activeGraphicTab === "query" && (
                 <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: "#94a3b8", marginBottom: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: "#5f6368", marginBottom: 12 }}>
                     <span>Number of manual joins, sliding windows, and normalization steps required for incident forensics:</span>
-                    <span style={{ color: "#10b981", fontWeight: 700 }}>Lower is Better (Ideal = 1 op)</span>
+                    <span style={{ color: "#137333", fontWeight: 700 }}>Lower is Better (Ideal = 1 op)</span>
                   </div>
 
                   <div className="eval-bar-group">
@@ -4837,8 +4990,8 @@ export default function App() {
                               style={{
                                 width: `${barWidth}%`,
                                 background: isOneOp
-                                  ? "linear-gradient(90deg, #059669, #10b981)"
-                                  : "linear-gradient(90deg, #6366f1, #818cf8)",
+                                  ? "#137333"
+                                  : "#1a73e8",
                                 boxShadow: isOneOp ? "0 0 10px rgba(16, 185, 129, 0.45)" : "none",
                               }}
                             >
@@ -4852,9 +5005,9 @@ export default function App() {
 
                           <div className="eval-bar-tag">
                             {isOneOp ? (
-                              <span style={{ color: "#10b981", fontWeight: 600 }}>🚀 1 Direct Hop (90% Reduction)</span>
+                              <span style={{ color: "#137333", fontWeight: 600 }}>🚀 1 Direct Hop (90% Reduction)</span>
                             ) : (
-                              <span style={{ color: "#94a3b8" }}>{ops} Multi-Table Joins Required</span>
+                              <span style={{ color: "#5f6368" }}>{ops} Multi-Table Joins Required</span>
                             )}
                           </div>
                         </div>
@@ -4871,9 +5024,9 @@ export default function App() {
               {/* Graphic 4: Storage & Provenance Overhead */}
               {activeGraphicTab === "storage" && (
                 <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: "#94a3b8", marginBottom: 12 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: "#5f6368", marginBottom: 12 }}>
                     <span>Bytes serialized per telemetry event vs W3C PROV-O Lineage Completeness:</span>
-                    <span style={{ color: "#38bdf8", fontWeight: 700 }}>Minimal Storage Impact</span>
+                    <span style={{ color: "#1a73e8", fontWeight: 700 }}>Minimal Storage Impact</span>
                   </div>
 
                   <div className="eval-bar-group">
@@ -4901,23 +5054,23 @@ export default function App() {
                               style={{
                                 width: `${barWidth}%`,
                                 background: isB4
-                                  ? "linear-gradient(90deg, #0284c7, #38bdf8)"
-                                  : "linear-gradient(90deg, #475569, #64748b)",
+                                  ? "#1a73e8"
+                                  : "#5f6368",
                               }}
                             >
                               {bytes} B
                             </div>
                           </div>
 
-                          <div className="eval-bar-val" style={{ color: isB4 ? "#38bdf8" : "#cbd5e1" }}>
+                          <div className="eval-bar-val" style={{ color: isB4 ? "#1a73e8" : "#5f6368" }}>
                             {bytes} B
                           </div>
 
                           <div className="eval-bar-tag">
                             {isB4 ? (
-                              <span style={{ color: "#38bdf8", fontWeight: 600 }}>100% W3C PROV (+154 B)</span>
+                              <span style={{ color: "#1a73e8", fontWeight: 600 }}>100% W3C PROV (+154 B)</span>
                             ) : (
-                              <span style={{ color: "#64748b" }}>0% Provenance Lineage</span>
+                              <span style={{ color: "#5f6368" }}>0% Provenance Lineage</span>
                             )}
                           </div>
                         </div>
@@ -4936,10 +5089,10 @@ export default function App() {
             <div className="stat-card" style={{ marginBottom: 24 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                 <div>
-                  <h4 style={{ color: "#60a5fa", margin: 0, fontSize: 16 }}>
+                  <h4 style={{ color: "#1a73e8", margin: 0, fontSize: 16 }}>
                     📊 Academic Baseline Benchmark Summary Table (Tables 5 &amp; 6 Reproduction)
                   </h4>
-                  <p style={{ color: "#94a3b8", fontSize: 12.5, margin: "4px 0 0 0" }}>
+                  <p style={{ color: "#5f6368", fontSize: 12.5, margin: "4px 0 0 0" }}>
                     Comparative aggregate metrics across 40 benchmark runs (8 scenarios &times; 5 baselines).
                   </p>
                 </div>
@@ -4948,15 +5101,15 @@ export default function App() {
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", fontSize: 13, borderCollapse: "collapse" }}>
                   <thead>
-                    <tr style={{ borderBottom: "2px solid #1f2937", textAlign: "left" }}>
-                      <th style={{ padding: "10px 12px", color: "#94a3b8" }}>Baseline Model</th>
-                      <th style={{ padding: "10px 12px", color: "#94a3b8" }}>Delegation Accuracy</th>
-                      <th style={{ padding: "10px 12px", color: "#94a3b8" }}>Interaction Recall</th>
-                      <th style={{ padding: "10px 12px", color: "#94a3b8" }}>Ambiguity Amb(E)</th>
-                      <th style={{ padding: "10px 12px", color: "#94a3b8" }}>Provenance</th>
-                      <th style={{ padding: "10px 12px", color: "#94a3b8" }}>Query Burden</th>
-                      <th style={{ padding: "10px 12px", color: "#94a3b8" }}>Storage / Event</th>
-                      <th style={{ padding: "10px 12px", color: "#94a3b8" }}>p95 Latency</th>
+                    <tr style={{ borderBottom: "1px solid #dadce0", textAlign: "left" }}>
+                      <th style={{ padding: "10px 12px", color: "#5f6368" }}>Baseline Model</th>
+                      <th style={{ padding: "10px 12px", color: "#5f6368" }}>Delegation Accuracy</th>
+                      <th style={{ padding: "10px 12px", color: "#5f6368" }}>Interaction Recall</th>
+                      <th style={{ padding: "10px 12px", color: "#5f6368" }}>Ambiguity Amb(E)</th>
+                      <th style={{ padding: "10px 12px", color: "#5f6368" }}>Provenance</th>
+                      <th style={{ padding: "10px 12px", color: "#5f6368" }}>Query Burden</th>
+                      <th style={{ padding: "10px 12px", color: "#5f6368" }}>Storage / Event</th>
+                      <th style={{ padding: "10px 12px", color: "#5f6368" }}>p95 Latency</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -4966,7 +5119,7 @@ export default function App() {
                         <tr
                           key={row.id}
                           style={{
-                            borderBottom: "1px solid #1f2937",
+                            borderBottom: "1px solid #dadce0",
                             background: isProposed ? "rgba(16, 185, 129, 0.06)" : "transparent",
                           }}
                         >
@@ -4979,9 +5132,9 @@ export default function App() {
                                 background: row.color,
                                 display: "inline-block"
                               }} />
-                              <span style={{ color: isProposed ? "#34d399" : "#f8fafc" }}>{row.label}</span>
+                              <span style={{ color: isProposed ? "#137333" : "#202124" }}>{row.label}</span>
                             </div>
-                            <div style={{ fontSize: 11, color: "#64748b", marginTop: 2, paddingLeft: 16 }}>{row.desc}</div>
+                            <div style={{ fontSize: 11, color: "#5f6368", marginTop: 2, paddingLeft: 16 }}>{row.desc}</div>
                           </td>
 
                           <td style={{ padding: "12px" }}>
@@ -5025,15 +5178,15 @@ export default function App() {
                             </span>
                           </td>
 
-                          <td style={{ padding: "12px", color: row.queryOps === 1 ? "#34d399" : "#e2e8f0", fontWeight: 600 }}>
+                          <td style={{ padding: "12px", color: row.queryOps === 1 ? "#137333" : "#202124", fontWeight: 600 }}>
                             {row.queryOps} {row.queryOps === 1 ? "op" : "ops"}
                           </td>
 
-                          <td style={{ padding: "12px", color: "#94a3b8" }}>
+                          <td style={{ padding: "12px", color: "#5f6368" }}>
                             {row.bytesPerEvent} B
                           </td>
 
-                          <td style={{ padding: "12px", color: "#a5b4fc" }}>
+                          <td style={{ padding: "12px", color: "#1a73e8" }}>
                             +{row.latencyP95.toFixed(2)} ms
                           </td>
                         </tr>
@@ -5048,10 +5201,10 @@ export default function App() {
             <div className="stat-card">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
                 <div>
-                  <h4 style={{ color: "#60a5fa", margin: 0, fontSize: 16 }}>
+                  <h4 style={{ color: "#1a73e8", margin: 0, fontSize: 16 }}>
                     🔬 8-Scenario Experimental Breakdown ({filteredEvalRows.length} of {evalResults?.length || 40} Runs)
                   </h4>
-                  <p style={{ color: "#94a3b8", fontSize: 12.5, margin: "4px 0 0 0" }}>
+                  <p style={{ color: "#5f6368", fontSize: 12.5, margin: "4px 0 0 0" }}>
                     Filter individual benchmark data points by experimental scenario or baseline architecture.
                   </p>
                 </div>
@@ -5060,15 +5213,15 @@ export default function App() {
               {/* Filter Bar */}
               <div className="eval-filter-bar">
                 <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
-                  <label style={{ fontSize: 12.5, color: "#94a3b8", fontWeight: 600 }}>Scenario:</label>
+                  <label style={{ fontSize: 12.5, color: "#5f6368", fontWeight: 600 }}>Scenario:</label>
                   <select
                     value={evalScenarioFilter}
                     onChange={(e) => setEvalScenarioFilter(e.target.value)}
                     style={{
-                      background: "#111827",
-                      border: "1px solid #374151",
+                      background: "#ffffff",
+                      border: "1px solid #dadce0",
                       borderRadius: 6,
-                      color: "#f8fafc",
+                      color: "#202124",
                       padding: "6px 10px",
                       fontSize: 12.5,
                     }}
@@ -5084,15 +5237,15 @@ export default function App() {
                     <option value="8">8. Sensitive-information flow</option>
                   </select>
 
-                  <label style={{ fontSize: 12.5, color: "#94a3b8", fontWeight: 600, marginLeft: 6 }}>Baseline:</label>
+                  <label style={{ fontSize: 12.5, color: "#5f6368", fontWeight: 600, marginLeft: 6 }}>Baseline:</label>
                   <select
                     value={evalBaselineFilter}
                     onChange={(e) => setEvalBaselineFilter(e.target.value)}
                     style={{
-                      background: "#111827",
-                      border: "1px solid #374151",
+                      background: "#ffffff",
+                      border: "1px solid #dadce0",
                       borderRadius: 6,
-                      color: "#f8fafc",
+                      color: "#202124",
                       padding: "6px 10px",
                       fontSize: 12.5,
                     }}
@@ -5114,10 +5267,10 @@ export default function App() {
                     onChange={(e) => setEvalSearchTerm(e.target.value)}
                     style={{
                       width: "100%",
-                      background: "#111827",
-                      border: "1px solid #374151",
+                      background: "#ffffff",
+                      border: "1px solid #dadce0",
                       borderRadius: 6,
-                      color: "#f8fafc",
+                      color: "#202124",
                       padding: "6px 10px",
                       fontSize: 12.5,
                     }}
@@ -5129,16 +5282,16 @@ export default function App() {
               <div style={{ maxHeight: 420, overflowY: "auto" }}>
                 <table style={{ width: "100%", fontSize: 12.5, borderCollapse: "collapse" }}>
                   <thead>
-                    <tr style={{ borderBottom: "2px solid #1f2937", textAlign: "left", position: "sticky", top: 0, background: "#111827" }}>
-                      <th style={{ padding: "8px 10px", color: "#94a3b8" }}>#</th>
-                      <th style={{ padding: "8px 10px", color: "#94a3b8" }}>Scenario</th>
-                      <th style={{ padding: "8px 10px", color: "#94a3b8" }}>Baseline</th>
-                      <th style={{ padding: "8px 10px", color: "#94a3b8" }}>Accuracy</th>
-                      <th style={{ padding: "8px 10px", color: "#94a3b8" }}>Interaction Recall</th>
-                      <th style={{ padding: "8px 10px", color: "#94a3b8" }}>Ambiguity Amb(E)</th>
-                      <th style={{ padding: "8px 10px", color: "#94a3b8" }}>Query Ops</th>
-                      <th style={{ padding: "8px 10px", color: "#94a3b8" }}>Storage / Event</th>
-                      <th style={{ padding: "8px 10px", color: "#94a3b8" }}>Latency p95</th>
+                    <tr style={{ borderBottom: "1px solid #dadce0", textAlign: "left", position: "sticky", top: 0, background: "#ffffff" }}>
+                      <th style={{ padding: "8px 10px", color: "#5f6368" }}>#</th>
+                      <th style={{ padding: "8px 10px", color: "#5f6368" }}>Scenario</th>
+                      <th style={{ padding: "8px 10px", color: "#5f6368" }}>Baseline</th>
+                      <th style={{ padding: "8px 10px", color: "#5f6368" }}>Accuracy</th>
+                      <th style={{ padding: "8px 10px", color: "#5f6368" }}>Interaction Recall</th>
+                      <th style={{ padding: "8px 10px", color: "#5f6368" }}>Ambiguity Amb(E)</th>
+                      <th style={{ padding: "8px 10px", color: "#5f6368" }}>Query Ops</th>
+                      <th style={{ padding: "8px 10px", color: "#5f6368" }}>Storage / Event</th>
+                      <th style={{ padding: "8px 10px", color: "#5f6368" }}>Latency p95</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -5149,18 +5302,18 @@ export default function App() {
                           <tr
                             key={idx}
                             style={{
-                              borderBottom: "1px solid #1f2937",
+                              borderBottom: "1px solid #dadce0",
                               background: isB4 ? "rgba(16, 185, 129, 0.04)" : "transparent",
                             }}
                           >
-                            <td style={{ padding: "8px 10px", color: "#64748b" }}>{row.scenario_id || idx + 1}</td>
-                            <td style={{ padding: "8px 10px", color: "#e2e8f0", fontWeight: 500 }}>
+                            <td style={{ padding: "8px 10px", color: "#5f6368" }}>{row.scenario_id || idx + 1}</td>
+                            <td style={{ padding: "8px 10px", color: "#202124", fontWeight: 500 }}>
                               {row.scenario_name || `Scenario ${row.scenario_id}`}
                             </td>
                             <td style={{ padding: "8px 10px" }}>
                               <code style={{
-                                color: isB4 ? "#34d399" : (row.baseline?.includes("CIM") ? "#60a5fa" : "#cbd5e1"),
-                                background: "#0b0f19",
+                                color: isB4 ? "#137333" : (row.baseline?.includes("CIM") ? "#1a73e8" : "#5f6368"),
+                                background: "#f1f3f4",
                                 padding: "2px 6px",
                                 borderRadius: 4,
                                 fontSize: 11.5
@@ -5185,10 +5338,10 @@ export default function App() {
                             <td style={{ padding: "8px 10px", color: row.query_operations === 1 ? "#34d399" : "#94a3b8" }}>
                               {row.query_operations} ops
                             </td>
-                            <td style={{ padding: "8px 10px", color: "#94a3b8" }}>
+                            <td style={{ padding: "8px 10px", color: "#5f6368" }}>
                               {row.bytes_per_event} B
                             </td>
-                            <td style={{ padding: "8px 10px", color: "#a5b4fc" }}>
+                            <td style={{ padding: "8px 10px", color: "#1a73e8" }}>
                               +{Number(row.latency_p95_ms || 0.01).toFixed(2)} ms
                             </td>
                           </tr>
@@ -5196,7 +5349,7 @@ export default function App() {
                       })
                     ) : (
                       <tr>
-                        <td colSpan={9} style={{ padding: "24px", textAlign: "center", color: "#64748b" }}>
+                        <td colSpan={9} style={{ padding: "24px", textAlign: "center", color: "#5f6368" }}>
                           {evalLoading ? "Executing benchmark scenarios..." : "No benchmark rows match the selected filters."}
                         </td>
                       </tr>
@@ -5212,8 +5365,8 @@ export default function App() {
         {activeTab === "docs" && (
           <div className="content-panel">
             <div className="stat-card" style={{ marginBottom: 20 }}>
-              <h3 style={{ color: "#60a5fa", marginBottom: 12 }}>Common Information Model (CIM) Invariants</h3>
-              <div style={{ color: "#cbd5e1", lineHeight: 1.8, fontSize: 14 }}>
+              <h3 style={{ color: "#1a73e8", marginBottom: 12 }}>Common Information Model (CIM) Invariants</h3>
+              <div style={{ color: "#202124", lineHeight: 1.8, fontSize: 14 }}>
                 <p><strong>1. Authority Invariant:</strong> Every tool execution event e must reference a valid, cryptographically signed delegation token d with unforgeable parent-child lineage.</p>
                 <p><strong>2. Orthogonal Three-Graph Separation:</strong> Execution Graph (GE), Authority Graph (GA), and Interaction Graph (GI) capture fundamentally distinct dimensions of multi-agent dynamics.</p>
                 <p><strong>3. Non-Identifiability Resolution:</strong> In parallel branches (W1), standard causal distributed traces split into disconnected components (|Comp(d)| &gt; 1); authority tokens resolve the missing authorization context.</p>
@@ -5222,8 +5375,8 @@ export default function App() {
             </div>
 
             <div className="stat-card">
-              <h3 style={{ color: "#60a5fa", marginBottom: 12 }}>Research Paper References</h3>
-              <ul style={{ paddingLeft: 20, color: "#cbd5e1", lineHeight: 1.8 }}>
+              <h3 style={{ color: "#1a73e8", marginBottom: 12 }}>Research Paper References</h3>
+              <ul style={{ paddingLeft: 20, color: "#202124", lineHeight: 1.8 }}>
                 <li>📄 <strong>arXiv:2606.09692v1:</strong> <em>"Observability for Delegated Execution in Agentic AI Systems"</em> (Mishra & Sharad)</li>
                 <li>📊 <strong>RM_MID.pdf:</strong> IIIT Allahabad Research Mid-Term Presentation (Slides 5, 11, 13, 15)</li>
                 <li>🧬 <strong>W3C PROV-O:</strong> Provenance Data Model specification (Entity, Activity, Agent, wasDerivedFrom)</li>
