@@ -27,16 +27,16 @@ import {
   Layers,
 } from "lucide-react";
 
-// Squad metadata library defining distinct federated squads
+// Squad metadata library defining distinct federated squads (Google M3 Palette)
 export const SQUAD_METADATA = {
   squad_command: {
     id: "squad_command",
     name: "Command & Governance Squad",
     shortName: "Command Squad",
     icon: "👑",
-    color: "#3b82f6",
-    fillColor: "rgba(59, 130, 246, 0.12)",
-    borderColor: "#60a5fa",
+    color: "#1a73e8",
+    fillColor: "#e8f0fe",
+    borderColor: "#dadce0",
     mission: "Root Task Orchestration, Scoped Token Delegation & W3C PROV Report Synthesis",
     defaultPos: { x: 350, y: 95 },
   },
@@ -45,9 +45,9 @@ export const SQUAD_METADATA = {
     name: "Complaints & Experience Squad",
     shortName: "Complaints Squad",
     icon: "🏢",
-    color: "#10b981",
-    fillColor: "rgba(16, 185, 129, 0.12)",
-    borderColor: "#34d399",
+    color: "#1e8e3e",
+    fillColor: "#e6f4ea",
+    borderColor: "#dadce0",
     mission: "CFPB Complaint Ingestion, Consumer Dispute Extraction & Sentiment Polarity NLP",
     defaultPos: { x: 175, y: 315 },
   },
@@ -56,9 +56,9 @@ export const SQUAD_METADATA = {
     name: "SecOps Forensics Squad",
     shortName: "SecOps Squad",
     icon: "🛡️",
-    color: "#ef4444",
-    fillColor: "rgba(239, 68, 68, 0.12)",
-    borderColor: "#f87171",
+    color: "#d93025",
+    fillColor: "#fce8e6",
+    borderColor: "#dadce0",
     mission: "System Access Log Scanning, Privilege Escalation Hunting & FedRAMP / NIST Policy Auditing",
     defaultPos: { x: 525, y: 315 },
   },
@@ -67,9 +67,9 @@ export const SQUAD_METADATA = {
     name: "Statistical Analytics Squad",
     shortName: "Analytics Squad",
     icon: "📊",
-    color: "#f59e0b",
-    fillColor: "rgba(245, 158, 11, 0.12)",
-    borderColor: "#fbbf24",
+    color: "#e37400",
+    fillColor: "#fef7e0",
+    borderColor: "#dadce0",
     mission: "Quantitative Metric Inversion, Anomaly Rate Computation & Variance Benchmarking",
     defaultPos: { x: 230, y: 400 },
   },
@@ -78,9 +78,9 @@ export const SQUAD_METADATA = {
     name: "Adversarial Debate Squad",
     shortName: "Critic Squad",
     icon: "🎯",
-    color: "#f97316",
-    fillColor: "rgba(249, 115, 22, 0.12)",
-    borderColor: "#fb923c",
+    color: "#e8710a",
+    fillColor: "#feefe3",
+    borderColor: "#dadce0",
     mission: "Adversarial Logic Verification, Counterfactual Challenge & Hallucination Elimination",
     defaultPos: { x: 470, y: 400 },
   },
@@ -122,16 +122,16 @@ export const getAgentSquadId = (agentId) => {
   return "squad_command";
 };
 
-// Dynamic metadata library for specialized agents
+// Dynamic metadata library for specialized agents (Google M3 Palette)
 const KNOWN_AGENTS = {
   agent_coordinator: {
     label: "Coordinator",
     role: "Lead Orchestrator & Task Delegator",
     model: "Google Gemini 3.5 Flash",
     tools: ["mint_delegation", "verify_invariants"],
-    color: "#3b82f6",
-    fillColor: "rgba(59, 130, 246, 0.15)",
-    borderColor: "#60a5fa",
+    color: "#1a73e8",
+    fillColor: "#e8f0fe",
+    borderColor: "#dadce0",
     squadId: "squad_command",
   },
   Coordinator_Agent: {
@@ -139,9 +139,9 @@ const KNOWN_AGENTS = {
     role: "Lead Orchestrator & Task Delegator",
     model: "Google Gemini 3.5 Flash",
     tools: ["mint_delegation", "verify_invariants"],
-    color: "#3b82f6",
-    fillColor: "rgba(59, 130, 246, 0.15)",
-    borderColor: "#60a5fa",
+    color: "#1a73e8",
+    fillColor: "#e8f0fe",
+    borderColor: "#dadce0",
     squadId: "squad_command",
   },
   agent_researcher: {
@@ -149,9 +149,9 @@ const KNOWN_AGENTS = {
     role: "CFPB Complaint Extraction",
     model: "Google Gemini 3.5 Flash",
     tools: ["read_sample_dataset", "query_cfpb_records"],
-    color: "#10b981",
-    fillColor: "rgba(16, 185, 129, 0.15)",
-    borderColor: "#34d399",
+    color: "#1e8e3e",
+    fillColor: "#e6f4ea",
+    borderColor: "#dadce0",
     squadId: "squad_complaints",
   },
   Executor_Agent: {
@@ -159,9 +159,9 @@ const KNOWN_AGENTS = {
     role: "CIM Data Ingestion & Extraction",
     model: "Google Gemini 3.5 Flash",
     tools: ["read_sample_dataset", "query_cfpb_records"],
-    color: "#10b981",
-    fillColor: "rgba(16, 185, 129, 0.15)",
-    borderColor: "#34d399",
+    color: "#1e8e3e",
+    fillColor: "#e6f4ea",
+    borderColor: "#dadce0",
     squadId: "squad_complaints",
   },
   agent_analyst: {
@@ -169,9 +169,9 @@ const KNOWN_AGENTS = {
     role: "Statistical Anomaly Evaluator",
     model: "Google Gemini 3.5 Flash",
     tools: ["calculate_anomaly_rates", "compute_aggregates"],
-    color: "#f59e0b",
-    fillColor: "rgba(245, 158, 11, 0.15)",
-    borderColor: "#fbbf24",
+    color: "#e37400",
+    fillColor: "#fef7e0",
+    borderColor: "#dadce0",
     squadId: "squad_analytics",
   },
   agent_reporter: {
@@ -179,9 +179,9 @@ const KNOWN_AGENTS = {
     role: "W3C PROV & Synthesis",
     model: "Google Gemini 3.5 Flash",
     tools: ["export_w3c_prov", "generate_markdown_report"],
-    color: "#ec4899",
-    fillColor: "rgba(236, 72, 153, 0.15)",
-    borderColor: "#f472b6",
+    color: "#9334e6",
+    fillColor: "#f3e8fd",
+    borderColor: "#dadce0",
     squadId: "squad_command",
   },
   Synthesizer_Agent: {
@@ -189,9 +189,9 @@ const KNOWN_AGENTS = {
     role: "Executive Resolution Formulator",
     model: "Google Gemini 3.5 Flash",
     tools: ["export_w3c_prov", "generate_markdown_report"],
-    color: "#ec4899",
-    fillColor: "rgba(236, 72, 153, 0.15)",
-    borderColor: "#f472b6",
+    color: "#9334e6",
+    fillColor: "#f3e8fd",
+    borderColor: "#dadce0",
     squadId: "squad_command",
   },
   agent_forensics: {
@@ -199,9 +199,9 @@ const KNOWN_AGENTS = {
     role: "Access Log & Security Forensics",
     model: "Google Gemini 3.5 Flash",
     tools: ["scan_system_access_logs", "inspect_auth_events"],
-    color: "#06b6d4",
-    fillColor: "rgba(6, 182, 212, 0.15)",
-    borderColor: "#22d3ee",
+    color: "#129eaf",
+    fillColor: "#e4f7fb",
+    borderColor: "#dadce0",
     squadId: "squad_secops",
   },
   agent_threat_hunter: {
@@ -209,9 +209,9 @@ const KNOWN_AGENTS = {
     role: "Privilege Escalation Detector",
     model: "Google Gemini 3.5 Flash",
     tools: ["detect_unauthorized_root", "verify_ip_anomalies"],
-    color: "#ef4444",
-    fillColor: "rgba(239, 68, 68, 0.15)",
-    borderColor: "#f87171",
+    color: "#d93025",
+    fillColor: "#fce8e6",
+    borderColor: "#dadce0",
     squadId: "squad_secops",
   },
   agent_compliance: {
@@ -219,9 +219,9 @@ const KNOWN_AGENTS = {
     role: "FedRAMP & NIST Policy Auditor",
     model: "Google Gemini 3.5 Flash",
     tools: ["audit_nist_sp_800_53", "validate_cim_invariants"],
-    color: "#8b5cf6",
-    fillColor: "rgba(139, 92, 246, 0.15)",
-    borderColor: "#a78bfa",
+    color: "#1a73e8",
+    fillColor: "#e8f0fe",
+    borderColor: "#dadce0",
     squadId: "squad_secops",
   },
   agent_sentiment: {
@@ -229,9 +229,9 @@ const KNOWN_AGENTS = {
     role: "Consumer Experience & NLP",
     model: "Google Gemini 3.5 Flash",
     tools: ["analyze_sentiment_polarity", "extract_customer_intents"],
-    color: "#14b8a6",
-    fillColor: "rgba(20, 184, 166, 0.15)",
-    borderColor: "#2dd4bf",
+    color: "#1e8e3e",
+    fillColor: "#e6f4ea",
+    borderColor: "#dadce0",
     squadId: "squad_complaints",
   },
   agent_critic: {
@@ -239,9 +239,9 @@ const KNOWN_AGENTS = {
     role: "Reasoning & Invariant Auditor",
     model: "Google Gemini 3.5 Flash",
     tools: ["verify_causality", "detect_inconsistencies"],
-    color: "#f97316",
-    fillColor: "rgba(249, 115, 22, 0.15)",
-    borderColor: "#fb923c",
+    color: "#d93025",
+    fillColor: "#fce8e6",
+    borderColor: "#dadce0",
     squadId: "squad_critic",
   },
   Critic_Agent: {
@@ -249,9 +249,9 @@ const KNOWN_AGENTS = {
     role: "Reasoning & Invariant Auditor",
     model: "Google Gemini 3.5 Flash",
     tools: ["verify_causality", "detect_inconsistencies"],
-    color: "#f97316",
-    fillColor: "rgba(249, 115, 22, 0.15)",
-    borderColor: "#fb923c",
+    color: "#d93025",
+    fillColor: "#fce8e6",
+    borderColor: "#dadce0",
     squadId: "squad_critic",
   },
 };
@@ -261,18 +261,18 @@ const DEFAULT_META = {
   role: "Collaborative Autonomous Node",
   model: "Google Gemini 3.5 Flash",
   tools: ["cim_tool_execution", "envelope_exchange"],
-  color: "#8b5cf6",
-  fillColor: "rgba(139, 92, 246, 0.15)",
-  borderColor: "#a78bfa",
+  color: "#1a73e8",
+  fillColor: "#e8f0fe",
+  borderColor: "#dadce0",
   squadId: "squad_command",
 };
 
 const AVAILABLE_AGENT_OPTIONS = [
-  { id: "agent_threat_hunter", name: "Threat Hunter", role: "Privilege Escalation Detector", color: "#ef4444", squad: "squad_secops" },
-  { id: "agent_compliance", name: "Compliance Auditor", role: "FedRAMP & NIST Invariant Auditor", color: "#8b5cf6", squad: "squad_secops" },
-  { id: "agent_sentiment", name: "Sentiment Specialist", role: "Consumer Experience & NLP", color: "#14b8a6", squad: "squad_complaints" },
-  { id: "agent_forensics", name: "Forensics Scanner", role: "Access Log & Security Forensics", color: "#06b6d4", squad: "squad_secops" },
-  { id: "agent_critic", name: "Adversarial Critic", role: "Reasoning & Vulnerability Auditor", color: "#f97316", squad: "squad_critic" },
+  { id: "agent_threat_hunter", name: "Threat Hunter", role: "Privilege Escalation Detector", color: "#d93025", squad: "squad_secops" },
+  { id: "agent_compliance", name: "Compliance Auditor", role: "FedRAMP & NIST Invariant Auditor", color: "#1a73e8", squad: "squad_secops" },
+  { id: "agent_sentiment", name: "Sentiment Specialist", role: "Consumer Experience & NLP", color: "#1e8e3e", squad: "squad_complaints" },
+  { id: "agent_forensics", name: "Forensics Scanner", role: "Access Log & Security Forensics", color: "#129eaf", squad: "squad_secops" },
+  { id: "agent_critic", name: "Adversarial Critic", role: "Reasoning & Vulnerability Auditor", color: "#d93025", squad: "squad_critic" },
 ];
 
 export default function AgentInteractionGraph({
@@ -509,9 +509,9 @@ export default function AgentInteractionGraph({
           name: `${sqId.replace("squad_", "").toUpperCase()} Squad`,
           shortName: `${sqId.replace("squad_", "")} Squad`,
           icon: "🏢",
-          color: "#8b5cf6",
-          fillColor: "rgba(139, 92, 246, 0.12)",
-          borderColor: "#a78bfa",
+          color: "#1a73e8",
+          fillColor: "#e8f0fe",
+          borderColor: "#dadce0",
           mission: "Domain-specific autonomous agent collaboration",
           defaultPos: { x: 350, y: 240 },
         };
@@ -846,14 +846,14 @@ export default function AgentInteractionGraph({
   };
 
   const getEdgeColor = (type, isHighlighted, isCrossSquad = false) => {
-    if (isCrossSquad) return "#f59e0b"; // Radiant Amber for Cross-Squad Bridge
-    if (isHighlighted) return "#38bdf8";
+    if (isCrossSquad) return "#e37400";
+    if (isHighlighted) return "#1a73e8";
     const t = (type || "").toLowerCase();
-    if (t.includes("delegat")) return "#60a5fa";
-    if (t.includes("finding") || t.includes("data") || t.includes("response") || t.includes("result")) return "#10b981";
-    if (t.includes("analys") || t.includes("audit") || t.includes("critic")) return "#f59e0b";
-    if (t.includes("report") || t.includes("synth")) return "#ec4899";
-    return "#94a3b8";
+    if (t.includes("delegat")) return "#1a73e8";
+    if (t.includes("finding") || t.includes("data") || t.includes("response") || t.includes("result")) return "#1e8e3e";
+    if (t.includes("analys") || t.includes("audit") || t.includes("critic")) return "#e37400";
+    if (t.includes("report") || t.includes("synth")) return "#9334e6";
+    return "#80868b";
   };
 
   const isCrossSquadActive = activeSquads.length > 1;
@@ -862,11 +862,11 @@ export default function AgentInteractionGraph({
     <div
       style={{
         marginTop: 14,
-        background: "#080c14",
-        border: "1px solid rgba(59, 130, 246, 0.35)",
-        borderRadius: 12,
+        background: "#ffffff",
+        border: "1px solid #dadce0",
+        borderRadius: 8,
         padding: compact ? "12px 14px" : "18px 20px",
-        boxShadow: "0 8px 30px rgba(0, 0, 0, 0.5)",
+        boxShadow: "0 1px 3px rgba(60,64,67,0.12)",
         position: "relative",
       }}
     >
@@ -878,7 +878,7 @@ export default function AgentInteractionGraph({
           alignItems: "center",
           marginBottom: isCollapsed ? 0 : 12,
           paddingBottom: isCollapsed ? 0 : 10,
-          borderBottom: isCollapsed ? "none" : "1px solid #1e293b",
+          borderBottom: isCollapsed ? "none" : "1px solid #dadce0",
           flexWrap: "wrap",
           gap: 10,
         }}
@@ -892,17 +892,17 @@ export default function AgentInteractionGraph({
             style={{
               width: 32,
               height: 32,
-              borderRadius: "50%",
-              background: "linear-gradient(135deg, #3b82f6, #10b981)",
+              borderRadius: 24,
+              background: "#e8f0fe",
+              border: "1px solid #dadce0",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "#fff",
+              color: "#1a73e8",
               flexShrink: 0,
-              boxShadow: "0 0 12px rgba(16, 185, 129, 0.4)",
             }}
           >
-            {viewMode === "squad" ? <Building2 size={17} /> : <Share2 size={17} />}
+            {viewMode === "squad" ? <Building2 size={17} color="#1a73e8" /> : <Share2 size={17} color="#1a73e8" />}
           </div>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -911,7 +911,7 @@ export default function AgentInteractionGraph({
                   margin: 0,
                   fontSize: compact ? 14 : 15.5,
                   fontWeight: 700,
-                  color: "#60a5fa",
+                  color: "#202124",
                   letterSpacing: "0.2px",
                 }}
               >
@@ -922,18 +922,18 @@ export default function AgentInteractionGraph({
               <span
                 style={{
                   fontSize: 10.5,
-                  padding: "2px 7px",
-                  borderRadius: 4,
-                  background: isCrossSquadActive ? "rgba(245, 158, 11, 0.2)" : "rgba(56, 189, 248, 0.15)",
-                  color: isCrossSquadActive ? "#fbbf24" : "#38bdf8",
-                  border: isCrossSquadActive ? "1px solid rgba(245, 158, 11, 0.4)" : "1px solid rgba(56, 189, 248, 0.3)",
+                  padding: "2px 8px",
+                  borderRadius: 16,
+                  background: isCrossSquadActive ? "#fef7e0" : "#e8f0fe",
+                  color: isCrossSquadActive ? "#b06000" : "#1a73e8",
+                  border: "1px solid #dadce0",
                   fontWeight: 700,
                 }}
               >
                 {isCrossSquadActive ? "⚡ CROSS-SQUAD COLLABORATION" : `${activeSquads.length} Squad Active`}
               </span>
             </div>
-            <span style={{ fontSize: 11, color: "#94a3b8" }}>
+            <span style={{ fontSize: 11, color: "#5f6368" }}>
               {activeSquads.length} Autonomous Squads &bull; {localNodes.length} Specialized Agents &bull; {localEdges.length} Messages Captured
             </span>
           </div>
@@ -959,16 +959,15 @@ export default function AgentInteractionGraph({
                     }
                   }}
                   style={{
-                    padding: "5px 10px",
-                    borderRadius: 6,
-                    background: "#0b1329",
-                    color: "#60a5fa",
-                    border: "1px solid #1e3a8a",
+                    padding: "6px 14px",
+                    borderRadius: 24,
+                    background: "#ffffff",
+                    color: "#202124",
+                    border: "1px solid #dadce0",
                     fontSize: 11.5,
-                    fontWeight: 700,
+                    fontWeight: 600,
                     cursor: "pointer",
                     outline: "none",
-                    boxShadow: "0 0 10px rgba(59, 130, 246, 0.2)",
                   }}
                   title="Switch between Squad-Level and Agent-Level interaction topology"
                 >
@@ -986,18 +985,18 @@ export default function AgentInteractionGraph({
                       display: "flex",
                       alignItems: "center",
                       gap: 4,
-                      padding: "5px 9px",
-                      background: "rgba(16, 185, 129, 0.15)",
-                      border: "1px solid rgba(16, 185, 129, 0.35)",
-                      borderRadius: 6,
-                      color: "#34d399",
+                      padding: "6px 14px",
+                      background: "#ffffff",
+                      border: "1px solid #dadce0",
+                      borderRadius: 24,
+                      color: "#1a73e8",
                       fontSize: 11,
                       fontWeight: 600,
                       cursor: "pointer",
                     }}
                     title="Add specialized agent node to live topology"
                   >
-                    <Plus size={12} />
+                    <Plus size={12} color="#1a73e8" />
                     <span>Add Agent</span>
                   </button>
 
@@ -1008,8 +1007,8 @@ export default function AgentInteractionGraph({
                         top: "100%",
                         right: 0,
                         marginTop: 4,
-                        background: "#0f172a",
-                        border: "1px solid #334155",
+                        background: "#ffffff",
+                        border: "1px solid #dadce0",
                         borderRadius: 8,
                         padding: 6,
                         display: "flex",
@@ -1017,10 +1016,10 @@ export default function AgentInteractionGraph({
                         gap: 4,
                         zIndex: 50,
                         width: 220,
-                        boxShadow: "0 10px 25px rgba(0,0,0,0.5)",
+                        boxShadow: "0 2px 10px rgba(60,64,67,0.2)",
                       }}
                     >
-                      <div style={{ fontSize: 10, color: "#64748b", fontWeight: 700, padding: "4px 8px", textTransform: "uppercase" }}>
+                      <div style={{ fontSize: 10, color: "#5f6368", fontWeight: 700, padding: "4px 8px", textTransform: "uppercase" }}>
                         Select Specialized Agent:
                       </div>
                       {AVAILABLE_AGENT_OPTIONS.map((opt) => (
@@ -1032,17 +1031,17 @@ export default function AgentInteractionGraph({
                             alignItems: "center",
                             justifyContent: "space-between",
                             padding: "6px 8px",
-                            background: "#1e293b",
-                            border: "1px solid #334155",
+                            background: "#f8f9fa",
+                            border: "1px solid #dadce0",
                             borderRadius: 6,
-                            color: "#f8fafc",
+                            color: "#202124",
                             fontSize: 11,
                             cursor: "pointer",
                             textAlign: "left",
                           }}
                         >
                           <span style={{ fontWeight: 600, color: opt.color }}>{opt.name}</span>
-                          <Plus size={11} color="#94a3b8" />
+                          <Plus size={11} color="#5f6368" />
                         </button>
                       ))}
                     </div>
@@ -1054,12 +1053,13 @@ export default function AgentInteractionGraph({
               <button
                 onClick={() => setNodePositions(computeDynamicLayout(localNodes))}
                 style={{
-                  padding: "5px 9px",
-                  background: "#1e293b",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  borderRadius: 6,
-                  color: "#94a3b8",
+                  padding: "6px 14px",
+                  background: "#ffffff",
+                  border: "1px solid #dadce0",
+                  borderRadius: 24,
+                  color: "#5f6368",
                   fontSize: 11,
+                  fontWeight: 500,
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
@@ -1079,11 +1079,11 @@ export default function AgentInteractionGraph({
                     display: "flex",
                     alignItems: "center",
                     gap: 5,
-                    padding: "5px 11px",
-                    background: isPlaying ? "#059669" : "#1e293b",
-                    border: "1px solid rgba(255,255,255,0.15)",
-                    borderRadius: 6,
-                    color: "#fff",
+                    padding: "6px 14px",
+                    background: isPlaying ? "#1e8e3e" : "#1a73e8",
+                    border: "1px solid transparent",
+                    borderRadius: 24,
+                    color: "#ffffff",
                     fontSize: 11,
                     fontWeight: 600,
                     cursor: "pointer",
@@ -1100,13 +1100,13 @@ export default function AgentInteractionGraph({
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
             style={{
-              padding: "5px 10px",
-              background: isCollapsed ? "rgba(59, 130, 246, 0.15)" : "#1e293b",
-              border: isCollapsed ? "1px solid #3b82f6" : "1px solid rgba(255,255,255,0.1)",
-              borderRadius: 6,
-              color: isCollapsed ? "#93c5fd" : "#94a3b8",
+              padding: "6px 14px",
+              background: "#f1f3f4",
+              border: "1px solid #dadce0",
+              borderRadius: 24,
+              color: "#5f6368",
               fontSize: 11.5,
-              fontWeight: 600,
+              fontWeight: 500,
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
@@ -1125,8 +1125,8 @@ export default function AgentInteractionGraph({
           {/* SQUAD COLLABORATION BANNER */}
           <div
             style={{
-              background: "linear-gradient(90deg, rgba(30, 58, 138, 0.25) 0%, rgba(16, 185, 129, 0.15) 50%, rgba(239, 68, 68, 0.15) 100%)",
-              border: "1px solid #1e3a8a",
+              background: "#f8f9fa",
+              border: "1px solid #dadce0",
               borderRadius: 8,
               padding: "8px 12px",
               marginBottom: 10,
@@ -1138,23 +1138,24 @@ export default function AgentInteractionGraph({
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Zap size={14} color="#f59e0b" />
-              <span style={{ fontWeight: 700, color: "#f8fafc", fontSize: 12 }}>
+              <Zap size={14} color="#f9ab00" />
+              <span style={{ fontWeight: 700, color: "#202124", fontSize: 12 }}>
                 {viewMode === "squad" ? "🏢 SQUAD INTERACTION TOPOLOGY" : "👥 AGENT DETAIL TOPOLOGY (GROUPED BY SQUAD)"}
               </span>
-              <span style={{ color: "#94a3b8", fontSize: 11.5 }}>
+              <span style={{ color: "#5f6368", fontSize: 11.5 }}>
                 {activeSquads.map((s) => `${s.icon} ${s.shortName}`).join(" ⇄ ")}
               </span>
             </div>
             {isCrossSquadActive && (
               <span
                 style={{
-                  background: "#f59e0b",
-                  color: "#000",
+                  background: "#fef7e0",
+                  color: "#b06000",
+                  border: "1px solid #dadce0",
                   padding: "2px 8px",
-                  borderRadius: 4,
+                  borderRadius: 16,
                   fontSize: 10.5,
-                  fontWeight: 800,
+                  fontWeight: 700,
                   letterSpacing: "0.04em",
                 }}
               >
@@ -1175,7 +1176,7 @@ export default function AgentInteractionGraph({
                 alignItems: "center",
               }}
             >
-              <span style={{ fontSize: 10, textTransform: "uppercase", color: "#64748b", fontWeight: 700, minWidth: 42 }}>
+              <span style={{ fontSize: 10, textTransform: "uppercase", color: "#5f6368", fontWeight: 700, minWidth: 42 }}>
                 Steps:
               </span>
               {chronologicalSteps.map((step, idx) => {
@@ -1203,30 +1204,18 @@ export default function AgentInteractionGraph({
                     }}
                     style={{
                       flexShrink: 0,
-                      padding: "4px 9px",
-                      borderRadius: 14,
+                      padding: "4px 10px",
+                      borderRadius: 24,
                       fontSize: 10.5,
-                      fontWeight: 600,
-                      background: isActive
-                        ? isCross
-                          ? "linear-gradient(135deg, #b45309, #f59e0b)"
-                          : "linear-gradient(135deg, #2563eb, #3b82f6)"
-                        : isCross
-                        ? "rgba(245, 158, 11, 0.12)"
-                        : "#131b2e",
-                      border: isActive
-                        ? isCross
-                          ? "1px solid #fbbf24"
-                          : "1px solid #60a5fa"
-                        : isCross
-                        ? "1px solid rgba(245, 158, 11, 0.4)"
-                        : "1px solid #1e293b",
-                      color: isActive ? "#fff" : isCross ? "#fbbf24" : "#94a3b8",
+                      fontWeight: isActive ? 600 : 500,
+                      background: isActive ? "#e8f0fe" : "#ffffff",
+                      border: isActive ? "1px solid #1a73e8" : "1px solid #dadce0",
+                      color: isActive ? "#1a73e8" : isCross ? "#b06000" : "#5f6368",
                       cursor: "pointer",
                       display: "flex",
                       alignItems: "center",
                       gap: 4,
-                      boxShadow: isActive ? "0 0 10px rgba(59, 130, 246, 0.5)" : "none",
+                      boxShadow: isActive ? "0 1px 3px rgba(60,64,67,0.15)" : "none",
                     }}
                   >
                     <span>#{idx + 1}</span>
@@ -1246,9 +1235,9 @@ export default function AgentInteractionGraph({
               position: "relative",
               width: "100%",
               height: compact ? 370 : 490,
-              background: "radial-gradient(ellipse at 50% 50%, #0e1726 0%, #06090f 100%)",
-              borderRadius: 10,
-              border: "1px solid #1e293b",
+              background: "#f8f9fa",
+              borderRadius: 8,
+              border: "1px solid #dadce0",
               overflow: "hidden",
               userSelect: "none",
             }}
@@ -1268,20 +1257,9 @@ export default function AgentInteractionGraph({
               onTouchEnd={handleMouseUpCanvas}
             >
               <defs>
-                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="3" result="blur" />
-                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                </filter>
-                <filter id="gold-glow" x="-30%" y="-30%" width="160%" height="160%">
-                  <feGaussianBlur stdDeviation="4" result="blur" />
-                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                </filter>
-
-                <linearGradient id="bridgeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#10b981" />
-                  <stop offset="50%" stopColor="#f59e0b" />
-                  <stop offset="100%" stopColor="#ef4444" />
-                </linearGradient>
+                <pattern id="gridDots" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+                  <circle cx="2" cy="2" r="1.2" fill="#dadce0" />
+                </pattern>
 
                 <marker
                   id="arrow-default"
@@ -1292,7 +1270,7 @@ export default function AgentInteractionGraph({
                   markerHeight="6"
                   orient="auto-start-reverse"
                 >
-                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#60a5fa" />
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#80868b" />
                 </marker>
                 <marker
                   id="arrow-bridge"
@@ -1303,7 +1281,7 @@ export default function AgentInteractionGraph({
                   markerHeight="7"
                   orient="auto-start-reverse"
                 >
-                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#f59e0b" />
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#f9ab00" />
                 </marker>
                 <marker
                   id="arrow-squad"
@@ -1314,7 +1292,7 @@ export default function AgentInteractionGraph({
                   markerHeight="7"
                   orient="auto-start-reverse"
                 >
-                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#38bdf8" />
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#1a73e8" />
                 </marker>
                 <marker
                   id="arrow-squad-bridge"
@@ -1325,19 +1303,12 @@ export default function AgentInteractionGraph({
                   markerHeight="8"
                   orient="auto-start-reverse"
                 >
-                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#f59e0b" />
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#f9ab00" />
                 </marker>
               </defs>
 
-              {/* Subdued Grid Background */}
-              <g stroke="rgba(255, 255, 255, 0.03)" strokeWidth="1">
-                {Array.from({ length: 14 }).map((_, i) => (
-                  <line key={`v-${i}`} x1={i * 50} y1="0" x2={i * 50} y2="480" />
-                ))}
-                {Array.from({ length: 10 }).map((_, i) => (
-                  <line key={`h-${i}`} x1="0" y1={i * 50} x2="700" y2={i * 50} />
-                ))}
-              </g>
+              {/* Clean Subtle Grid Dots Background */}
+              <rect width="700" height="480" fill="url(#gridDots)" />
 
               {/* ========================================================= */}
               {/* MODE A: SQUAD INTERACTION VIEW (Primary Squad Nodes)     */}
@@ -1348,7 +1319,7 @@ export default function AgentInteractionGraph({
                   {squadEdges.map((sEdge, idx) => {
                     const isSelected = selectedSquadEdge?.key === sEdge.key;
                     const pathData = calculateSquadPath(sEdge.source, sEdge.target, idx);
-                    const strokeColor = sEdge.isBridge ? "#f59e0b" : "#3b82f6";
+                    const strokeColor = sEdge.isBridge ? "#f9ab00" : isSelected ? "#1a73e8" : "#80868b";
 
                     return (
                       <g
@@ -1360,33 +1331,33 @@ export default function AgentInteractionGraph({
                         style={{ cursor: "pointer" }}
                       >
                         {/* Wide hit area */}
-                        <path d={pathData.d} fill="none" stroke="transparent" strokeWidth="32" />
+                        <path d={pathData.d} fill="none" stroke="transparent" strokeWidth="24" />
 
-                        {/* Glow halo */}
-                        <path
-                          d={pathData.d}
-                          fill="none"
-                          stroke={sEdge.isBridge ? "#f59e0b" : "#38bdf8"}
-                          strokeWidth={sEdge.isBridge ? "8" : "5"}
-                          opacity={isSelected ? "0.6" : sEdge.isBridge ? "0.35" : "0.2"}
-                          filter={sEdge.isBridge ? "url(#gold-glow)" : "url(#glow)"}
-                        />
+                        {/* Subtle selection highlight */}
+                        {isSelected && (
+                          <path
+                            d={pathData.d}
+                            fill="none"
+                            stroke="#1a73e8"
+                            strokeWidth="8"
+                            opacity="0.2"
+                          />
+                        )}
 
                         {/* Main Conduit Line */}
                         <path
                           d={pathData.d}
                           fill="none"
-                          stroke={sEdge.isBridge ? "url(#bridgeGradient)" : strokeColor}
-                          strokeWidth={isSelected ? "4" : sEdge.isBridge ? "3.5" : "2.5"}
-                          strokeDasharray={sEdge.isBridge ? "8 4" : "none"}
+                          stroke={strokeColor}
+                          strokeWidth={isSelected ? "3" : sEdge.isBridge ? "2.5" : "1.8"}
+                          strokeDasharray={sEdge.isBridge ? "6 4" : "none"}
                           markerEnd={sEdge.isBridge ? "url(#arrow-squad-bridge)" : "url(#arrow-squad)"}
                         />
 
-                        {/* High-energy traveling packet */}
+                        {/* Traveling packet */}
                         <circle
-                          r={sEdge.isBridge ? "6" : "5"}
-                          fill={sEdge.isBridge ? "#fde047" : "#60a5fa"}
-                          filter="url(#glow)"
+                          r={sEdge.isBridge ? "5" : "4"}
+                          fill={sEdge.isBridge ? "#f9ab00" : "#1a73e8"}
                         >
                           <animateMotion
                             path={pathData.d}
@@ -1403,16 +1374,16 @@ export default function AgentInteractionGraph({
                             width={sEdge.isBridge ? 200 : 150}
                             height="26"
                             rx="13"
-                            fill={isSelected ? "#1e3a8a" : "#0f172a"}
-                            stroke={sEdge.isBridge ? "#f59e0b" : "#38bdf8"}
-                            strokeWidth={sEdge.isBridge ? "2" : "1.5"}
+                            fill="#ffffff"
+                            stroke={sEdge.isBridge ? "#f9ab00" : isSelected ? "#1a73e8" : "#dadce0"}
+                            strokeWidth="1"
                           />
                           <text
                             textAnchor="middle"
                             dy="4"
-                            fill={sEdge.isBridge ? "#fef08a" : "#f8fafc"}
+                            fill="#202124"
                             fontSize="9.5"
-                            fontWeight="bold"
+                            fontWeight="600"
                             fontFamily="system-ui, sans-serif"
                           >
                             {sEdge.label}
@@ -1437,19 +1408,20 @@ export default function AgentInteractionGraph({
                         }}
                         style={{ cursor: "pointer" }}
                       >
-                        {/* Selected / Outer Glow */}
-                        <rect
-                          x="-114"
-                          y="-58"
-                          width="228"
-                          height="116"
-                          rx="16"
-                          fill="none"
-                          stroke={squad.color}
-                          strokeWidth={isSelected ? "5" : "3"}
-                          opacity={isSelected ? "0.6" : "0.25"}
-                          filter="url(#glow)"
-                        />
+                        {/* Selected Outer Halo */}
+                        {isSelected && (
+                          <rect
+                            x="-114"
+                            y="-58"
+                            width="228"
+                            height="116"
+                            rx="12"
+                            fill="none"
+                            stroke="#1a73e8"
+                            strokeWidth="4"
+                            opacity="0.25"
+                          />
+                        )}
 
                         {/* Main Squad Box */}
                         <rect
@@ -1457,10 +1429,10 @@ export default function AgentInteractionGraph({
                           y="-54"
                           width="220"
                           height="108"
-                          rx="14"
-                          fill="#0c1322"
-                          stroke={isSelected ? "#38bdf8" : squad.borderColor}
-                          strokeWidth={isSelected ? "2.5" : "1.8"}
+                          rx="8"
+                          fill="#ffffff"
+                          stroke={isSelected ? "#1a73e8" : "#dadce0"}
+                          strokeWidth={isSelected ? "2" : "1"}
                         />
 
                         {/* Top Squad Banner */}
@@ -1469,21 +1441,20 @@ export default function AgentInteractionGraph({
                           y="-53"
                           width="218"
                           height="32"
-                          rx="12"
+                          rx="8"
                           fill={squad.fillColor}
                         />
 
                         {/* Operational Status Light */}
-                        <circle cx="-92" cy="-37" r="4.5" fill="#10b981" />
-                        <circle cx="-92" cy="-37" r="8" fill="#10b981" opacity="0.3" />
+                        <circle cx="-92" cy="-37" r="4" fill="#1e8e3e" />
 
                         {/* Squad Title */}
                         <text
                           x="-78"
                           y="-33"
-                          fill="#f8fafc"
+                          fill="#202124"
                           fontSize="11.5"
-                          fontWeight="800"
+                          fontWeight="700"
                           fontFamily="system-ui, sans-serif"
                         >
                           {squad.icon} {squad.shortName}
@@ -1496,17 +1467,17 @@ export default function AgentInteractionGraph({
                           width="60"
                           height="18"
                           rx="9"
-                          fill="#1e293b"
-                          stroke={squad.borderColor}
+                          fill="#ffffff"
+                          stroke="#dadce0"
                           strokeWidth="1"
                         />
                         <text
                           x="70"
                           y="-34"
                           textAnchor="middle"
-                          fill="#93c5fd"
+                          fill="#5f6368"
                           fontSize="8.5"
-                          fontWeight="700"
+                          fontWeight="600"
                         >
                           {squad.members.length} Agents
                         </text>
@@ -1517,7 +1488,7 @@ export default function AgentInteractionGraph({
                             x="0"
                             y="0"
                             textAnchor="middle"
-                            fill="#cbd5e1"
+                            fill="#5f6368"
                             fontSize="9"
                             fontFamily="system-ui, sans-serif"
                           >
@@ -1530,7 +1501,7 @@ export default function AgentInteractionGraph({
                           x="0"
                           y="18"
                           textAnchor="middle"
-                          fill="#94a3b8"
+                          fill="#5f6368"
                           fontSize="8.5"
                           fontFamily="system-ui, sans-serif"
                         >
@@ -1546,16 +1517,16 @@ export default function AgentInteractionGraph({
                             y="-9"
                             width="190"
                             height="18"
-                            rx="5"
-                            fill="#111827"
-                            stroke="rgba(255, 255, 255, 0.12)"
+                            rx="4"
+                            fill="#f8f9fa"
+                            stroke="#dadce0"
                             strokeWidth="1"
                           />
                           <text
                             x="0"
                             y="3.5"
                             textAnchor="middle"
-                            fill="#38bdf8"
+                            fill="#1a73e8"
                             fontSize="8"
                             fontFamily="monospace"
                             fontWeight="600"
@@ -1582,9 +1553,9 @@ export default function AgentInteractionGraph({
                         y={hull.y}
                         width={hull.width}
                         height={hull.height}
-                        rx="16"
+                        rx="8"
                         fill={hull.fillColor}
-                        stroke={hull.borderColor}
+                        stroke="#dadce0"
                         strokeWidth="1.5"
                         strokeDasharray="6 4"
                       />
@@ -1597,16 +1568,16 @@ export default function AgentInteractionGraph({
                           width={Math.min(hull.width - 24, 210)}
                           height="22"
                           rx="6"
-                          fill="#0f172a"
-                          stroke={hull.borderColor}
-                          strokeWidth="1.5"
+                          fill="#ffffff"
+                          stroke="#dadce0"
+                          strokeWidth="1"
                         />
                         <text
                           x="10"
                           y="15"
                           fill={hull.color}
                           fontSize="9.5"
-                          fontWeight="800"
+                          fontWeight="700"
                           fontFamily="system-ui, sans-serif"
                         >
                           {hull.icon} {hull.shortName.toUpperCase()} ({hull.memberCount} AGENTS)
@@ -1641,25 +1612,23 @@ export default function AgentInteractionGraph({
                           <path
                             d={pathData.d}
                             fill="none"
-                            stroke={edgeColor}
-                            strokeWidth="7"
-                            opacity="0.35"
-                            filter="url(#glow)"
+                            stroke="#1a73e8"
+                            strokeWidth="6"
+                            opacity="0.2"
                           />
                         )}
 
                         <path
                           d={pathData.d}
                           fill="none"
-                          stroke={isCross ? "#f59e0b" : edgeColor}
-                          strokeWidth={isSelected ? "3" : isCross ? "2.5" : "1.8"}
-                          strokeOpacity={isSelected ? 1 : 0.75}
-                          strokeDasharray={isCross ? "8 4" : isSelected ? "8 4" : "5 5"}
+                          stroke={isCross ? "#f9ab00" : isSelected ? "#1a73e8" : edgeColor}
+                          strokeWidth={isSelected ? "2.5" : isCross ? "2" : "1.5"}
+                          strokeDasharray={isCross ? "6 4" : isSelected ? "none" : "4 4"}
                           markerEnd={isCross ? "url(#arrow-bridge)" : "url(#arrow-default)"}
                         />
 
                         {/* Animated Flowing Packet */}
-                        <circle r={isCross ? "5" : "4.5"} fill={isCross ? "#fbbf24" : edgeColor} filter="url(#glow)">
+                        <circle r={isCross ? "4" : "3.5"} fill={isCross ? "#f9ab00" : edgeColor}>
                           <animateMotion
                             path={pathData.d}
                             dur={`${2.0 + (idx % 3) * 0.4}s`}
@@ -1670,16 +1639,16 @@ export default function AgentInteractionGraph({
                         {/* Step Sequence Badge on Midpoint */}
                         <g transform={`translate(${pathData.midX}, ${pathData.midY})`}>
                           <circle
-                            r={isSelected ? 11 : 9}
-                            fill={isSelected ? "#38bdf8" : isCross ? "#b45309" : "#0f172a"}
-                            stroke={edgeColor}
+                            r={isSelected ? 10 : 8.5}
+                            fill={isSelected ? "#1a73e8" : "#ffffff"}
+                            stroke="#dadce0"
                             strokeWidth="1.5"
                           />
                           <text
                             textAnchor="middle"
                             dy="3.5"
-                            fill={isSelected ? "#000" : "#fff"}
-                            fontSize="9.5"
+                            fill={isSelected ? "#ffffff" : "#202124"}
+                            fontSize="9"
                             fontWeight="bold"
                             fontFamily="sans-serif"
                           >
@@ -1715,12 +1684,11 @@ export default function AgentInteractionGraph({
                             y="-42"
                             width="176"
                             height="84"
-                            rx="14"
+                            rx="10"
                             fill="none"
-                            stroke={squad.color || node.color || "#3b82f6"}
-                            strokeWidth="5"
-                            opacity="0.4"
-                            filter="url(#glow)"
+                            stroke="#1a73e8"
+                            strokeWidth="4"
+                            opacity="0.25"
                           />
                         )}
 
@@ -1730,10 +1698,10 @@ export default function AgentInteractionGraph({
                           y="-38"
                           width="168"
                           height="76"
-                          rx="12"
-                          fill="#0f172a"
-                          stroke={isSelected || isConnected ? "#38bdf8" : node.borderColor || "#334155"}
-                          strokeWidth={isSelected || isConnected ? "2.5" : "1.5"}
+                          rx="8"
+                          fill="#ffffff"
+                          stroke={isSelected || isConnected ? "#1a73e8" : "#dadce0"}
+                          strokeWidth={isSelected || isConnected ? "2" : "1"}
                         />
 
                         {/* Header gradient banner */}
@@ -1742,19 +1710,18 @@ export default function AgentInteractionGraph({
                           y="-37"
                           width="166"
                           height="26"
-                          rx="10"
-                          fill={node.fillColor || "rgba(59, 130, 246, 0.15)"}
+                          rx="8"
+                          fill={node.fillColor || "#e8f0fe"}
                         />
 
                         {/* Pulse status indicator */}
-                        <circle cx="-66" cy="-24" r="4" fill="#10b981" />
-                        <circle cx="-66" cy="-24" r="7" fill="#10b981" opacity="0.25" />
+                        <circle cx="-66" cy="-24" r="3.5" fill="#1e8e3e" />
 
                         {/* Agent Name */}
                         <text
                           x="-54"
                           y="-20"
-                          fill="#f8fafc"
+                          fill="#202124"
                           fontSize="11"
                           fontWeight="700"
                           fontFamily="system-ui, sans-serif"
@@ -1764,10 +1731,10 @@ export default function AgentInteractionGraph({
 
                         {/* Drag Grip Indicator */}
                         <g transform="translate(60, -28)" opacity="0.6">
-                          <circle cx="0" cy="0" r="1.5" fill="#94a3b8" />
-                          <circle cx="5" cy="0" r="1.5" fill="#94a3b8" />
-                          <circle cx="0" cy="5" r="1.5" fill="#94a3b8" />
-                          <circle cx="5" cy="5" r="1.5" fill="#94a3b8" />
+                          <circle cx="0" cy="0" r="1.5" fill="#80868b" />
+                          <circle cx="5" cy="0" r="1.5" fill="#80868b" />
+                          <circle cx="0" cy="5" r="1.5" fill="#80868b" />
+                          <circle cx="5" cy="5" r="1.5" fill="#80868b" />
                         </g>
 
                         {/* Squad Badge Pill on Agent Card */}
@@ -1778,8 +1745,8 @@ export default function AgentInteractionGraph({
                             width="144"
                             height="14"
                             rx="4"
-                            fill="rgba(0, 0, 0, 0.4)"
-                            stroke={squad.borderColor}
+                            fill="#ffffff"
+                            stroke="#dadce0"
                             strokeWidth="0.8"
                           />
                           <text
@@ -1788,7 +1755,7 @@ export default function AgentInteractionGraph({
                             textAnchor="middle"
                             fill={squad.color}
                             fontSize="8"
-                            fontWeight="700"
+                            fontWeight="600"
                             fontFamily="system-ui, sans-serif"
                           >
                             {squad.icon} {squad.shortName}
@@ -1803,15 +1770,15 @@ export default function AgentInteractionGraph({
                             width="140"
                             height="15"
                             rx="4"
-                            fill="#111827"
-                            stroke="rgba(255, 255, 255, 0.1)"
+                            fill="#f8f9fa"
+                            stroke="#dadce0"
                             strokeWidth="1"
                           />
                           <text
                             x="0"
                             y="4"
                             textAnchor="middle"
-                            fill="#38bdf8"
+                            fill="#1a73e8"
                             fontSize="8"
                             fontFamily="monospace"
                             fontWeight="600"
@@ -1832,14 +1799,16 @@ export default function AgentInteractionGraph({
             <div
               style={{
                 marginTop: 10,
-                background: "#0c1322",
-                border: "1px solid #1e3a5f",
+                background: "#ffffff",
+                border: "1px solid #dadce0",
                 borderRadius: 8,
                 padding: "12px 16px",
                 display: "grid",
                 gridTemplateColumns: "1.4fr 1fr",
                 gap: 12,
                 fontSize: 12,
+                boxShadow: "0 1px 3px rgba(60,64,67,0.12)",
+                color: "#202124",
               }}
             >
               {/* INSPECTOR 1: Selected Squad Node in Squad View */}
@@ -1854,35 +1823,36 @@ export default function AgentInteractionGraph({
                       <span
                         style={{
                           fontSize: 10,
-                          background: "rgba(16, 185, 129, 0.15)",
-                          color: "#34d399",
-                          padding: "1px 6px",
-                          borderRadius: 4,
-                          fontWeight: 700,
+                          background: "#e6f4ea",
+                          color: "#137333",
+                          border: "1px solid #dadce0",
+                          padding: "2px 8px",
+                          borderRadius: 12,
+                          fontWeight: 600,
                         }}
                       >
                         ● Active Squad
                       </span>
                     </div>
-                    <div style={{ color: "#cbd5e1", fontSize: 11.5, marginBottom: 6, lineHeight: 1.4 }}>
-                      <strong>Mission:</strong> {selectedSquad.mission}
+                    <div style={{ color: "#5f6368", fontSize: 11.5, marginBottom: 6, lineHeight: 1.4 }}>
+                      <strong style={{ color: "#202124" }}>Mission:</strong> {selectedSquad.mission}
                     </div>
-                    <div style={{ fontSize: 11, color: "#94a3b8" }}>
-                      <strong>Member Agents ({selectedSquad.members.length}):</strong>{" "}
+                    <div style={{ fontSize: 11, color: "#5f6368" }}>
+                      <strong style={{ color: "#202124" }}>Member Agents ({selectedSquad.members.length}):</strong>{" "}
                       {selectedSquad.members.map((m) => m.label || m.id).join(", ")}
                     </div>
                   </div>
-                  <div style={{ fontSize: 11, color: "#94a3b8", display: "flex", flexDirection: "column", gap: 3 }}>
+                  <div style={{ fontSize: 11, color: "#5f6368", display: "flex", flexDirection: "column", gap: 3 }}>
                     <div>
-                      <strong>Squad ID:</strong> <code>{selectedSquad.id}</code>
+                      <strong style={{ color: "#202124" }}>Squad ID:</strong> <code>{selectedSquad.id}</code>
                     </div>
                     <div>
-                      <strong>Tool Suite:</strong>{" "}
-                      <span style={{ color: "#38bdf8" }}>{selectedSquad.toolList.join(", ") || "CIM Specialized Tools"}</span>
+                      <strong style={{ color: "#202124" }}>Tool Suite:</strong>{" "}
+                      <span style={{ color: "#1a73e8" }}>{selectedSquad.toolList.join(", ") || "CIM Specialized Tools"}</span>
                     </div>
                     <div>
-                      <strong>Federation Status:</strong>{" "}
-                      <span style={{ color: "#10b981" }}>Zero-Trust Enforced &bull; W3C Tracked</span>
+                      <strong style={{ color: "#202124" }}>Federation Status:</strong>{" "}
+                      <span style={{ color: "#1e8e3e" }}>Zero-Trust Enforced &bull; W3C Tracked</span>
                     </div>
                   </div>
                 </>
@@ -1893,37 +1863,38 @@ export default function AgentInteractionGraph({
                     <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
                       <span
                         style={{
-                          background: selectedSquadEdge.isBridge ? "#b45309" : "#1e3a8a",
-                          color: selectedSquadEdge.isBridge ? "#fef08a" : "#93c5fd",
-                          padding: "2px 7px",
-                          borderRadius: 4,
+                          background: selectedSquadEdge.isBridge ? "#fef7e0" : "#e8f0fe",
+                          color: selectedSquadEdge.isBridge ? "#b06000" : "#1a73e8",
+                          border: "1px solid #dadce0",
+                          padding: "2px 8px",
+                          borderRadius: 12,
                           fontSize: 10,
-                          fontWeight: 800,
+                          fontWeight: 700,
                           textTransform: "uppercase",
                         }}
                       >
                         {selectedSquadEdge.isBridge ? "⚡ Cross-Squad Federation Bridge" : "Inter-Squad Conduit"}
                       </span>
-                      <strong style={{ color: "#f8fafc" }}>
+                      <strong style={{ color: "#202124" }}>
                         {SQUAD_METADATA[selectedSquadEdge.source]?.shortName} &rarr;{" "}
                         {SQUAD_METADATA[selectedSquadEdge.target]?.shortName}
                       </strong>
                     </div>
-                    <div style={{ color: "#cbd5e1", lineHeight: 1.4 }}>
+                    <div style={{ color: "#5f6368", lineHeight: 1.4 }}>
                       {selectedSquadEdge.isBridge
                         ? "Federated cross-squad bridge correlating CFPB Consumer Complaints with SecOps System Access Logs under Zero-Trust provenance tracking."
                         : `Conduit exchanging ${selectedSquadEdge.messageCount} inter-squad coordination messages.`}
                     </div>
                   </div>
-                  <div style={{ fontSize: 11, color: "#94a3b8", display: "flex", flexDirection: "column", gap: 3 }}>
+                  <div style={{ fontSize: 11, color: "#5f6368", display: "flex", flexDirection: "column", gap: 3 }}>
                     <div>
-                      <strong>Messages Exchanged:</strong> {selectedSquadEdge.messageCount}
+                      <strong style={{ color: "#202124" }}>Messages Exchanged:</strong> {selectedSquadEdge.messageCount}
                     </div>
                     <div>
-                      <strong>Protocol:</strong> <span>CIM Gateway / Envelope Exchange</span>
+                      <strong style={{ color: "#202124" }}>Protocol:</strong> <span>CIM Gateway / Envelope Exchange</span>
                     </div>
                     <div>
-                      <strong>Types:</strong> <span>{selectedSquadEdge.types.join(", ") || "information_transfer"}</span>
+                      <strong style={{ color: "#202124" }}>Types:</strong> <span style={{ color: "#1a73e8" }}>{selectedSquadEdge.types.join(", ") || "information_transfer"}</span>
                     </div>
                   </div>
                 </>
@@ -1934,10 +1905,11 @@ export default function AgentInteractionGraph({
                     <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
                       <span
                         style={{
-                          background: "#1e3a8a",
-                          color: "#93c5fd",
-                          padding: "2px 6px",
-                          borderRadius: 4,
+                          background: "#e8f0fe",
+                          color: "#1a73e8",
+                          border: "1px solid #dadce0",
+                          padding: "2px 8px",
+                          borderRadius: 12,
                           fontSize: 10,
                           fontWeight: 700,
                           textTransform: "uppercase",
@@ -1945,23 +1917,23 @@ export default function AgentInteractionGraph({
                       >
                         {selectedEdge.interaction_type || "Inter-Agent Message"}
                       </span>
-                      <strong style={{ color: "#f8fafc" }}>
+                      <strong style={{ color: "#202124" }}>
                         {selectedEdge.source?.replace("agent_", "")} &rarr; {selectedEdge.target?.replace("agent_", "")}
                       </strong>
                     </div>
-                    <div style={{ color: "#cbd5e1", lineHeight: 1.4 }}>
+                    <div style={{ color: "#5f6368", lineHeight: 1.4 }}>
                       {selectedEdge.semantic_summary || selectedEdge.label || "Communication payload delivered across the Observability Gateway."}
                     </div>
                   </div>
-                  <div style={{ fontSize: 11, color: "#94a3b8", display: "flex", flexDirection: "column", gap: 2 }}>
+                  <div style={{ fontSize: 11, color: "#5f6368", display: "flex", flexDirection: "column", gap: 2 }}>
                     <div>
-                      <strong>Token:</strong> <code>{selectedEdge.delegation_id || "del_root"}</code>
+                      <strong style={{ color: "#202124" }}>Token:</strong> <code style={{ color: "#1e8e3e" }}>{selectedEdge.delegation_id || "del_root"}</code>
                     </div>
                     <div>
-                      <strong>Privacy:</strong> <span>Capture Level 2 (Summary &bull; Redacted)</span>
+                      <strong style={{ color: "#202124" }}>Privacy:</strong> <span>Capture Level 2 (Summary &bull; Redacted)</span>
                     </div>
                     <div>
-                      <strong>Timestamp:</strong> <span>{selectedEdge.timestamp?.split("T")[1]?.substring(0, 8) || "Live"}</span>
+                      <strong style={{ color: "#202124" }}>Timestamp:</strong> <span>{selectedEdge.timestamp?.split("T")[1]?.substring(0, 8) || "Live"}</span>
                     </div>
                   </div>
                 </>
@@ -1970,20 +1942,20 @@ export default function AgentInteractionGraph({
                 <>
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                      <strong style={{ color: "#38bdf8", fontSize: 13 }}>{selectedNode.label || selectedNode.id}</strong>
-                      <span style={{ fontSize: 10, background: "rgba(56, 189, 248, 0.15)", color: "#38bdf8", padding: "1px 6px", borderRadius: 4 }}>
+                      <strong style={{ color: "#1a73e8", fontSize: 13 }}>{selectedNode.label || selectedNode.id}</strong>
+                      <span style={{ fontSize: 10, background: "#e8f0fe", color: "#1a73e8", border: "1px solid #dadce0", padding: "2px 8px", borderRadius: 12 }}>
                         {selectedNode.model || "Google Gemini 3.5 Flash"}
                       </span>
                     </div>
-                    <div style={{ color: "#cbd5e1", fontSize: 11.5, marginBottom: 6 }}>
+                    <div style={{ color: "#5f6368", fontSize: 11.5, marginBottom: 6 }}>
                       {selectedNode.role || "Autonomous Specialized Agent"}
                     </div>
-                    <div style={{ fontSize: 11, color: "#94a3b8" }}>
-                      <strong>Active Tools:</strong> {(selectedNode.tools || ["read_dataset", "query_records"]).join(", ")}
+                    <div style={{ fontSize: 11, color: "#5f6368" }}>
+                      <strong style={{ color: "#202124" }}>Active Tools:</strong> {(selectedNode.tools || ["read_dataset", "query_records"]).join(", ")}
                     </div>
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "flex-end", gap: 6 }}>
-                    <div style={{ fontSize: 11, color: "#10b981" }}>
+                    <div style={{ fontSize: 11, color: "#1e8e3e" }}>
                       &bull; State: <strong>Online &amp; Active</strong>
                     </div>
                     {!selectedNode.id.includes("coord") && (
@@ -1993,11 +1965,11 @@ export default function AgentInteractionGraph({
                           display: "flex",
                           alignItems: "center",
                           gap: 4,
-                          padding: "3px 8px",
-                          background: "rgba(239, 68, 68, 0.15)",
-                          border: "1px solid rgba(239, 68, 68, 0.3)",
-                          borderRadius: 4,
-                          color: "#f87171",
+                          padding: "4px 12px",
+                          background: "#fce8e6",
+                          border: "1px solid #dadce0",
+                          borderRadius: 24,
+                          color: "#d93025",
                           fontSize: 10.5,
                           cursor: "pointer",
                         }}
