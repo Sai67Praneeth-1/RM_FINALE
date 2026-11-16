@@ -26,12 +26,12 @@ function sanitize(str) {
 export function generateC4ContainerDiagram() {
   return `flowchart TB
     %% Level 2 C4 Container Architecture: Agentic AI Observability
-    classDef boundary fill:#111214,stroke:#3d4452,stroke-width:2px,color:#f0f2f5,stroke-dasharray: 4 4
-    classDef client fill:#1a1d21,stroke:#e8a44a,stroke-width:2px,color:#f0f2f5
-    classDef gateway fill:#1a1d21,stroke:#2dd4bf,stroke-width:2px,color:#f0f2f5
-    classDef agent fill:#1a1d21,stroke:#60a5fa,stroke-width:2px,color:#f0f2f5
-    classDef store fill:#1a1d21,stroke:#a78bfa,stroke-width:2px,color:#f0f2f5
-    classDef llm fill:#1a1d21,stroke:#f59e0b,stroke-width:2px,color:#f0f2f5
+    classDef boundary fill:#f8f9fa,stroke:#dadce0,stroke-width:1.5px,color:#5f6368,stroke-dasharray: 4 4
+    classDef client fill:#ffffff,stroke:#1a73e8,stroke-width:1.5px,color:#202124
+    classDef gateway fill:#ffffff,stroke:#1a73e8,stroke-width:1.5px,color:#202124
+    classDef agent fill:#e8f0fe,stroke:#1a73e8,stroke-width:1.5px,color:#1557b0
+    classDef store fill:#ffffff,stroke:#dadce0,stroke-width:1.5px,color:#202124
+    classDef llm fill:#fef7e0,stroke:#f9ab00,stroke-width:1.5px,color:#202124
 
     subgraph UserContext ["👤 User Context"]
         User["Principal / Human Investigator<br/>[Role: Directs Workflow & Evaluates Evidence]"]:::client
@@ -95,14 +95,14 @@ export function generateExecutionMermaid(nodes = [], edges = []) {
   if (!nodes || nodes.length === 0) {
     return `flowchart TD
       NoEvents["No Execution Events Recorded"]:::empty
-      classDef empty fill:#1a1d21,stroke:#64748b,color:#94a3b8;`;
+      classDef empty fill:#f8f9fa,stroke:#dadce0,color:#5f6368;`;
   }
 
   const safeNodes = nodes.slice(0, 20); // Cap at 20 for crisp rendering
   let code = `flowchart TD\n`;
-  code += `    classDef success fill:#1a1d21,stroke:#34d399,stroke-width:2px,color:#f0f2f5;\n`;
-  code += `    classDef failed fill:#1a1d21,stroke:#f87171,stroke-width:2px,color:#f0f2f5;\n`;
-  code += `    classDef tool fill:#111214,stroke:#f59e0b,stroke-width:2px,color:#fde68a;\n\n`;
+  code += `    classDef success fill:#e6f4ea,stroke:#1e8e3e,stroke-width:1.5px,color:#137333;\n`;
+  code += `    classDef failed fill:#fce8e6,stroke:#d93025,stroke-width:1.5px,color:#d93025;\n`;
+  code += `    classDef tool fill:#fef7e0,stroke:#f9ab00,stroke-width:1.5px,color:#b06000;\n\n`;
 
   safeNodes.forEach((node, idx) => {
     const nid = `E${idx}`;
@@ -131,13 +131,13 @@ export function generateAuthorityMermaid(nodes = [], edges = []) {
   if (!nodes || nodes.length === 0) {
     return `flowchart TD
       NoAuth["No Authority Delegations Recorded"]:::empty
-      classDef empty fill:#1a1d21,stroke:#64748b,color:#94a3b8;`;
+      classDef empty fill:#f8f9fa,stroke:#dadce0,color:#5f6368;`;
   }
 
   let code = `flowchart TD\n`;
-  code += `    classDef principal fill:#1a1d21,stroke:#e8a44a,stroke-width:2px,color:#f0f2f5;\n`;
-  code += `    classDef delegation fill:#1a1d21,stroke:#34d399,stroke-width:2px,color:#f0f2f5;\n`;
-  code += `    classDef agent fill:#1a1d21,stroke:#60a5fa,stroke-width:2px,color:#f0f2f5;\n\n`;
+  code += `    classDef principal fill:#fef7e0,stroke:#f9ab00,stroke-width:1.5px,color:#202124;\n`;
+  code += `    classDef delegation fill:#e6f4ea,stroke:#1e8e3e,stroke-width:1.5px,color:#137333;\n`;
+  code += `    classDef agent fill:#e8f0fe,stroke:#1a73e8,stroke-width:1.5px,color:#1557b0;\n\n`;
 
   const principals = nodes.filter((n) => n.node_type === "principal" || n.id?.startsWith("prin_"));
   const delegations = nodes.filter((n) => n.node_type === "delegation" || n.id?.startsWith("del_"));
@@ -239,10 +239,10 @@ function mapAgentParticipant(name) {
 export function generateUnifiedThreeGraphMermaid(execCount = 5, authCount = 3, itrCount = 4) {
   return `flowchart LR
     %% Three-Graph Unified Cross-Graph Verification
-    classDef comm fill:#1a1d21,stroke:#38bdf8,stroke-width:2px,color:#f0f2f5;
-    classDef auth fill:#1a1d21,stroke:#34d399,stroke-width:2px,color:#f0f2f5;
-    classDef exec fill:#1a1d21,stroke:#f59e0b,stroke-width:2px,color:#f0f2f5;
-    classDef validator fill:#111214,stroke:#e8a44a,stroke-width:2px,color:#fde68a;
+    classDef comm fill:#e8f0fe,stroke:#1a73e8,stroke-width:1.5px,color:#1557b0;
+    classDef auth fill:#e6f4ea,stroke:#1e8e3e,stroke-width:1.5px,color:#137333;
+    classDef exec fill:#fef7e0,stroke:#f9ab00,stroke-width:1.5px,color:#b06000;
+    classDef validator fill:#ffffff,stroke:#dadce0,stroke-width:1.5px,color:#202124;
 
     subgraph GItr ["1. Communication Graph (G_interact)"]
         direction TB

@@ -1256,7 +1256,7 @@ export default function App() {
                         style={{
                           background: isActive ? "#e8f0fe" : "transparent",
                           color: isActive ? "#1a73e8" : "#202124",
-                          borderRadius: 8,
+                          borderRadius: 24,
                           fontWeight: isActive ? 600 : 500,
                         }}
                         onClick={() => handleTabChange(item.id)}
@@ -2495,9 +2495,9 @@ export default function App() {
                           key={t.level}
                           className={`pill-btn ${isActive ? "active" : ""}`}
                           style={{
-                            padding: "3px 8px",
+                            padding: "3px 12px",
                             fontSize: 11,
-                            borderRadius: 4,
+                            borderRadius: 24,
                             background: isActive ? "#1a73e8" : "transparent",
                             color: isActive ? "#ffffff" : "#5f6368",
                             border: isActive ? "1px solid #1a73e8" : "1px solid transparent",
@@ -2921,7 +2921,7 @@ export default function App() {
 
                           <button
                             className="pill-btn"
-                            style={{ padding: "3px 8px", fontSize: 11, borderRadius: 4 }}
+                            style={{ padding: "4px 14px", fontSize: 11, borderRadius: 24 }}
                             onClick={() => setInspectedGatewayItem(item)}
                           >
                             Inspect Telemetry
@@ -2964,7 +2964,7 @@ export default function App() {
                     </div>
                     <button
                       className="pill-btn"
-                      style={{ padding: "4px 8px", borderRadius: 4 }}
+                      style={{ padding: "4px 8px", borderRadius: 24 }}
                       onClick={() => setInspectedGatewayItem(null)}
                     >
                       <X size={15} />
@@ -4608,7 +4608,7 @@ export default function App() {
                   </div>
                   <button
                     className="pill-btn"
-                    style={{ padding: "4px 8px", borderRadius: 4 }}
+                    style={{ padding: "4px 8px", borderRadius: 24 }}
                     onClick={() => setInspectedEvent(null)}
                   >
                     <X size={14} />
