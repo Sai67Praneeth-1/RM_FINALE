@@ -271,6 +271,7 @@ class MongoChatStore:
             "timestamp": now_iso,
         }
         if metadata:
+            msg_obj["metadata"] = metadata
             for k, v in metadata.items():
                 if v is not None:
                     # Exclude heavyweight full graph structures (these are retrieved via /api/graphs/{wf_id})

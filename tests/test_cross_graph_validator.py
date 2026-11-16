@@ -347,3 +347,57 @@ def test_chat_complaints_triggers_workflow_and_returns_workflow_id():
     assert data["workflow_id"] is not None
     assert data["workflow_id"].startswith("wf_")
 
+
+def test_chat_command_telemetry_endpoints():
+    client = TestClient(app)
+
+    # 1. Start a workflow via chat to get chat_id and workflow_id
+    chat_res = client.post("/api/chat", json={
+        "message": "Audit customer complaints for high severity tickets",
+        "dataset_name": "customer_complaints.csv",
+        "mode": "deterministic_demo"
+    })
+    assert chat_res.status_code == 200
+    chat_data = chat_res.json()
+    chat_id = chat_data["conversation_id"]
+    wf_id = chat_data["workflow_id"]
+    assert wf_id is not None
+
+    # 2. Test GET /api/chats/{chat_id}/commands
+    cmds_res = client.get(f"/api/chats/{chat_id}/commands")
+    assert cmds_res.status_code == 200
+    cmds_data = cmds_res.json()
+    assert isinstance(cmds_data, list)
+    assert len(cmds_data) >= 1
+    cmd_item = next((c for c in cmds_data if c["workflow_id"] == wf_id), None)
+    assert cmd_item is not None
+    assert "prompt" in cmd_item
+    assert "agent_count" in cmd_item
+    assert "tool_count" in cmd_item
+    assert "final_output_preview" in cmd_item
+
+    # 3. Test GET /api/chats/{chat_id}/command/{workflow_id}
+    telemetry_res = client.get(f"/api/chats/{chat_id}/command/{wf_id}")
+    assert telemetry_res.status_code == 200
+    telemetry = telemetry_res.json()
+
+    assert telemetry["workflow_id"] == wf_id
+    assert telemetry["chat_id"] == chat_id
+    assert "task_description" in telemetry
+    assert "agent_sequence" in telemetry
+    assert len(telemetry["agent_sequence"]) >= 1
+    assert "tool_calls" in telemetry
+    assert len(telemetry["tool_calls"]) >= 1
+    assert "data_transfers" in telemetry
+    assert len(telemetry["data_transfers"]) >= 1
+    assert "three_graphs" in telemetry
+    assert "execution_graph" in telemetry["three_graphs"]
+    assert "authority_graph" in telemetry["three_graphs"]
+    assert "interaction_graph" in telemetry["three_graphs"]
+    assert "backward_trace" in telemetry
+    assert "final_reporter" in telemetry["backward_trace"]
+    assert "mermaid_charts" in telemetry
+    assert "sequence" in telemetry["mermaid_charts"]
+    assert "execution" in telemetry["mermaid_charts"]
+    assert "authority" in telemetry["mermaid_charts"]
+

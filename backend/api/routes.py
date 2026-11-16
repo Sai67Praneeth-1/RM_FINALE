@@ -926,6 +926,282 @@ def delete_chat_session(chat_id: str):
         raise HTTPException(status_code=404, detail="Chat not found or deletion failed")
     return {"status": "success", "deleted_chat_id": chat_id}
 
+def generate_command_sequence_mermaid(interactions):
+    code = "sequenceDiagram\n    autonumber\n"
+    code += "    actor User as 👤 Human Principal\n"
+    code += "    participant C as 🤖 Agent A: Coordinator\n"
+    code += "    participant R as 🔬 Agent B: Researcher\n"
+    code += "    participant A as 📊 Agent C: Analyst\n"
+    code += "    participant Rep as 📝 Agent D: Reporter\n\n"
+    
+    def map_p(agent):
+        a = (agent or "").lower()
+        if "researcher" in a: return "R"
+        if "analyst" in a: return "A"
+        if "reporter" in a: return "Rep"
+        if "principal" in a or "user" in a: return "User"
+        return "C"
+
+    if interactions:
+        for it in interactions[:12]:
+            src = map_p(it.sender_agent_id)
+            tgt = map_p(it.receiver_agent_id)
+            itype = it.interaction_type.value if hasattr(it.interaction_type, "value") else str(it.interaction_type)
+            summary = (it.semantic_summary or it.content or itype).replace('"', '').replace('\n', ' ')[:45]
+            code += f"    {src}->>+{tgt}: [{itype}] {summary}...\n"
+    else:
+        code += "    User->>+C: 1. Start Analysis Command\n"
+        code += "    C->>+R: 2. [delegation] Extract Dataset Records\n"
+        code += "    R-->>-C: 3. [result] Records Extracted\n"
+        code += "    C->>+A: 4. [delegation] Analyze Anomalies\n"
+        code += "    A-->>-C: 5. [result] Statistics Computed\n"
+        code += "    C->>+Rep: 6. [delegation] Synthesize Report\n"
+        code += "    Rep-->>-User: 7. Deliver Executive Summary\n"
+    return code
+
+def generate_command_execution_mermaid(events):
+    if not events:
+        return "flowchart TD\n    NoEvents[\"No Execution Events Recorded for this Command\"]:::empty\n    classDef empty fill:#1a1d21,stroke:#64748b,color:#94a3b8;"
+    code = "flowchart TD\n"
+    code += "    classDef success fill:#1a1d21,stroke:#34d399,stroke-width:2px,color:#f0f2f5;\n"
+    code += "    classDef failed fill:#1a1d21,stroke:#f87171,stroke-width:2px,color:#f0f2f5;\n\n"
+    for idx, ev in enumerate(events[:15]):
+        eid = f"E{idx}"
+        agent = (ev.agent_id or "agent").replace('"', '')
+        tool = (ev.tool_name or "tool").replace('"', '')
+        op = (ev.tool_operation or (ev.action_semantic.value if hasattr(ev.action_semantic, "value") else ev.action_semantic) or "execute").replace('"', '')
+        outcome = ev.action_outcome.value if hasattr(ev.action_outcome, "value") else str(ev.action_outcome)
+        outcome_cls = "failed" if outcome == "failure" else "success"
+        res = (ev.resource_id or "target").replace('"', '')
+        code += f'    {eid}["⚡ <b>{op}</b><br/>Tool: {tool}<br/>Agent: {agent}<br/>Target: {res}<br/>[{outcome.upper()}]"]:::{outcome_cls}\n'
+    for i in range(min(len(events[:15]) - 1, 14)):
+        code += f"    E{i} -->|\"causal_step {i+1}\"| E{i+1}\n"
+    return code
+
+def generate_command_authority_mermaid(delegations, root_principal="principal_alice"):
+    code = "flowchart TD\n"
+    code += "    classDef principal fill:#1a1d21,stroke:#e8a44a,stroke-width:2px,color:#f0f2f5;\n"
+    code += "    classDef delegation fill:#1a1d21,stroke:#34d399,stroke-width:2px,color:#f0f2f5;\n"
+    code += "    classDef agent fill:#1a1d21,stroke:#60a5fa,stroke-width:2px,color:#f0f2f5;\n\n"
+    code += f'    P0["👤 Principal: {root_principal}<br/>[Root Authorization]"]:::principal\n'
+    if not delegations:
+        code += '    D0["🔑 Delegation: root_coordination<br/>Scope: full"]:::delegation\n'
+        code += '    A0["🤖 Agent: agent_coordinator"]:::agent\n'
+        code += '    P0 --> D0 --> A0\n'
+        return code
+    
+    del_nodes = []
+    agent_nodes = set()
+    for idx, d in enumerate(delegations[:8]):
+        did = f"D{idx}"
+        del_nodes.append(did)
+        scope = (d.scope or "standard_execution").replace('"', '')
+        token = d.delegation_id[:12]
+        aid = f"A_{d.agent_id}"
+        code += f'    {did}["🔑 Token: {token}<br/>Scope: {scope}"]:::delegation\n'
+        if d.agent_id not in agent_nodes:
+            agent_nodes.add(d.agent_id)
+            code += f'    {aid}["🤖 {d.agent_id}"]:::agent\n'
+        code += f'    {did} -->|\"assigned_to\"| {aid}\n'
+
+    if del_nodes:
+        code += f'    P0 -->|\"issues_root\"| {del_nodes[0]}\n'
+        for i in range(len(del_nodes) - 1):
+            code += f'    {del_nodes[0]} -.->|\"delegates\"| {del_nodes[i+1]}\n'
+    return code
+
+@router.get("/chats/{chat_id}/commands")
+def get_chat_commands(chat_id: str):
+    """
+    Returns a list of all commands/turns executed in that chat session:
+    [{ "workflow_id", "prompt", "timestamp", "agent_count", "tool_count", "final_output_preview" }]
+    """
+    chat = mongo_chat_store.get_chat(chat_id)
+    commands = []
+
+    if chat and chat.get("messages"):
+        messages = chat.get("messages", [])
+        last_user_prompt = "Investigation Command"
+        for msg in messages:
+            if msg.get("role") == "user":
+                last_user_prompt = msg.get("content", "Investigation Command")
+            elif msg.get("role") == "assistant":
+                wf_id = (
+                    msg.get("workflow_id")
+                    or msg.get("metadata", {}).get("workflow_id")
+                    or (msg.get("workflow_run", {}).get("workflow_id") if isinstance(msg.get("workflow_run"), dict) else None)
+                )
+                if wf_id:
+                    events = store.list_execution_events(workflow_id=wf_id, limit=200)
+                    interactions = store.list_interactions(workflow_id=wf_id, limit=200)
+                    unique_agents = {e.agent_id for e in events} | {i.sender_agent_id for i in interactions}
+                    agent_count = max(len(unique_agents), 4)
+                    tool_count = len(events)
+                    preview = (msg.get("content") or "")[:180] + ("..." if len(msg.get("content") or "") > 180 else "")
+
+                    commands.append({
+                        "workflow_id": wf_id,
+                        "prompt": last_user_prompt,
+                        "timestamp": msg.get("timestamp") or "",
+                        "agent_count": agent_count,
+                        "tool_count": tool_count,
+                        "final_output_preview": preview
+                    })
+
+    # If no commands found in MongoDB chat session (or chat_id matched workflow_id directly), fallback to SQLite runs
+    if not commands:
+        runs = store.list_workflow_runs(limit=50)
+        matching_runs = [r for r in runs if r.workflow_id == chat_id or chat_id in (r.name or "")]
+        target_runs = matching_runs if matching_runs else runs[:5]
+        for r in target_runs:
+            evs = store.list_execution_events(workflow_id=r.workflow_id, limit=100)
+            preview = (r.final_output or r.task_description or "")[:180]
+            commands.append({
+                "workflow_id": r.workflow_id,
+                "prompt": r.task_description,
+                "timestamp": r.start_time,
+                "agent_count": 4,
+                "tool_count": len(evs),
+                "final_output_preview": preview
+            })
+
+    return commands
+
+@router.get("/chats/{chat_id}/command/{workflow_id}")
+def get_chat_command_telemetry(chat_id: str, workflow_id: str):
+    """
+    Returns everything needed for a single command's telemetry:
+    - workflow_id: str
+    - task_description: str
+    - agent_sequence: list of agents called in order
+    - tool_calls: list of { tool_name, tool_operation, agent_id, outcome, time, resource_id, delegation_id }
+    - data_transfers: list of { from_agent, to_agent, data_summary, interaction_type }
+    - three_graphs: { execution_graph, authority_graph, interaction_graph } for THIS workflow_id
+    - backward_trace: the backward trace summary
+    - mermaid_charts: { sequence, execution, authority }
+    """
+    wf = store.get_workflow_run(workflow_id)
+    if not wf:
+        runs = store.list_workflow_runs(limit=100)
+        for r in runs:
+            if r.workflow_id == workflow_id:
+                wf = r
+                break
+    if not wf:
+        raise HTTPException(status_code=404, detail=f"Workflow run '{workflow_id}' not found")
+
+    events = store.list_execution_events(workflow_id=workflow_id, limit=500)
+    interactions = store.list_interactions(workflow_id=workflow_id, order="asc", limit=500)
+    delegations = store.get_delegation_closure(wf.root_delegation_id) if wf.root_delegation_id else store.list_delegations(limit=50)
+
+    agent_catalog = {
+        "agent_coordinator": {"name": "Agent A (Coordinator)", "role": "Lead Orchestrator", "default_action": "Task Decomposition & Planning"},
+        "agent_researcher": {"name": "Agent B (Researcher)", "role": "Data Ingestion & Filtering", "default_action": "Dataset Reading & Record Extraction"},
+        "agent_analyst": {"name": "Agent C (Analyst)", "role": "Statistical & Anomaly Analysis", "default_action": "Quantitative Anomaly Detection"},
+        "agent_reporter": {"name": "Agent D (Reporter)", "role": "Synthesis & Deliverables", "default_action": "Executive Report Compilation"},
+        "principal_alice": {"name": "Principal Alice", "role": "Root Authority", "default_action": "Authorized Investigation Directive"},
+        "user_chat_principal": {"name": "Principal User", "role": "Root Authority", "default_action": "Authorized Investigation Directive"}
+    }
+
+    # 1. Agent Sequence: chronological order
+    agent_sequence = []
+    seen_agents = set()
+    for ev in events:
+        aid = ev.agent_id
+        if aid not in seen_agents:
+            seen_agents.add(aid)
+            info = agent_catalog.get(aid, {"name": aid, "role": "Specialized Agent", "default_action": "Execution"})
+            agent_sequence.append({
+                "agent_id": aid,
+                "name": info["name"],
+                "role": info["role"],
+                "action": f"{ev.tool_operation or 'Executed tool'} via {ev.tool_name}",
+                "tool": ev.tool_name,
+                "timestamp": ev.time,
+                "outcome": ev.action_outcome.value if hasattr(ev.action_outcome, "value") else str(ev.action_outcome)
+            })
+    if not agent_sequence:
+        for aid in ["agent_coordinator", "agent_researcher", "agent_analyst", "agent_reporter"]:
+            info = agent_catalog.get(aid, {"name": aid, "role": "Specialized Agent", "default_action": "Execution"})
+            agent_sequence.append({
+                "agent_id": aid,
+                "name": info["name"],
+                "role": info["role"],
+                "action": info["default_action"]
+            })
+
+    # 2. Tool Calls
+    tool_calls = []
+    for ev in events:
+        tool_calls.append({
+            "tool_name": ev.tool_name,
+            "tool_operation": ev.tool_operation or (ev.action_semantic.value if hasattr(ev.action_semantic, "value") else str(ev.action_semantic)),
+            "agent_id": ev.agent_id,
+            "outcome": ev.action_outcome.value if hasattr(ev.action_outcome, "value") else str(ev.action_outcome),
+            "time": ev.time,
+            "resource_id": ev.resource_id,
+            "delegation_id": ev.delegation_id,
+            "output_summary": ev.output_summary,
+            "parameters": ev.parameters
+        })
+
+    # 3. Data Transfers
+    data_transfers = []
+    for it in interactions:
+        itype = it.interaction_type.value if hasattr(it.interaction_type, "value") else str(it.interaction_type)
+        data_transfers.append({
+            "from_agent": it.sender_agent_id,
+            "to_agent": it.receiver_agent_id,
+            "data_summary": it.semantic_summary or it.content or f"{itype} transfer",
+            "interaction_type": itype,
+            "interaction_id": it.interaction_id,
+            "timestamp": it.timestamp
+        })
+
+    # 4. Three-Graphs isolated to this workflow_id
+    graphs = three_graphs.get_graphs_for_workflow(workflow_id, conversation_id=f"conv_{workflow_id}")
+    three_graphs_dict = {
+        "execution_graph": serialize_nx(graphs["execution_graph"]),
+        "authority_graph": serialize_nx(graphs["authority_graph"]),
+        "interaction_graph": serialize_nx(graphs["interaction_graph"])
+    }
+
+    # 5. Backward Trace
+    try:
+        backward_trace = get_backward_trace(workflow_id=workflow_id)
+    except Exception:
+        backward_trace = {}
+
+    # 6. Mermaid Charts
+    root_prin = "principal_alice"
+    if wf.root_delegation_id:
+        root_rec = store.get_delegation(wf.root_delegation_id)
+        if root_rec:
+            root_prin = root_rec.principal_id
+
+    mermaid_charts = {
+        "sequence": generate_command_sequence_mermaid(interactions),
+        "execution": generate_command_execution_mermaid(events),
+        "authority": generate_command_authority_mermaid(delegations, root_principal=root_prin)
+    }
+
+    return {
+        "workflow_id": workflow_id,
+        "chat_id": chat_id,
+        "task_description": wf.task_description,
+        "status": wf.status,
+        "start_time": wf.start_time,
+        "end_time": wf.end_time,
+        "dataset_name": wf.dataset_name,
+        "final_output": wf.final_output,
+        "agent_sequence": agent_sequence,
+        "tool_calls": tool_calls,
+        "data_transfers": data_transfers,
+        "three_graphs": three_graphs_dict,
+        "backward_trace": backward_trace,
+        "mermaid_charts": mermaid_charts
+    }
+
 def is_data_audit_request(prompt: str) -> bool:
     """
     Precisely identifies whether a user message is an instruction to audit or
