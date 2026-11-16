@@ -36,26 +36,26 @@ import {
   generateUnifiedThreeGraphMermaid,
 } from "./utils/mermaidGenerators";
 
-// Obsidian Research Palette Node Colors
+// Google Material Design 3 Node Colors
 export const OBSIDIAN_NODE_COLORS = {
-  agent: { color: "#60a5fa", border: "#60a5fa", bg: "rgba(96, 165, 250, 0.15)", text: "#93c5fd" },
-  principal: { color: "#e8a44a", border: "#e8a44a", bg: "rgba(232, 164, 74, 0.15)", text: "#fde68a" },
-  delegation: { color: "#34d399", border: "#34d399", bg: "rgba(52, 211, 153, 0.15)", text: "#a7f3d0" },
-  execution_event: { color: "#f59e0b", border: "#f59e0b", bg: "rgba(245, 158, 11, 0.15)", text: "#fde68a" },
-  resource: { color: "#2dd4bf", border: "#2dd4bf", bg: "rgba(45, 212, 191, 0.15)", text: "#99f6e4" },
-  artifact: { color: "#a78bfa", border: "#a78bfa", bg: "rgba(167, 139, 250, 0.15)", text: "#ddd6fe" },
+  agent: { color: "#1a73e8", border: "#1a73e8", bg: "#e8f0fe", text: "#1a73e8" },
+  principal: { color: "#e37400", border: "#f9ab00", bg: "#fef7e0", text: "#b06000" },
+  delegation: { color: "#1e8e3e", border: "#1e8e3e", bg: "#e6f4ea", text: "#137333" },
+  execution_event: { color: "#e37400", border: "#f9ab00", bg: "#fef7e0", text: "#b06000" },
+  resource: { color: "#129eaf", border: "#129eaf", bg: "#e4f7fb", text: "#007b83" },
+  artifact: { color: "#9334e6", border: "#9334e6", bg: "#f3e8fd", text: "#7627bb" },
 };
 
-// Known Agent Styles (Mapped to Obsidian Research Palette: Agent #60a5fa)
+// Known Agent Styles (Google Material Design 3 Palette)
 const AGENT_COLORS = {
-  agent_coordinator: { border: "#60a5fa", bg: "rgba(96, 165, 250, 0.15)", text: "#93c5fd", label: "Agent A: Coordinator" },
-  Coordinator_Agent: { border: "#60a5fa", bg: "rgba(96, 165, 250, 0.15)", text: "#93c5fd", label: "Coordinator Agent" },
-  agent_researcher: { border: "#60a5fa", bg: "rgba(96, 165, 250, 0.15)", text: "#93c5fd", label: "Agent B: Researcher" },
-  Executor_Agent: { border: "#60a5fa", bg: "rgba(96, 165, 250, 0.15)", text: "#93c5fd", label: "Executor Agent" },
-  agent_analyst: { border: "#60a5fa", bg: "rgba(96, 165, 250, 0.15)", text: "#93c5fd", label: "Agent C: Analyst" },
-  Critic_Agent: { border: "#60a5fa", bg: "rgba(96, 165, 250, 0.15)", text: "#93c5fd", label: "Critic Agent" },
-  agent_reporter: { border: "#60a5fa", bg: "rgba(96, 165, 250, 0.15)", text: "#93c5fd", label: "Agent D: Reporter" },
-  Synthesizer_Agent: { border: "#60a5fa", bg: "rgba(96, 165, 250, 0.15)", text: "#93c5fd", label: "Synthesizer Agent" },
+  agent_coordinator: { border: "#dadce0", bg: "#e8f0fe", text: "#1a73e8", label: "Agent A: Coordinator" },
+  Coordinator_Agent: { border: "#dadce0", bg: "#e8f0fe", text: "#1a73e8", label: "Coordinator Agent" },
+  agent_researcher: { border: "#dadce0", bg: "#e6f4ea", text: "#1e8e3e", label: "Agent B: Researcher" },
+  Executor_Agent: { border: "#dadce0", bg: "#e6f4ea", text: "#1e8e3e", label: "Executor Agent" },
+  agent_analyst: { border: "#dadce0", bg: "#fef7e0", text: "#b06000", label: "Agent C: Analyst" },
+  Critic_Agent: { border: "#dadce0", bg: "#fce8e6", text: "#d93025", label: "Critic Agent" },
+  agent_reporter: { border: "#dadce0", bg: "#f3e8fd", text: "#7627bb", label: "Agent D: Reporter" },
+  Synthesizer_Agent: { border: "#dadce0", bg: "#f3e8fd", text: "#7627bb", label: "Synthesizer Agent" },
 };
 
 export default function ThreeGraphViewer({
@@ -350,27 +350,27 @@ export default function ThreeGraphViewer({
         <div
           onClick={() => setActiveGraphTab("backward_trace")}
           style={{
-            background: activeGraphTab === "backward_trace" ? "rgba(232, 164, 74, 0.18)" : "#111827",
-            border: activeGraphTab === "backward_trace" ? "2px solid var(--accent-primary, #e8a44a)" : "1px solid #1f2937",
+            background: activeGraphTab === "backward_trace" ? "#fef7e0" : "#ffffff",
+            border: activeGraphTab === "backward_trace" ? "1px solid #f9ab00" : "1px solid #dadce0",
             borderRadius: 8,
             padding: "14px 16px",
             cursor: "pointer",
             transition: "all 0.15s ease",
             position: "relative",
-            boxShadow: activeGraphTab === "backward_trace" ? "0 0 16px rgba(232, 164, 74, 0.3)" : "none",
+            boxShadow: activeGraphTab === "backward_trace" ? "0 1px 3px rgba(60,64,67,0.15)" : "none",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--accent-primary, #e8a44a)", display: "flex", alignItems: "center", gap: 6 }}>
-              <Compass size={16} />
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#b06000", display: "flex", alignItems: "center", gap: 6 }}>
+              <Compass size={16} color="#e37400" />
               <span>🕵️ Backward Tracer</span>
             </span>
-            <span style={{ fontSize: 11, background: "rgba(232, 164, 74, 0.25)", color: "var(--accent-primary, #e8a44a)", padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>
+            <span style={{ fontSize: 11, background: "#fef7e0", color: "#b06000", padding: "2px 8px", borderRadius: 12, fontWeight: 600, border: "1px solid #dadce0" }}>
               End-to-Start
             </span>
           </div>
-          <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.4 }}>
-            <strong>"Trace back from End to Start:"</strong> Answers who gave report, who transferred data &amp; permissions.
+          <div style={{ fontSize: 12, color: "#5f6368", lineHeight: 1.4 }}>
+            <strong style={{ color: "#202124" }}>"Trace back from End to Start:"</strong> Answers who gave report, who transferred data &amp; permissions.
           </div>
         </div>
 
@@ -378,26 +378,27 @@ export default function ThreeGraphViewer({
         <div
           onClick={() => setActiveGraphTab("execution_graph")}
           style={{
-            background: activeGraphTab === "execution_graph" ? "rgba(16, 185, 129, 0.12)" : "#111827",
-            border: activeGraphTab === "execution_graph" ? "1px solid #10b981" : "1px solid #1f2937",
+            background: activeGraphTab === "execution_graph" ? "#e6f4ea" : "#ffffff",
+            border: activeGraphTab === "execution_graph" ? "1px solid #1e8e3e" : "1px solid #dadce0",
             borderRadius: 8,
             padding: "14px 16px",
             cursor: "pointer",
             transition: "all 0.15s ease",
             position: "relative",
+            boxShadow: activeGraphTab === "execution_graph" ? "0 1px 3px rgba(60,64,67,0.15)" : "none",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: "#34d399", display: "flex", alignItems: "center", gap: 6 }}>
-              <Activity size={16} />
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#137333", display: "flex", alignItems: "center", gap: 6 }}>
+              <Activity size={16} color="#1e8e3e" />
               <span>1. Execution Graph (GE)</span>
             </span>
-            <span style={{ fontSize: 11, background: "rgba(16, 185, 129, 0.2)", color: "#34d399", padding: "2px 6px", borderRadius: 4 }}>
+            <span style={{ fontSize: 11, background: "#e6f4ea", color: "#137333", padding: "2px 8px", borderRadius: 12, fontWeight: 600, border: "1px solid #dadce0" }}>
               {execNodes.length} Events
             </span>
           </div>
-          <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.4 }}>
-            <strong>"What happened?"</strong> &bull; Causal sequence of tool invocations, dataset operations, and status outcomes.
+          <div style={{ fontSize: 12, color: "#5f6368", lineHeight: 1.4 }}>
+            <strong style={{ color: "#202124" }}>"What happened?"</strong> &bull; Causal sequence of tool invocations, dataset operations, and status outcomes.
           </div>
         </div>
 
@@ -405,25 +406,27 @@ export default function ThreeGraphViewer({
         <div
           onClick={() => setActiveGraphTab("authority_graph")}
           style={{
-            background: activeGraphTab === "authority_graph" ? "rgba(139, 92, 246, 0.12)" : "#111827",
-            border: activeGraphTab === "authority_graph" ? "1px solid #8b5cf6" : "1px solid #1f2937",
+            background: activeGraphTab === "authority_graph" ? "#f3e8fd" : "#ffffff",
+            border: activeGraphTab === "authority_graph" ? "1px solid #9334e6" : "1px solid #dadce0",
             borderRadius: 8,
             padding: "14px 16px",
             cursor: "pointer",
             transition: "all 0.15s ease",
+            position: "relative",
+            boxShadow: activeGraphTab === "authority_graph" ? "0 1px 3px rgba(60,64,67,0.15)" : "none",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: "#a78bfa", display: "flex", alignItems: "center", gap: 6 }}>
-              <Key size={16} />
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#7627bb", display: "flex", alignItems: "center", gap: 6 }}>
+              <Key size={16} color="#9334e6" />
               <span>2. Authority Graph (GA)</span>
             </span>
-            <span style={{ fontSize: 11, background: "rgba(139, 92, 246, 0.2)", color: "#a78bfa", padding: "2px 6px", borderRadius: 4 }}>
+            <span style={{ fontSize: 11, background: "#f3e8fd", color: "#7627bb", padding: "2px 8px", borderRadius: 12, fontWeight: 600, border: "1px solid #dadce0" }}>
               {authNodes.length} Nodes
             </span>
           </div>
-          <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.4 }}>
-            <strong>"Who authorized it?"</strong> &bull; Cryptographic delegation lineage from User Principal down to sub-agent tokens.
+          <div style={{ fontSize: 12, color: "#5f6368", lineHeight: 1.4 }}>
+            <strong style={{ color: "#202124" }}>"Who authorized it?"</strong> &bull; Cryptographic delegation lineage from User Principal down to sub-agent tokens.
           </div>
         </div>
 
@@ -431,25 +434,27 @@ export default function ThreeGraphViewer({
         <div
           onClick={() => setActiveGraphTab("interaction_graph")}
           style={{
-            background: activeGraphTab === "interaction_graph" ? "rgba(56, 189, 248, 0.12)" : "#111827",
-            border: activeGraphTab === "interaction_graph" ? "1px solid #38bdf8" : "1px solid #1f2937",
+            background: activeGraphTab === "interaction_graph" ? "#e8f0fe" : "#ffffff",
+            border: activeGraphTab === "interaction_graph" ? "1px solid #1a73e8" : "1px solid #dadce0",
             borderRadius: 8,
             padding: "14px 16px",
             cursor: "pointer",
             transition: "all 0.15s ease",
+            position: "relative",
+            boxShadow: activeGraphTab === "interaction_graph" ? "0 1px 3px rgba(60,64,67,0.15)" : "none",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: "#38bdf8", display: "flex", alignItems: "center", gap: 6 }}>
-              <Share2 size={16} />
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#1a73e8", display: "flex", alignItems: "center", gap: 6 }}>
+              <Share2 size={16} color="#1a73e8" />
               <span>3. Interaction Graph (GI)</span>
             </span>
-            <span style={{ fontSize: 11, background: "rgba(56, 189, 248, 0.2)", color: "#38bdf8", padding: "2px 6px", borderRadius: 4 }}>
+            <span style={{ fontSize: 11, background: "#e8f0fe", color: "#1a73e8", padding: "2px 8px", borderRadius: 12, fontWeight: 600, border: "1px solid #dadce0" }}>
               {itrNodes.length} Agents
             </span>
           </div>
-          <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.4 }}>
-            <strong>"Who communicated?"</strong> &bull; Peer-to-peer dialogues, subtask handoffs, and consequence tool linkages.
+          <div style={{ fontSize: 12, color: "#5f6368", lineHeight: 1.4 }}>
+            <strong style={{ color: "#202124" }}>"Who communicated?"</strong> &bull; Peer-to-peer dialogues, subtask handoffs, and consequence tool linkages.
           </div>
         </div>
 
@@ -457,25 +462,27 @@ export default function ThreeGraphViewer({
         <div
           onClick={() => setActiveGraphTab("unified")}
           style={{
-            background: activeGraphTab === "unified" ? "rgba(245, 158, 11, 0.12)" : "#111827",
-            border: activeGraphTab === "unified" ? "1px solid #f59e0b" : "1px solid #1f2937",
+            background: activeGraphTab === "unified" ? "#fef7e0" : "#ffffff",
+            border: activeGraphTab === "unified" ? "1px solid #f9ab00" : "1px solid #dadce0",
             borderRadius: 8,
             padding: "14px 16px",
             cursor: "pointer",
             transition: "all 0.15s ease",
+            position: "relative",
+            boxShadow: activeGraphTab === "unified" ? "0 1px 3px rgba(60,64,67,0.15)" : "none",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: "#fbbf24", display: "flex", alignItems: "center", gap: 6 }}>
-              <Layers size={16} />
+            <span style={{ fontSize: 13, fontWeight: 700, color: "#b06000", display: "flex", alignItems: "center", gap: 6 }}>
+              <Layers size={16} color="#e37400" />
               <span>4. Unified "3-in-1" View</span>
             </span>
-            <span style={{ fontSize: 11, background: "rgba(245, 158, 11, 0.2)", color: "#fbbf24", padding: "2px 6px", borderRadius: 4 }}>
+            <span style={{ fontSize: 11, background: "#fef7e0", color: "#b06000", padding: "2px 8px", borderRadius: 12, fontWeight: 600, border: "1px solid #dadce0" }}>
               Full Trace
             </span>
           </div>
-          <div style={{ fontSize: 12, color: "#94a3b8", lineHeight: 1.4 }}>
-            <strong>End-to-End Correlation:</strong> See how an inter-agent dialogue grants authority which executes tool actions.
+          <div style={{ fontSize: 12, color: "#5f6368", lineHeight: 1.4 }}>
+            <strong style={{ color: "#202124" }}>End-to-End Correlation:</strong> See how an inter-agent dialogue grants authority which executes tool actions.
           </div>
         </div>
       </div>
@@ -490,25 +497,30 @@ export default function ThreeGraphViewer({
           justifyContent: "space-between",
           gap: 12,
           padding: "12px 18px",
+          background: "#ffffff",
+          border: "1px solid #dadce0",
+          borderRadius: 8,
+          boxShadow: "0 1px 3px rgba(60,64,67,0.12)",
         }}
       >
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12, flex: 1 }}>
-          <label style={{ fontSize: 13, color: "#94a3b8", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
-            <Bot size={15} color="#60a5fa" />
+          <label style={{ fontSize: 13, color: "#5f6368", fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
+            <Bot size={15} color="#1a73e8" />
             <span>Select Investigation Workflow:</span>
           </label>
           <select
             value={selectedWorkflowId}
             onChange={(e) => onSelectWorkflow && onSelectWorkflow(e.target.value)}
             style={{
-              background: "#0b0f19",
-              border: "1px solid #334155",
-              borderRadius: 6,
-              color: "#f8fafc",
-              padding: "7px 12px",
+              background: "#ffffff",
+              border: "1px solid #dadce0",
+              borderRadius: 24,
+              color: "#202124",
+              padding: "7px 14px",
               fontSize: 12.5,
               minWidth: 260,
               maxWidth: 420,
+              outline: "none",
             }}
           >
             {workflows && workflows.length > 0 ? (
@@ -528,7 +540,18 @@ export default function ThreeGraphViewer({
               onClick={onRefresh}
               disabled={loading}
               title="Refresh graph data"
-              style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 10px" }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "6px 14px",
+                borderRadius: 24,
+                background: "#ffffff",
+                border: "1px solid #dadce0",
+                color: "#5f6368",
+                fontSize: 12,
+                cursor: "pointer",
+              }}
             >
               <RefreshCw size={13} className={loading ? "spin" : ""} />
               <span>Refresh</span>
@@ -542,14 +565,18 @@ export default function ThreeGraphViewer({
             onClick={handleRunSample}
             disabled={isSampleRunning}
             style={{
-              background: "#1d4ed8",
-              borderColor: "#2563eb",
+              background: "#1a73e8",
+              border: "1px solid #1a73e8",
+              borderRadius: 24,
               color: "#ffffff",
               fontWeight: 600,
               display: "flex",
               alignItems: "center",
               gap: 6,
-              padding: "7px 14px",
+              padding: "7px 18px",
+              cursor: isSampleRunning ? "not-allowed" : "pointer",
+              boxShadow: "0 1px 2px rgba(60,64,67,0.3)",
+              fontSize: 12.5,
             }}
           >
             <Sparkles size={14} className={isSampleRunning ? "spin" : ""} />
@@ -564,17 +591,18 @@ export default function ThreeGraphViewer({
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          background: "#16191d",
-          border: "1px solid #2a2f38",
+          background: "#ffffff",
+          border: "1px solid #dadce0",
           borderRadius: 8,
           padding: "8px 14px",
           flexWrap: "wrap",
           gap: 10,
+          boxShadow: "0 1px 3px rgba(60,64,67,0.12)",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <Compass size={16} color="#e8a44a" />
-          <span style={{ fontSize: 13, fontWeight: 700, color: "#f0f2f5" }}>
+          <Compass size={16} color="#1a73e8" />
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#202124" }}>
             Visualization Engine:
           </span>
         </div>
@@ -583,14 +611,13 @@ export default function ThreeGraphViewer({
           <button
             onClick={() => setViewMode("interactive")}
             style={{
-              background: viewMode === "interactive" ? "#e8a44a" : "#22262c",
-              color: viewMode === "interactive" ? "#111214" : "#94a3b8",
-              border: "1px solid",
-              borderColor: viewMode === "interactive" ? "#e8a44a" : "#334155",
-              borderRadius: 6,
-              padding: "6px 14px",
+              background: viewMode === "interactive" ? "#e8f0fe" : "#ffffff",
+              color: viewMode === "interactive" ? "#1a73e8" : "#5f6368",
+              border: "1px solid #dadce0",
+              borderRadius: 24,
+              padding: "6px 16px",
               fontSize: 12.5,
-              fontWeight: 700,
+              fontWeight: 600,
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
@@ -605,14 +632,13 @@ export default function ThreeGraphViewer({
           <button
             onClick={() => setViewMode("c4_mermaid")}
             style={{
-              background: viewMode === "c4_mermaid" ? "#2dd4bf" : "#22262c",
-              color: viewMode === "c4_mermaid" ? "#111214" : "#94a3b8",
-              border: "1px solid",
-              borderColor: viewMode === "c4_mermaid" ? "#2dd4bf" : "#334155",
-              borderRadius: 6,
-              padding: "6px 14px",
+              background: viewMode === "c4_mermaid" ? "#e8f0fe" : "#ffffff",
+              color: viewMode === "c4_mermaid" ? "#1a73e8" : "#5f6368",
+              border: "1px solid #dadce0",
+              borderRadius: 24,
+              padding: "6px 16px",
               fontSize: 12.5,
-              fontWeight: 700,
+              fontWeight: 600,
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
@@ -628,7 +654,7 @@ export default function ThreeGraphViewer({
 
       {/* 4. Display Mode: C4 Enterprise & Mermaid Diagrams */}
       {viewMode === "c4_mermaid" && (
-        <div className="stat-card" style={{ padding: 18 }}>
+        <div className="stat-card" style={{ padding: 18, background: "#ffffff", border: "1px solid #dadce0", borderRadius: 8, boxShadow: "0 1px 3px rgba(60,64,67,0.12)" }}>
           {/* Mermaid Diagram Selector Tabs */}
           <div
             style={{
@@ -636,7 +662,7 @@ export default function ThreeGraphViewer({
               flexWrap: "wrap",
               justifyContent: "space-between",
               alignItems: "center",
-              borderBottom: "1px solid #1f2937",
+              borderBottom: "1px solid #dadce0",
               paddingBottom: 12,
               marginBottom: 16,
               gap: 8,
@@ -647,9 +673,14 @@ export default function ThreeGraphViewer({
                 className={`pill-btn ${mermaidDiagram === "c4" ? "active" : ""}`}
                 onClick={() => setMermaidDiagram("c4")}
                 style={{
-                  background: mermaidDiagram === "c4" ? "#e8a44a" : "#1e293b",
-                  color: mermaidDiagram === "c4" ? "#111214" : "#94a3b8",
-                  fontWeight: 700,
+                  background: mermaidDiagram === "c4" ? "#e8f0fe" : "#ffffff",
+                  color: mermaidDiagram === "c4" ? "#1a73e8" : "#5f6368",
+                  border: "1px solid #dadce0",
+                  borderRadius: 24,
+                  padding: "6px 14px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontSize: 12,
                 }}
               >
                 🏛️ Level 2 C4 Architecture
@@ -659,9 +690,14 @@ export default function ThreeGraphViewer({
                 className={`pill-btn ${mermaidDiagram === "sequence" ? "active" : ""}`}
                 onClick={() => setMermaidDiagram("sequence")}
                 style={{
-                  background: mermaidDiagram === "sequence" ? "#38bdf8" : "#1e293b",
-                  color: mermaidDiagram === "sequence" ? "#ffffff" : "#94a3b8",
-                  fontWeight: 700,
+                  background: mermaidDiagram === "sequence" ? "#e8f0fe" : "#ffffff",
+                  color: mermaidDiagram === "sequence" ? "#1a73e8" : "#5f6368",
+                  border: "1px solid #dadce0",
+                  borderRadius: 24,
+                  padding: "6px 14px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontSize: 12,
                 }}
               >
                 💬 Interaction Sequence (GI)
@@ -671,9 +707,14 @@ export default function ThreeGraphViewer({
                 className={`pill-btn ${mermaidDiagram === "execution" ? "active" : ""}`}
                 onClick={() => setMermaidDiagram("execution")}
                 style={{
-                  background: mermaidDiagram === "execution" ? "#34d399" : "#1e293b",
-                  color: mermaidDiagram === "execution" ? "#ffffff" : "#94a3b8",
-                  fontWeight: 700,
+                  background: mermaidDiagram === "execution" ? "#e8f0fe" : "#ffffff",
+                  color: mermaidDiagram === "execution" ? "#1a73e8" : "#5f6368",
+                  border: "1px solid #dadce0",
+                  borderRadius: 24,
+                  padding: "6px 14px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontSize: 12,
                 }}
               >
                 ⚡ Causal Execution Flow (GE)
@@ -683,9 +724,14 @@ export default function ThreeGraphViewer({
                 className={`pill-btn ${mermaidDiagram === "authority" ? "active" : ""}`}
                 onClick={() => setMermaidDiagram("authority")}
                 style={{
-                  background: mermaidDiagram === "authority" ? "#a78bfa" : "#1e293b",
-                  color: mermaidDiagram === "authority" ? "#ffffff" : "#94a3b8",
-                  fontWeight: 700,
+                  background: mermaidDiagram === "authority" ? "#e8f0fe" : "#ffffff",
+                  color: mermaidDiagram === "authority" ? "#1a73e8" : "#5f6368",
+                  border: "1px solid #dadce0",
+                  borderRadius: 24,
+                  padding: "6px 14px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontSize: 12,
                 }}
               >
                 🔑 Authority Lineage Tree (GA)
@@ -695,16 +741,21 @@ export default function ThreeGraphViewer({
                 className={`pill-btn ${mermaidDiagram === "unified" ? "active" : ""}`}
                 onClick={() => setMermaidDiagram("unified")}
                 style={{
-                  background: mermaidDiagram === "unified" ? "#f59e0b" : "#1e293b",
-                  color: mermaidDiagram === "unified" ? "#ffffff" : "#94a3b8",
-                  fontWeight: 700,
+                  background: mermaidDiagram === "unified" ? "#e8f0fe" : "#ffffff",
+                  color: mermaidDiagram === "unified" ? "#1a73e8" : "#5f6368",
+                  border: "1px solid #dadce0",
+                  borderRadius: 24,
+                  padding: "6px 14px",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  fontSize: 12,
                 }}
               >
                 🔗 Unified Multi-Layer Proof
               </button>
             </div>
 
-            <div style={{ fontSize: 12, color: "#2dd4bf" }}>
+            <div style={{ fontSize: 12, color: "#5f6368" }}>
               ✨ <em>Ready for Draw.io: Click "Draw.io" above to import directly into diagrams.net.</em>
             </div>
           </div>
@@ -722,18 +773,22 @@ export default function ThreeGraphViewer({
       {viewMode === "interactive" && (
         <div style={{ display: "grid", gridTemplateColumns: selectedEntity ? "1fr 340px" : "1fr", gap: 16 }}>
           {/* Graph Display Card */}
-          <div className="stat-card" style={{ padding: 18, minHeight: 460 }}>
+          <div className="stat-card" style={{ padding: 18, minHeight: 460, background: "#ffffff", border: "1px solid #dadce0", borderRadius: 8, boxShadow: "0 1px 3px rgba(60,64,67,0.12)" }}>
             {/* Sub-Header Tabs */}
-            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #1f2937", paddingBottom: 12, marginBottom: 16 }}>
+            <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #dadce0", paddingBottom: 12, marginBottom: 16, gap: 8 }}>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 <button
                   className={`pill-btn ${activeGraphTab === "backward_trace" ? "active" : ""}`}
                   onClick={() => setActiveGraphTab("backward_trace")}
                   style={{
-                    background: activeGraphTab === "backward_trace" ? "var(--accent-primary, #e8a44a)" : "#1e293b",
-                    color: activeGraphTab === "backward_trace" ? "#111214" : "#f0f2f5",
-                    fontWeight: 700,
-                    boxShadow: activeGraphTab === "backward_trace" ? "0 0 12px rgba(232, 164, 74, 0.4)" : "none",
+                    background: activeGraphTab === "backward_trace" ? "#e8f0fe" : "#ffffff",
+                    color: activeGraphTab === "backward_trace" ? "#1a73e8" : "#5f6368",
+                    border: "1px solid #dadce0",
+                    borderRadius: 24,
+                    padding: "6px 14px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontSize: 12,
                   }}
                 >
                   <Compass size={14} style={{ display: "inline", marginRight: 6 }} />
@@ -743,9 +798,14 @@ export default function ThreeGraphViewer({
                   className={`pill-btn ${activeGraphTab === "unified" ? "active" : ""}`}
                   onClick={() => setActiveGraphTab("unified")}
                   style={{
-                    background: activeGraphTab === "unified" ? "#d97706" : "#1e293b",
-                    color: activeGraphTab === "unified" ? "#ffffff" : "#94a3b8",
+                    background: activeGraphTab === "unified" ? "#e8f0fe" : "#ffffff",
+                    color: activeGraphTab === "unified" ? "#1a73e8" : "#5f6368",
+                    border: "1px solid #dadce0",
+                    borderRadius: 24,
+                    padding: "6px 14px",
                     fontWeight: 600,
+                    cursor: "pointer",
+                    fontSize: 12,
                   }}
                 >
                   <Layers size={14} style={{ display: "inline", marginRight: 6 }} />
@@ -755,9 +815,14 @@ export default function ThreeGraphViewer({
                   className={`pill-btn ${activeGraphTab === "execution_graph" ? "active" : ""}`}
                   onClick={() => setActiveGraphTab("execution_graph")}
                   style={{
-                    background: activeGraphTab === "execution_graph" ? "#059669" : "#1e293b",
-                    color: activeGraphTab === "execution_graph" ? "#ffffff" : "#94a3b8",
+                    background: activeGraphTab === "execution_graph" ? "#e8f0fe" : "#ffffff",
+                    color: activeGraphTab === "execution_graph" ? "#1a73e8" : "#5f6368",
+                    border: "1px solid #dadce0",
+                    borderRadius: 24,
+                    padding: "6px 14px",
                     fontWeight: 600,
+                    cursor: "pointer",
+                    fontSize: 12,
                   }}
                 >
                   <Activity size={14} style={{ display: "inline", marginRight: 6 }} />
@@ -767,9 +832,14 @@ export default function ThreeGraphViewer({
                   className={`pill-btn ${activeGraphTab === "authority_graph" ? "active" : ""}`}
                   onClick={() => setActiveGraphTab("authority_graph")}
                   style={{
-                    background: activeGraphTab === "authority_graph" ? "#7c3aed" : "#1e293b",
-                    color: activeGraphTab === "authority_graph" ? "#ffffff" : "#94a3b8",
+                    background: activeGraphTab === "authority_graph" ? "#e8f0fe" : "#ffffff",
+                    color: activeGraphTab === "authority_graph" ? "#1a73e8" : "#5f6368",
+                    border: "1px solid #dadce0",
+                    borderRadius: 24,
+                    padding: "6px 14px",
                     fontWeight: 600,
+                    cursor: "pointer",
+                    fontSize: 12,
                   }}
                 >
                   <Key size={14} style={{ display: "inline", marginRight: 6 }} />
@@ -779,9 +849,14 @@ export default function ThreeGraphViewer({
                   className={`pill-btn ${activeGraphTab === "interaction_graph" ? "active" : ""}`}
                   onClick={() => setActiveGraphTab("interaction_graph")}
                   style={{
-                    background: activeGraphTab === "interaction_graph" ? "#0284c7" : "#1e293b",
-                    color: activeGraphTab === "interaction_graph" ? "#ffffff" : "#94a3b8",
+                    background: activeGraphTab === "interaction_graph" ? "#e8f0fe" : "#ffffff",
+                    color: activeGraphTab === "interaction_graph" ? "#1a73e8" : "#5f6368",
+                    border: "1px solid #dadce0",
+                    borderRadius: 24,
+                    padding: "6px 14px",
                     fontWeight: 600,
+                    cursor: "pointer",
+                    fontSize: 12,
                   }}
                 >
                   <Share2 size={14} style={{ display: "inline", marginRight: 6 }} />
@@ -790,13 +865,22 @@ export default function ThreeGraphViewer({
                 <button
                   className={`pill-btn ${activeGraphTab === "raw_json" ? "active" : ""}`}
                   onClick={() => setActiveGraphTab("raw_json")}
-                  style={{ fontSize: 11 }}
+                  style={{
+                    background: activeGraphTab === "raw_json" ? "#e8f0fe" : "#ffffff",
+                    color: activeGraphTab === "raw_json" ? "#1a73e8" : "#5f6368",
+                    border: "1px solid #dadce0",
+                    borderRadius: 24,
+                    padding: "6px 14px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    fontSize: 12,
+                  }}
                 >
                   Developer JSON
                 </button>
               </div>
 
-              <div style={{ fontSize: 12, color: "#64748b" }}>
+              <div style={{ fontSize: 12, color: "#5f6368" }}>
                 💡 <em>Click any node or connection arrow to inspect forensic attributes.</em>
               </div>
             </div>
@@ -856,8 +940,8 @@ export default function ThreeGraphViewer({
 
             {/* VIEW E: RAW JSON (DEVELOPER VIEW) */}
             {activeGraphTab === "raw_json" && (
-              <div style={{ background: "#0b0f19", border: "1px solid #1e293b", borderRadius: 8, padding: 14, maxHeight: 480, overflowY: "auto" }}>
-                <pre style={{ color: "#94a3b8", fontSize: 11.5, margin: 0, fontFamily: "monospace" }}>
+              <div style={{ background: "#f8f9fa", border: "1px solid #dadce0", borderRadius: 8, padding: 14, maxHeight: 480, overflowY: "auto" }}>
+                <pre style={{ color: "#202124", fontSize: 11.5, margin: 0, fontFamily: "monospace" }}>
                   {JSON.stringify(graphData || {}, null, 2)}
                 </pre>
               </div>
@@ -870,8 +954,10 @@ export default function ThreeGraphViewer({
             className="stat-card"
             style={{
               padding: 16,
-              background: "#0b0f19",
-              border: "1px solid #334155",
+              background: "#ffffff",
+              border: "1px solid #dadce0",
+              borderRadius: 8,
+              boxShadow: "0 1px 3px rgba(60,64,67,0.12)",
               display: "flex",
               flexDirection: "column",
               gap: 12,
@@ -880,18 +966,18 @@ export default function ThreeGraphViewer({
               position: "relative",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #1f2937", paddingBottom: 10 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #dadce0", paddingBottom: 10 }}>
               <div>
-                <span style={{ fontSize: 10, color: "#38bdf8", textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.05em" }}>
+                <span style={{ fontSize: 10, color: "#1a73e8", textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.05em" }}>
                   {selectedEntity.entityCategory || "Entity Inspection"}
                 </span>
-                <h5 style={{ margin: "2px 0 0 0", color: "#f8fafc", fontSize: 14 }}>
+                <h5 style={{ margin: "2px 0 0 0", color: "#202124", fontSize: 14 }}>
                   {selectedEntity.label || selectedEntity.id || selectedEntity.event_id || "Forensic Inspector"}
                 </h5>
               </div>
               <button
                 onClick={() => setSelectedEntity(null)}
-                style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", padding: 4 }}
+                style={{ background: "transparent", border: "none", color: "#5f6368", cursor: "pointer", padding: 4 }}
               >
                 <X size={16} />
               </button>
@@ -901,38 +987,38 @@ export default function ThreeGraphViewer({
             <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: 12.5 }}>
               {selectedEntity.agent_id && (
                 <div>
-                  <div style={{ color: "#64748b", fontSize: 11 }}>Executing Agent:</div>
-                  <div style={{ color: "#60a5fa", fontWeight: 600 }}>{selectedEntity.agent_id}</div>
+                  <div style={{ color: "#5f6368", fontSize: 11 }}>Executing Agent:</div>
+                  <div style={{ color: "#1a73e8", fontWeight: 600 }}>{selectedEntity.agent_id}</div>
                 </div>
               )}
 
               {selectedEntity.tool_name && (
                 <div>
-                  <div style={{ color: "#64748b", fontSize: 11 }}>CIM Tool Invocated:</div>
-                  <div style={{ color: "#f59e0b", fontWeight: 600 }}>
-                    <code>{selectedEntity.tool_name}</code> &bull; <em>{selectedEntity.tool_operation || selectedEntity.action_semantic}</em>
+                  <div style={{ color: "#5f6368", fontSize: 11 }}>CIM Tool Invocated:</div>
+                  <div style={{ color: "#202124", fontWeight: 600 }}>
+                    <code style={{ color: "#1a73e8" }}>{selectedEntity.tool_name}</code> &bull; <em>{selectedEntity.tool_operation || selectedEntity.action_semantic}</em>
                   </div>
                 </div>
               )}
 
               {selectedEntity.resource_id && (
                 <div>
-                  <div style={{ color: "#64748b", fontSize: 11 }}>Target Resource:</div>
-                  <div style={{ color: "#2dd4bf" }}><code>{selectedEntity.resource_id}</code></div>
+                  <div style={{ color: "#5f6368", fontSize: 11 }}>Target Resource:</div>
+                  <div><code style={{ color: "#129eaf" }}>{selectedEntity.resource_id}</code></div>
                 </div>
               )}
 
               {selectedEntity.delegation_id && (
                 <div>
-                  <div style={{ color: "#64748b", fontSize: 11 }}>Authority Delegation Token:</div>
-                  <div style={{ color: "#34d399", fontWeight: 600 }}><code>{selectedEntity.delegation_id}</code></div>
+                  <div style={{ color: "#5f6368", fontSize: 11 }}>Authority Delegation Token:</div>
+                  <div style={{ color: "#1e8e3e", fontWeight: 600 }}><code>{selectedEntity.delegation_id}</code></div>
                 </div>
               )}
 
               {selectedEntity.outcome && (
                 <div>
-                  <div style={{ color: "#64748b", fontSize: 11 }}>Execution Outcome:</div>
-                  <div style={{ color: selectedEntity.outcome === "success" ? "#34d399" : "#f87171", fontWeight: 600 }}>
+                  <div style={{ color: "#5f6368", fontSize: 11 }}>Execution Outcome:</div>
+                  <div style={{ color: selectedEntity.outcome === "success" ? "#1e8e3e" : "#d93025", fontWeight: 600 }}>
                     {selectedEntity.outcome.toUpperCase()}
                   </div>
                 </div>
@@ -940,13 +1026,14 @@ export default function ThreeGraphViewer({
 
               {selectedEntity.sensitivity && (
                 <div>
-                  <div style={{ color: "#64748b", fontSize: 11 }}>3-Tier Privacy Tier:</div>
+                  <div style={{ color: "#5f6368", fontSize: 11 }}>3-Tier Privacy Tier:</div>
                   <span style={{
                     fontSize: 11,
-                    padding: "2px 6px",
-                    borderRadius: 4,
-                    background: selectedEntity.sensitivity === "confidential" ? "rgba(239, 68, 68, 0.2)" : "rgba(59, 130, 246, 0.2)",
-                    color: selectedEntity.sensitivity === "confidential" ? "#f87171" : "#60a5fa"
+                    padding: "2px 8px",
+                    borderRadius: 12,
+                    border: "1px solid #dadce0",
+                    background: selectedEntity.sensitivity === "confidential" ? "#fce8e6" : "#e8f0fe",
+                    color: selectedEntity.sensitivity === "confidential" ? "#d93025" : "#1a73e8"
                   }}>
                     {selectedEntity.sensitivity}
                   </span>
@@ -955,32 +1042,32 @@ export default function ThreeGraphViewer({
 
               {selectedEntity.time && (
                 <div>
-                  <div style={{ color: "#64748b", fontSize: 11 }}>Timestamp:</div>
-                  <div style={{ color: "#94a3b8", fontSize: 11.5 }}>{selectedEntity.time}</div>
+                  <div style={{ color: "#5f6368", fontSize: 11 }}>Timestamp:</div>
+                  <div style={{ color: "#5f6368", fontSize: 11.5 }}>{selectedEntity.time}</div>
                 </div>
               )}
 
               {selectedEntity.interaction_type && (
                 <div>
-                  <div style={{ color: "#64748b", fontSize: 11 }}>Interaction Type:</div>
-                  <div style={{ color: "#38bdf8", fontWeight: 600 }}>{selectedEntity.interaction_type}</div>
+                  <div style={{ color: "#5f6368", fontSize: 11 }}>Interaction Type:</div>
+                  <div style={{ color: "#1a73e8", fontWeight: 600 }}>{selectedEntity.interaction_type}</div>
                 </div>
               )}
 
               {selectedEntity.message_preview && (
                 <div>
-                  <div style={{ color: "#64748b", fontSize: 11 }}>Message Content Preview:</div>
-                  <div style={{ background: "#111827", padding: 8, borderRadius: 6, color: "#e2e8f0", fontSize: 12, marginTop: 4 }}>
+                  <div style={{ color: "#5f6368", fontSize: 11 }}>Message Content Preview:</div>
+                  <div style={{ background: "#f8f9fa", border: "1px solid #dadce0", padding: 8, borderRadius: 6, color: "#202124", fontSize: 12, marginTop: 4 }}>
                     "{selectedEntity.message_preview}"
                   </div>
                 </div>
               )}
 
               {/* Complete JSON Attributes */}
-              <div style={{ marginTop: 8, borderTop: "1px solid #1f2937", paddingTop: 8 }}>
-                <div style={{ color: "#64748b", fontSize: 11, marginBottom: 4 }}>Raw Node Properties:</div>
-                <div style={{ background: "#111827", padding: 8, borderRadius: 6, maxHeight: 180, overflowY: "auto" }}>
-                  <pre style={{ color: "#94a3b8", fontSize: 11, margin: 0, fontFamily: "monospace" }}>
+              <div style={{ marginTop: 8, borderTop: "1px solid #dadce0", paddingTop: 8 }}>
+                <div style={{ color: "#5f6368", fontSize: 11, marginBottom: 4 }}>Raw Node Properties:</div>
+                <div style={{ background: "#f8f9fa", border: "1px solid #dadce0", padding: 8, borderRadius: 6, maxHeight: 180, overflowY: "auto" }}>
+                  <pre style={{ color: "#202124", fontSize: 11, margin: 0, fontFamily: "monospace" }}>
                     {JSON.stringify(selectedEntity, null, 2)}
                   </pre>
                 </div>
@@ -1000,10 +1087,10 @@ export default function ThreeGraphViewer({
 function ExecutionGraphTopology({ nodes = [], edges = [], onSelectNode, onSelectEdge }) {
   if (nodes.length === 0) {
     return (
-      <div style={{ textAlign: "center", padding: "48px 20px", color: "#64748b" }}>
-        <Activity size={36} color="#334155" style={{ marginBottom: 12 }} />
-        <div style={{ fontSize: 15, color: "#cbd5e1", fontWeight: 600 }}>No Execution Events Recorded for this Workflow</div>
-        <div style={{ fontSize: 12.5, color: "#64748b", marginTop: 4 }}>
+      <div style={{ textAlign: "center", padding: "48px 20px", color: "#5f6368" }}>
+        <Activity size={36} color="#dadce0" style={{ marginBottom: 12 }} />
+        <div style={{ fontSize: 15, color: "#202124", fontWeight: 600 }}>No Execution Events Recorded for this Workflow</div>
+        <div style={{ fontSize: 12.5, color: "#5f6368", marginTop: 4 }}>
           Click "⚡ Run Sample Multi-Agent Investigation" above to execute and stream live tool execution events.
         </div>
       </div>
@@ -1012,15 +1099,15 @@ function ExecutionGraphTopology({ nodes = [], edges = [], onSelectNode, onSelect
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12.5, color: "#94a3b8" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12.5, color: "#5f6368" }}>
         <span>Causal Pipeline of Tool Invocations &bull; Sequence Ordered by Execution Time</span>
-        <span style={{ color: "#34d399", fontWeight: 600 }}>{nodes.length} Executed Tool Calls</span>
+        <span style={{ color: "#1e8e3e", fontWeight: 600 }}>{nodes.length} Executed Tool Calls</span>
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {nodes.map((node, idx) => {
           const agentKey = node.agent_id || "agent_researcher";
-          const agentMeta = AGENT_COLORS[agentKey] || { border: "#60a5fa", bg: "rgba(96, 165, 250, 0.15)", text: "#93c5fd", label: agentKey };
+          const agentMeta = AGENT_COLORS[agentKey] || { border: "#dadce0", bg: "#e8f0fe", text: "#1a73e8", label: agentKey };
           const isSuccess = node.outcome === "success" || !node.outcome;
 
           return (
@@ -1028,8 +1115,8 @@ function ExecutionGraphTopology({ nodes = [], edges = [], onSelectNode, onSelect
               <div
                 onClick={() => onSelectNode && onSelectNode(node)}
                 style={{
-                  background: "#0b0f19",
-                  border: `1px solid #f59e0b`,
+                  background: "#ffffff",
+                  border: "1px solid #dadce0",
                   borderRadius: 8,
                   padding: "12px 16px",
                   display: "flex",
@@ -1037,7 +1124,7 @@ function ExecutionGraphTopology({ nodes = [], edges = [], onSelectNode, onSelect
                   justifyContent: "space-between",
                   cursor: "pointer",
                   transition: "all 0.15s ease",
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+                  boxShadow: "0 1px 3px rgba(60,64,67,0.12)",
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
@@ -1046,14 +1133,14 @@ function ExecutionGraphTopology({ nodes = [], edges = [], onSelectNode, onSelect
                       width: 28,
                       height: 28,
                       borderRadius: "50%",
-                      background: "rgba(245, 158, 11, 0.15)",
-                      border: `1px solid #f59e0b`,
+                      background: "#e8f0fe",
+                      border: "1px solid #dadce0",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       fontSize: 12,
                       fontWeight: 700,
-                      color: "#fbbf24",
+                      color: "#1a73e8",
                     }}
                   >
                     {idx + 1}
@@ -1061,17 +1148,17 @@ function ExecutionGraphTopology({ nodes = [], edges = [], onSelectNode, onSelect
 
                   <div>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: "#f8fafc" }}>
-                        {node.tool_name || "Tool Call"}: <code>{node.tool_operation || node.action_semantic || "operation"}</code>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: "#202124" }}>
+                        {node.tool_name || "Tool Call"}: <code style={{ color: "#1a73e8" }}>{node.tool_operation || node.action_semantic || "operation"}</code>
                       </span>
-                      <span style={{ fontSize: 11, padding: "1px 6px", borderRadius: 4, background: agentMeta.bg, color: agentMeta.text, border: `1px solid ${agentMeta.border}` }}>
+                      <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 12, background: agentMeta.bg, color: agentMeta.text, border: "1px solid #dadce0" }}>
                         {agentMeta.label}
                       </span>
                     </div>
 
-                    <div style={{ fontSize: 11.5, color: "#94a3b8", marginTop: 4, display: "flex", gap: 12 }}>
-                      <span>Target: <code style={{ color: "#2dd4bf" }}>{node.resource_id || "resource"}</code></span>
-                      <span>Delegation Token: <code style={{ color: "#34d399" }}>{(node.delegation_id || "").substring(0, 14)}...</code></span>
+                    <div style={{ fontSize: 11.5, color: "#5f6368", marginTop: 4, display: "flex", gap: 12 }}>
+                      <span>Target: <code style={{ color: "#129eaf" }}>{node.resource_id || "resource"}</code></span>
+                      <span>Delegation Token: <code style={{ color: "#1e8e3e" }}>{(node.delegation_id || "").substring(0, 14)}...</code></span>
                       {node.time && <span>Time: {new Date(node.time).toLocaleTimeString()}</span>}
                     </div>
                   </div>
@@ -1083,20 +1170,20 @@ function ExecutionGraphTopology({ nodes = [], edges = [], onSelectNode, onSelect
                     alignItems: "center",
                     gap: 4,
                     fontSize: 12,
-                    color: isSuccess ? "#34d399" : "#f87171",
+                    color: isSuccess ? "#1e8e3e" : "#d93025",
                     fontWeight: 600
                   }}>
                     {isSuccess ? <CheckCircle2 size={16} /> : <AlertTriangle size={16} />}
                     <span>{isSuccess ? "Success" : "Failed"}</span>
                   </div>
-                  <ArrowRight size={15} color="#475569" />
+                  <ArrowRight size={15} color="#80868b" />
                 </div>
               </div>
 
               {/* Connecting Downward Causal Arrow */}
               {idx < nodes.length - 1 && (
                 <div style={{ display: "flex", justifyContent: "center", margin: "4px 0" }}>
-                  <div style={{ width: 2, height: 14, background: "#334155" }} />
+                  <div style={{ width: 2, height: 14, background: "#dadce0" }} />
                 </div>
               )}
             </div>
@@ -1113,10 +1200,10 @@ function ExecutionGraphTopology({ nodes = [], edges = [], onSelectNode, onSelect
 function AuthorityGraphTopology({ nodes = [], edges = [], onSelectNode, onSelectEdge }) {
   if (nodes.length === 0) {
     return (
-      <div style={{ textAlign: "center", padding: "48px 20px", color: "#64748b" }}>
-        <Key size={36} color="#334155" style={{ marginBottom: 12 }} />
-        <div style={{ fontSize: 15, color: "#cbd5e1", fontWeight: 600 }}>No Authority Lineage Recorded for this Workflow</div>
-        <div style={{ fontSize: 12.5, color: "#64748b", marginTop: 4 }}>
+      <div style={{ textAlign: "center", padding: "48px 20px", color: "#5f6368" }}>
+        <Key size={36} color="#dadce0" style={{ marginBottom: 12 }} />
+        <div style={{ fontSize: 15, color: "#202124", fontWeight: 600 }}>No Authority Lineage Recorded for this Workflow</div>
+        <div style={{ fontSize: 12.5, color: "#5f6368", marginTop: 4 }}>
           Click "⚡ Run Sample Multi-Agent Investigation" to generate cryptographic delegation tokens and lineage trees.
         </div>
       </div>
@@ -1130,16 +1217,16 @@ function AuthorityGraphTopology({ nodes = [], edges = [], onSelectNode, onSelect
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12.5, color: "#94a3b8" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12.5, color: "#5f6368" }}>
         <span>Hierarchical Cryptographic Delegation Lineage &bull; Verified W3C PROV Invariant</span>
-        <span style={{ color: "#a78bfa", fontWeight: 600 }}>{delegations.length} Verified Delegation Tokens</span>
+        <span style={{ color: "#1a73e8", fontWeight: 600 }}>{delegations.length} Verified Delegation Tokens</span>
       </div>
 
       {/* Visual Tree Levels */}
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         {/* Tier 1: User Principal (Origin of Authority) */}
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", marginBottom: 8, letterSpacing: "0.05em" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#5f6368", textTransform: "uppercase", marginBottom: 8, letterSpacing: "0.05em" }}>
             Level 1: Root Authority Origin (User Principal)
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
@@ -1148,22 +1235,23 @@ function AuthorityGraphTopology({ nodes = [], edges = [], onSelectNode, onSelect
                 key={p.id || idx}
                 onClick={() => onSelectNode && onSelectNode(p)}
                 style={{
-                  background: "rgba(232, 164, 74, 0.12)",
-                  border: "1px solid #e8a44a",
+                  background: "#fef7e0",
+                  border: "1px solid #dadce0",
                   borderRadius: 8,
                   padding: "10px 16px",
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
                   gap: 10,
+                  boxShadow: "0 1px 3px rgba(60,64,67,0.12)",
                 }}
               >
-                <Shield size={18} color="#e8a44a" />
+                <Shield size={18} color="#e37400" />
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#e8a44a" }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#202124" }}>
                     Principal: {p.entity_id || p.label || "Human User"}
                   </div>
-                  <div style={{ fontSize: 11, color: "#fde68a" }}>Root Authority Signer</div>
+                  <div style={{ fontSize: 11, color: "#5f6368" }}>Root Authority Signer</div>
                 </div>
               </div>
             ))}
@@ -1171,15 +1259,15 @@ function AuthorityGraphTopology({ nodes = [], edges = [], onSelectNode, onSelect
         </div>
 
         {/* Downward Hierarchy Link */}
-        <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#64748b", fontSize: 12 }}>
-          <div style={{ flex: 1, height: 1, background: "#1f2937" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#5f6368", fontSize: 12 }}>
+          <div style={{ flex: 1, height: 1, background: "#dadce0" }} />
           <span>Delegates Authority to Lead Agent</span>
-          <div style={{ flex: 1, height: 1, background: "#1f2937" }} />
+          <div style={{ flex: 1, height: 1, background: "#dadce0" }} />
         </div>
 
         {/* Tier 2: Delegation Tokens Granted */}
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", marginBottom: 8, letterSpacing: "0.05em" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#5f6368", textTransform: "uppercase", marginBottom: 8, letterSpacing: "0.05em" }}>
             Level 2: Active Delegation Scopes & Tokens
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
@@ -1188,26 +1276,27 @@ function AuthorityGraphTopology({ nodes = [], edges = [], onSelectNode, onSelect
                 key={d.id || idx}
                 onClick={() => onSelectNode && onSelectNode(d)}
                 style={{
-                  background: "#0b0f19",
-                  border: "1px solid #34d399",
-                  borderRadius: 6,
+                  background: "#ffffff",
+                  border: "1px solid #dadce0",
+                  borderRadius: 8,
                   padding: "10px 14px",
                   cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
+                  boxShadow: "0 1px 3px rgba(60,64,67,0.12)",
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <Key size={14} color="#34d399" />
+                  <Key size={14} color="#1e8e3e" />
                   <div>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: "#e2e8f0" }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "#202124" }}>
                       <code>{(d.id || d.label || "").substring(0, 16)}</code>
                     </div>
-                    <div style={{ fontSize: 11, color: "#94a3b8" }}>Scope: {d.scope || "Tool Execution Granted"}</div>
+                    <div style={{ fontSize: 11, color: "#5f6368" }}>Scope: {d.scope || "Tool Execution Granted"}</div>
                   </div>
                 </div>
-                <span style={{ fontSize: 10, background: "rgba(52, 211, 153, 0.2)", color: "#34d399", padding: "2px 5px", borderRadius: 4 }}>
+                <span style={{ fontSize: 10, background: "#e6f4ea", color: "#137333", border: "1px solid #dadce0", padding: "2px 8px", borderRadius: 12, fontWeight: 600 }}>
                   Valid
                 </span>
               </div>
@@ -1217,33 +1306,34 @@ function AuthorityGraphTopology({ nodes = [], edges = [], onSelectNode, onSelect
 
         {/* Tier 3: Authorized Agents Hierarchy */}
         <div>
-          <div style={{ fontSize: 11, fontWeight: 700, color: "#64748b", textTransform: "uppercase", marginBottom: 8, letterSpacing: "0.05em" }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#5f6368", textTransform: "uppercase", marginBottom: 8, letterSpacing: "0.05em" }}>
             Level 3: Authorized Multi-Agent Fleet
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
             {agents.map((a, idx) => {
               const agentKey = a.entity_id || a.agent_id || a.id?.replace("agent_", "") || "agent_coordinator";
-              const meta = AGENT_COLORS[agentKey] || { border: "#60a5fa", bg: "rgba(96, 165, 250, 0.15)", text: "#93c5fd", label: a.label || agentKey };
+              const meta = AGENT_COLORS[agentKey] || { border: "#dadce0", bg: "#e8f0fe", text: "#1a73e8", label: a.label || agentKey };
 
               return (
                 <div
                   key={a.id || idx}
                   onClick={() => onSelectNode && onSelectNode(a)}
                   style={{
-                    background: "#0b0f19",
-                    border: `1px solid #60a5fa`,
-                    borderRadius: 6,
+                    background: "#ffffff",
+                    border: "1px solid #dadce0",
+                    borderRadius: 8,
                     padding: "10px 14px",
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
                     gap: 10,
+                    boxShadow: "0 1px 3px rgba(60,64,67,0.12)",
                   }}
                 >
-                  <Bot size={18} color="#60a5fa" />
+                  <Bot size={18} color="#1a73e8" />
                   <div>
-                    <div style={{ fontSize: 12.5, fontWeight: 700, color: "#f8fafc" }}>{meta.label}</div>
-                    <div style={{ fontSize: 11, color: "#60a5fa" }}>Authorized Delegatee</div>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: "#202124" }}>{meta.label}</div>
+                    <div style={{ fontSize: 11, color: "#5f6368" }}>Authorized Delegatee</div>
                   </div>
                 </div>
               );
@@ -1261,14 +1351,14 @@ function AuthorityGraphTopology({ nodes = [], edges = [], onSelectNode, onSelect
 function UnifiedThreeGraphView({ execNodes = [], authNodes = [], itrEdges = [], itrNodes = [], onSelectNode, onSelectEdge }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      <div style={{ background: "#0b0f19", border: "1px solid #1e293b", borderLeft: "4px solid #f59e0b", borderRadius: 6, padding: "12px 16px", fontSize: 12.5, color: "#cbd5e1" }}>
-        <strong>🔗 The Three-Graph Unified Correlation Invariant:</strong> Multi-agent operations require three orthogonal perspectives. Below, observe how each <strong>Agent Communication (GI)</strong> authoritatively bounds a <strong>Delegation Token (GA)</strong>, which safely permits the downstream <strong>Tool Execution Event (GE)</strong>.
+      <div style={{ background: "#ffffff", border: "1px solid #dadce0", borderLeft: "4px solid #1a73e8", borderRadius: 8, padding: "12px 16px", fontSize: 12.5, color: "#202124", boxShadow: "0 1px 3px rgba(60,64,67,0.12)" }}>
+        <strong style={{ color: "#1a73e8" }}>🔗 The Three-Graph Unified Correlation Invariant:</strong> Multi-agent operations require three orthogonal perspectives. Below, observe how each <strong>Agent Communication (GI)</strong> authoritatively bounds a <strong>Delegation Token (GA)</strong>, which safely permits the downstream <strong>Tool Execution Event (GE)</strong>.
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}>
         {/* Column 1: Communication (GI) */}
-        <div style={{ background: "#0b0f19", border: "1px solid #1f2937", borderRadius: 8, padding: 14 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#38bdf8", fontWeight: 700, fontSize: 13, marginBottom: 12 }}>
+        <div style={{ background: "#ffffff", border: "1px solid #dadce0", borderRadius: 8, padding: 14, boxShadow: "0 1px 3px rgba(60,64,67,0.12)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#1a73e8", fontWeight: 700, fontSize: 13, marginBottom: 12 }}>
             <Share2 size={16} />
             <span>1. Communication (GI)</span>
           </div>
@@ -1280,27 +1370,27 @@ function UnifiedThreeGraphView({ execNodes = [], authNodes = [], itrEdges = [], 
                   key={idx}
                   onClick={() => onSelectEdge && onSelectEdge(e, "Interaction Event")}
                   style={{
-                    background: "#111827",
-                    border: "1px solid #334155",
+                    background: "#f8f9fa",
+                    border: "1px solid #dadce0",
                     borderRadius: 6,
                     padding: "8px 10px",
                     fontSize: 11.5,
                     cursor: "pointer",
                   }}
                 >
-                  <div style={{ color: "#38bdf8", fontWeight: 600 }}>{e.source} &rarr; {e.target}</div>
-                  <div style={{ color: "#94a3b8", fontSize: 11, marginTop: 2 }}>{e.interaction_type || "Task Delegation"}</div>
+                  <div style={{ color: "#1a73e8", fontWeight: 600 }}>{e.source} &rarr; {e.target}</div>
+                  <div style={{ color: "#5f6368", fontSize: 11, marginTop: 2 }}>{e.interaction_type || "Task Delegation"}</div>
                 </div>
               ))
             ) : (
-              <div style={{ color: "#64748b", fontSize: 12 }}>{itrNodes.length} Agents Registered in Communication Graph</div>
+              <div style={{ color: "#5f6368", fontSize: 12 }}>{itrNodes.length} Agents Registered in Communication Graph</div>
             )}
           </div>
         </div>
 
         {/* Column 2: Authority Lineage (GA) */}
-        <div style={{ background: "#0b0f19", border: "1px solid #1f2937", borderRadius: 8, padding: 14 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#34d399", fontWeight: 700, fontSize: 13, marginBottom: 12 }}>
+        <div style={{ background: "#ffffff", border: "1px solid #dadce0", borderRadius: 8, padding: 14, boxShadow: "0 1px 3px rgba(60,64,67,0.12)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#1e8e3e", fontWeight: 700, fontSize: 13, marginBottom: 12 }}>
             <Key size={16} />
             <span>2. Authority Scope (GA)</span>
           </div>
@@ -1311,24 +1401,24 @@ function UnifiedThreeGraphView({ execNodes = [], authNodes = [], itrEdges = [], 
                 key={idx}
                 onClick={() => onSelectNode && onSelectNode(n, "Authority Node")}
                 style={{
-                  background: "#111827",
-                  border: "1px solid #34d399",
+                  background: "#f8f9fa",
+                  border: "1px solid #dadce0",
                   borderRadius: 6,
                   padding: "8px 10px",
                   fontSize: 11.5,
                   cursor: "pointer",
                 }}
               >
-                <div style={{ color: "#34d399", fontWeight: 600 }}><code>{(n.id || "").substring(0, 20)}</code></div>
-                <div style={{ color: "#94a3b8", fontSize: 11, marginTop: 2 }}>Type: {n.node_type || "Delegation Token"}</div>
+                <div style={{ color: "#1e8e3e", fontWeight: 600 }}><code>{(n.id || "").substring(0, 20)}</code></div>
+                <div style={{ color: "#5f6368", fontSize: 11, marginTop: 2 }}>Type: {n.node_type || "Delegation Token"}</div>
               </div>
             ))}
           </div>
         </div>
 
         {/* Column 3: Tool Execution (GE) */}
-        <div style={{ background: "#0b0f19", border: "1px solid #1f2937", borderRadius: 8, padding: 14 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#f59e0b", fontWeight: 700, fontSize: 13, marginBottom: 12 }}>
+        <div style={{ background: "#ffffff", border: "1px solid #dadce0", borderRadius: 8, padding: 14, boxShadow: "0 1px 3px rgba(60,64,67,0.12)" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, color: "#e37400", fontWeight: 700, fontSize: 13, marginBottom: 12 }}>
             <Activity size={16} />
             <span>3. Tool Execution (GE)</span>
           </div>
@@ -1339,16 +1429,16 @@ function UnifiedThreeGraphView({ execNodes = [], authNodes = [], itrEdges = [], 
                 key={idx}
                 onClick={() => onSelectNode && onSelectNode(ev, "Execution Event")}
                 style={{
-                  background: "#111827",
-                  border: "1px solid #f59e0b",
+                  background: "#f8f9fa",
+                  border: "1px solid #dadce0",
                   borderRadius: 6,
                   padding: "8px 10px",
                   fontSize: 11.5,
                   cursor: "pointer",
                 }}
               >
-                <div style={{ color: "#34d399", fontWeight: 600 }}>{ev.tool_name}: {ev.tool_operation || ev.action_semantic}</div>
-                <div style={{ color: "#94a3b8", fontSize: 11, marginTop: 2 }}>Agent: {ev.agent_id}</div>
+                <div style={{ color: "#202124", fontWeight: 600 }}><code style={{ color: "#1a73e8" }}>{ev.tool_name}</code>: {ev.tool_operation || ev.action_semantic}</div>
+                <div style={{ color: "#5f6368", fontSize: 11, marginTop: 2 }}>Agent: {ev.agent_id}</div>
               </div>
             ))}
           </div>
