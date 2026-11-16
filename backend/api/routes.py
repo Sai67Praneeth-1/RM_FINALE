@@ -804,6 +804,8 @@ class ChatRequest(BaseModel):
     dataset_name: Optional[str] = "customer_complaints.csv"
     mode: Optional[str] = "live_api"
     capture_level: Optional[int] = 2
+    workflow_type: Optional[str] = None
+    squad_type: Optional[str] = None
 
 @router.get("/chats")
 def list_chats(limit: int = 100):
@@ -885,13 +887,15 @@ def is_data_audit_request(prompt: str) -> bool:
     """
     p_lower = prompt.lower().strip()
 
-    # PRIORITY 0: Queries about inter-agent communication, multi-agent systems, task delegation, or agent collaboration ALWAYS trigger workflow
+    # PRIORITY 0: Queries about inter-agent communication, multi-agent systems, task delegation, squads, or agent collaboration ALWAYS trigger workflow
     agent_comm_terms = [
         "interagent", "inter-agent", "multiagent", "multi-agent",
         "agent communication", "agents communicate", "agent collaboration", "agents collaborate",
         "task delegation", "delegate task", "delegation chain", "how do agents communicate",
         "how agents communicate", "show me interagent", "show interagent", "demonstrate communication",
-        "show communication graph", "agent interaction graph", "interaction graph", "agent workflow"
+        "show communication graph", "agent interaction graph", "interaction graph", "agent workflow",
+        "adversarial", "critic", "debate", "rapid consensus", "consensus", "squad", "cross-squad",
+        "cross squad", "triangle", "mesh", "star", "topology", "secops", "forensics"
     ]
     if any(t in p_lower for t in agent_comm_terms):
         return True
@@ -964,6 +968,53 @@ def is_data_audit_request(prompt: str) -> bool:
 
     return False
 
+def detect_squad_type(prompt: str, dataset_name: Optional[str] = None) -> str:
+    """
+    Intelligently determines the specialized agent squad and topology to deploy:
+    - cross_squad: Multi-domain investigation bridging complaints and system access logs (7 Agents)
+    - security_forensics: Access log analysis and root privilege escalation hunting (4 Agents)
+    - consumer_sentiment: CFPB complaint intake and NLP emotional distribution (5 Agents)
+    - adversarial_critic: Peer-to-peer adversarial debate & consensus validation (5 Agents)
+    - rapid_consensus: High-velocity circular triage without reporter latency (3 Agents)
+    """
+    p_lower = (prompt or "").lower().strip()
+    
+    # 1. Check for explicit cross-squad or dual-dataset signals
+    has_complaint_signal = any(k in p_lower for k in ["complaint", "complain", "ticket", "tkt-", "cfpb", "billing", "cust_"])
+    has_security_signal = any(k in p_lower for k in [
+        "access log", "access logs", "security log", "security logs", "system log",
+        "system logs", "root escalation", "root breach", "privilege", "unauthorized", "breach", "usr_", "log-"
+    ])
+    has_cross_explicit = any(k in p_lower for k in [
+        "cross-squad", "cross squad", "inter-squad", "inter squad", "both datasets",
+        "cross domain", "cross-domain", "hybrid squad", "hybrid", "full collaboration",
+        "enterprise cross", "cross team", "cross-team", "correlate with"
+    ])
+    
+    if has_cross_explicit or (has_complaint_signal and has_security_signal):
+        return "cross_squad"
+        
+    # 2. Adversarial critic debate
+    if any(k in p_lower for k in ["critic", "debate", "adversarial", "counter", "challenge", "peer review", "causality", "mesh"]):
+        return "adversarial_critic"
+        
+    # 3. Rapid 3-agent consensus
+    if any(k in p_lower for k in ["rapid", "quick", "fast", "triangle", "triangular", "3 agent", "3-agent", "fast consensus"]):
+        return "rapid_consensus"
+        
+    # 4. Canonical parallel or retry
+    if any(k in p_lower for k in ["parallel", "disconnected", "w1"]):
+        return "w1_parallel"
+    if any(k in p_lower for k in ["retry", "retries", "trial", "adapt", "backtrack", "w3"]):
+        return "w3_retry"
+
+    # 5. Security Forensics Squad
+    if has_security_signal or (dataset_name == "system_access_logs.csv"):
+        return "security_forensics"
+        
+    # 6. Default: Consumer Sentiment Squad (5 Agents)
+    return "consumer_sentiment"
+
 @router.post("/chat")
 def chat_with_coordinator(req: ChatRequest):
     """
@@ -1029,8 +1080,11 @@ def chat_with_coordinator(req: ChatRequest):
             "final_output": None
         }
 
-    # 3. Determine if this is a data-related task that should trigger the multi-agent workflow
-    is_workflow_task = is_data_audit_request(msg)
+    # 3. Determine if this is a data-related task or explicit squad request that should trigger the multi-agent workflow
+    if (req.squad_type and req.squad_type not in ["auto", ""]) or (req.workflow_type and req.workflow_type not in ["auto", "adaptive", ""]):
+        is_workflow_task = True
+    else:
+        is_workflow_task = is_data_audit_request(msg)
 
     # ---------------------------------------------------------------------------
     # CASE 1: General chatbot question (NOT a data workflow task)
@@ -1128,11 +1182,15 @@ def chat_with_coordinator(req: ChatRequest):
         run_mode = WorkflowMode.LIVE_API
     cap_enum = CaptureLevel(req.capture_level or 2)
 
-    wf_type = "adaptive"
-    if any(k in msg_lower for k in ["parallel", "disconnected", "w1", "concurrent"]):
-        wf_type = "w1_parallel"
-    elif any(k in msg_lower for k in ["retry", "retries", "trial", "adapt", "backtrack", "w3"]):
-        wf_type = "w3_retry"
+    wf_type = req.workflow_type or req.squad_type
+    if not wf_type:
+        wf_type = detect_squad_type(msg, target_dataset)
+
+    # Route dataset automatically according to squad if not explicitly specified
+    if wf_type == "security_forensics":
+        target_dataset = "system_access_logs.csv"
+    elif wf_type in ("consumer_sentiment", "cross_squad"):
+        target_dataset = "customer_complaints.csv"
 
     run = runner.execute_workflow(
         task_description=msg,
@@ -1165,7 +1223,7 @@ def chat_with_coordinator(req: ChatRequest):
 
     statemachine_dot = generate_langgraph_statemachine_dot()
 
-    graphs = three_graphs.get_graphs_for_workflow(run.workflow_id)
+    graphs = three_graphs.get_graphs_for_workflow(run.workflow_id, conversation_id=f"conv_{run.workflow_id}")
     interaction_graph_serialized = serialize_nx(graphs["interaction_graph"])
     execution_graph_serialized = serialize_nx(graphs["execution_graph"])
     authority_graph_serialized = serialize_nx(graphs["authority_graph"])
@@ -1224,7 +1282,10 @@ def chat_with_coordinator(req: ChatRequest):
         "execution_graph": execution_graph_serialized,
         "authority_graph": authority_graph_serialized,
         "interactions": interactions_serialized,
-        "final_output": run.final_output
+        "final_output": run.final_output,
+        "workflow_type": wf_type,
+        "squad_type": wf_type,
+        "active_agents": run.stats.get("active_agents", [])
     }
 
 @router.get("/goal_flow/{workflow_id}")

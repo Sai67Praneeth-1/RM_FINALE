@@ -178,6 +178,7 @@ export default function App() {
   ]);
   const [inputPrompt, setInputPrompt] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
+  const [selectedSquad, setSelectedSquad] = useState("auto");
   const [isListening, setIsListening] = useState(false);
   const [expandedProofs, setExpandedProofs] = useState({});
 
@@ -997,7 +998,7 @@ export default function App() {
     }
   };
 
-  const sendChatMessage = async (customPrompt) => {
+  const sendChatMessage = async (customPrompt, explicitSquad = null) => {
     const textToSend = customPrompt || inputPrompt;
     if (!textToSend.trim() || chatLoading) return;
 
@@ -1007,6 +1008,7 @@ export default function App() {
     setChatLoading(true);
 
     try {
+      const activeSquad = explicitSquad || (selectedSquad !== "auto" ? selectedSquad : undefined);
       const res = await fetch(`${API_BASE}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1014,6 +1016,8 @@ export default function App() {
           message: textToSend,
           conversation_id: activeChatId || undefined,
           mode: "live_huggingface",
+          squad_type: activeSquad,
+          workflow_type: activeSquad,
         }),
       });
       const data = await res.json();
@@ -1485,18 +1489,67 @@ export default function App() {
                 </div>
               )}
 
+              {/* Hybrid Squad Architecture Selector */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  flexWrap: "wrap",
+                  marginBottom: 10,
+                  padding: "8px 12px",
+                  background: "rgba(15, 23, 42, 0.75)",
+                  borderRadius: 8,
+                  border: "1px solid #1e293b",
+                }}
+              >
+                <span style={{ fontSize: 11.5, color: "#94a3b8", fontWeight: 700, display: "flex", alignItems: "center", gap: 5 }}>
+                  <Sparkles size={13} color="#38bdf8" /> Squad Architecture:
+                </span>
+                {[
+                  { id: "auto", label: "⚡ Auto (Hybrid Routing)", tip: "Auto-routes to single domain squad or cross-squad collaboration" },
+                  { id: "consumer_sentiment", label: "💬 Sentiment (5 Agents)", tip: "CFPB intake, NLP sentiment scoring, impact analysis, executive report" },
+                  { id: "security_forensics", label: "🛡️ SecOps (4 Agents)", tip: "Access log scanner, privilege escalation hunter, FedRAMP/NIST auditor" },
+                  { id: "cross_squad", label: "🌐 Cross-Squad (7 Agents)", tip: "Complaints Squad ➔ Security Squad inter-squad delegation bridge" },
+                  { id: "adversarial_critic", label: "🎯 Debate (5 Agents)", tip: "Bidirectional peer review between Analyst & Critic" },
+                  { id: "rapid_consensus", label: "⚡ Rapid (3 Agents)", tip: "High-speed closed triangular loop without reporter latency" },
+                ].map((sq) => (
+                  <button
+                    key={sq.id}
+                    onClick={() => setSelectedSquad(sq.id)}
+                    style={{
+                      padding: "4px 9px",
+                      borderRadius: 6,
+                      fontSize: 11.5,
+                      fontWeight: selectedSquad === sq.id ? 700 : 500,
+                      background: selectedSquad === sq.id ? "rgba(56, 189, 248, 0.2)" : "rgba(30, 41, 59, 0.5)",
+                      color: selectedSquad === sq.id ? "#38bdf8" : "#94a3b8",
+                      border: selectedSquad === sq.id ? "1px solid #38bdf8" : "1px solid rgba(51, 65, 85, 0.6)",
+                      cursor: "pointer",
+                      transition: "all 0.15s ease",
+                    }}
+                    title={sq.tip}
+                  >
+                    {sq.label}
+                  </button>
+                ))}
+              </div>
+
               <div className="suggestion-pills">
-                <button className="pill-btn" onClick={() => sendChatMessage("What are the customers mostly complaining of?")}>
-                  💬 Customer Complaints Audit
+                <button className="pill-btn" onClick={() => sendChatMessage("What are the customers mostly complaining of?", "consumer_sentiment")}>
+                  💬 Consumer Sentiment (5 Agents)
                 </button>
-                <button className="pill-btn" onClick={() => sendChatMessage("Check system access logs for unauthorized root escalation and file sharing")}>
-                  🛡️ Security & Root Escalation Audit
+                <button className="pill-btn" onClick={() => sendChatMessage("Check system access logs for unauthorized root escalation and file sharing", "security_forensics")}>
+                  🛡️ SecOps Forensics & Root Escalation (4 Agents)
                 </button>
-                <button className="pill-btn" onClick={() => sendChatMessage("Demonstrate inter-agent communication and task delegation across agents")}>
-                  📡 Live Inter-Agent Communication & Delegation
+                <button className="pill-btn" onClick={() => sendChatMessage("Investigate customer complaint TKT-1004 and correlate with system access logs for root breach", "cross_squad")}>
+                  🌐 Cross-Squad Enterprise Bridge (7 Agents)
                 </button>
-                <button className="pill-btn" onClick={() => sendChatMessage("Who are our enterprise customers and what issues are they facing?")}>
-                  🚨 Enterprise Accounts Status
+                <button className="pill-btn" onClick={() => sendChatMessage("Demonstrate adversarial critic debate between analyst and critic", "adversarial_critic")}>
+                  🎯 Adversarial Critic Debate (5 Agents)
+                </button>
+                <button className="pill-btn" onClick={() => sendChatMessage("Run rapid 3-agent consensus check on records", "rapid_consensus")}>
+                  ⚡ Rapid 3-Agent Consensus (3 Agents)
                 </button>
                 <button
                   className="pill-btn"

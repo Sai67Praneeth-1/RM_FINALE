@@ -204,6 +204,78 @@ export default function AgentInteractionGraph({
     const count = nodesList.length;
     if (count === 0) return pos;
 
+    const idSet = new Set(nodesList.map((n) => n.id));
+
+    // Topology 1: Cross-Squad Federation (7+ agents across Complaints & SecOps)
+    if (idSet.has("agent_forensics") && idSet.has("agent_researcher")) {
+      const crossPositions = {
+        agent_coordinator: { x: 350, y: 70 },
+        agent_researcher: { x: 135, y: 175 },
+        agent_sentiment: { x: 135, y: 320 },
+        agent_forensics: { x: 565, y: 175 },
+        agent_threat_hunter: { x: 565, y: 320 },
+        agent_compliance: { x: 260, y: 415 },
+        agent_reporter: { x: 440, y: 415 },
+      };
+      nodesList.forEach((n) => {
+        const meta = KNOWN_AGENTS[n.id] || DEFAULT_META;
+        const coords = crossPositions[n.id] || { x: 350, y: 240 };
+        pos[n.id] = { ...meta, ...n, label: n.label || meta.label, ...coords };
+      });
+      return pos;
+    }
+
+    // Topology 2: Adversarial Debate Squad (Peer-to-Peer Mesh with Critic)
+    if (idSet.has("agent_critic")) {
+      const criticPositions = {
+        agent_coordinator: { x: 350, y: 70 },
+        agent_researcher: { x: 130, y: 210 },
+        agent_analyst: { x: 270, y: 330 },
+        agent_critic: { x: 430, y: 330 },
+        agent_reporter: { x: 570, y: 210 },
+      };
+      nodesList.forEach((n) => {
+        const meta = KNOWN_AGENTS[n.id] || DEFAULT_META;
+        const coords = criticPositions[n.id] || { x: 350, y: 240 };
+        pos[n.id] = { ...meta, ...n, label: n.label || meta.label, ...coords };
+      });
+      return pos;
+    }
+
+    // Topology 3: SecOps Access Log & Privilege Escalation Squad (4 agents)
+    if (idSet.has("agent_forensics") && idSet.has("agent_threat_hunter")) {
+      const secPositions = {
+        agent_coordinator: { x: 350, y: 75 },
+        agent_forensics: { x: 150, y: 240 },
+        agent_threat_hunter: { x: 550, y: 240 },
+        agent_compliance: { x: 350, y: 395 },
+      };
+      nodesList.forEach((n) => {
+        const meta = KNOWN_AGENTS[n.id] || DEFAULT_META;
+        const coords = secPositions[n.id] || { x: 350, y: 240 };
+        pos[n.id] = { ...meta, ...n, label: n.label || meta.label, ...coords };
+      });
+      return pos;
+    }
+
+    // Topology 4: Consumer Sentiment Squad (5 agents)
+    if (idSet.has("agent_sentiment")) {
+      const sentPositions = {
+        agent_coordinator: { x: 350, y: 75 },
+        agent_researcher: { x: 130, y: 200 },
+        agent_sentiment: { x: 190, y: 390 },
+        agent_analyst: { x: 510, y: 390 },
+        agent_reporter: { x: 570, y: 200 },
+      };
+      nodesList.forEach((n) => {
+        const meta = KNOWN_AGENTS[n.id] || DEFAULT_META;
+        const coords = sentPositions[n.id] || { x: 350, y: 240 };
+        pos[n.id] = { ...meta, ...n, label: n.label || meta.label, ...coords };
+      });
+      return pos;
+    }
+
+    // Default Mathematical Dynamic Geometry for generic N
     const findCoordIdx = nodesList.findIndex((n) => {
       const id = (n.id || "").toLowerCase();
       return id.includes("coord") || id.includes("lead") || id.includes("orchestrat");
@@ -235,8 +307,8 @@ export default function AgentInteractionGraph({
       } else if (otherCount === 2) {
         const meta0 = KNOWN_AGENTS[others[0].id] || DEFAULT_META;
         const meta1 = KNOWN_AGENTS[others[1].id] || DEFAULT_META;
-        pos[others[0].id] = { ...meta0, ...others[0], label: others[0].label || meta0.label, x: 170, y: 310 };
-        pos[others[1].id] = { ...meta1, ...others[1], label: others[1].label || meta1.label, x: 530, y: 310 };
+        pos[others[0].id] = { ...meta0, ...others[0], label: others[0].label || meta0.label, x: 175, y: 330 };
+        pos[others[1].id] = { ...meta1, ...others[1], label: others[1].label || meta1.label, x: 525, y: 330 };
       } else if (otherCount === 3) {
         const meta0 = KNOWN_AGENTS[others[0].id] || DEFAULT_META;
         const meta1 = KNOWN_AGENTS[others[1].id] || DEFAULT_META;

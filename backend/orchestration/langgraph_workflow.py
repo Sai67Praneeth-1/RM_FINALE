@@ -42,6 +42,12 @@ class MultiAgentWorkflowState(TypedDict):
     research_delegation_id: Optional[str]
     analysis_delegation_id: Optional[str]
     report_delegation_id: Optional[str]
+    sentiment_delegation_id: Optional[str]
+    forensics_delegation_id: Optional[str]
+    threat_hunter_delegation_id: Optional[str]
+    compliance_delegation_id: Optional[str]
+    critic_delegation_id: Optional[str]
+    active_agents: Optional[List[str]]
     research_data: Optional[Dict[str, Any]]
     secondary_data: Optional[Dict[str, Any]]
     analysis_data: Optional[Dict[str, Any]]
@@ -584,10 +590,29 @@ def build_w3_retry_graph(gateway: Optional[ObservabilityGateway] = None):
 def build_multi_agent_graph(gateway: Optional[ObservabilityGateway] = None, workflow_type: str = "adaptive"):
     """
     Factory function returning the compiled LangGraph workflow requested.
-    Supports: 'adaptive', 'w1_parallel', 'w2_fanout', 'w3_retry'.
+    Supports:
+    - Domain Squads: 'security_forensics', 'consumer_sentiment', 'cross_squad', 'adversarial_critic', 'rapid_consensus'
+    - Canonical Benchmark Topologies: 'adaptive', 'w1_parallel', 'w3_retry'
     """
     wt = (workflow_type or "adaptive").lower()
-    if wt in ("w1", "w1_parallel", "parallel"):
+    from backend.orchestration.squad_workflows import (
+        build_security_forensics_graph,
+        build_consumer_sentiment_graph,
+        build_cross_squad_graph,
+        build_adversarial_critic_graph,
+        build_rapid_consensus_graph
+    )
+    if wt in ("security_forensics", "security", "secops", "forensics"):
+        return build_security_forensics_graph(gateway)
+    elif wt in ("consumer_sentiment", "sentiment", "experience", "complaints_squad"):
+        return build_consumer_sentiment_graph(gateway)
+    elif wt in ("cross_squad", "hybrid", "cross", "inter_squad", "cross_team"):
+        return build_cross_squad_graph(gateway)
+    elif wt in ("adversarial_critic", "critic", "debate", "peer_review"):
+        return build_adversarial_critic_graph(gateway)
+    elif wt in ("rapid_consensus", "rapid", "triangle", "fast"):
+        return build_rapid_consensus_graph(gateway)
+    elif wt in ("w1", "w1_parallel", "parallel"):
         return build_w1_parallel_graph(gateway)
     elif wt in ("w3", "w3_retry", "retry", "trial"):
         return build_w3_retry_graph(gateway)
@@ -651,22 +676,60 @@ def get_langgraph_topology_dot(workflow_type: str = "adaptive", active_nodes: Op
 def get_available_workflow_topologies() -> Dict[str, Dict[str, Any]]:
     """Returns documentation and metadata for each supported LangGraph workflow."""
     return {
+        "consumer_sentiment": {
+            "name": "Consumer Experience & Sentiment Squad (5 Agents)",
+            "paper_ref": "Domain Squad: Pentagon Pipeline",
+            "description": "5-agent customer sentiment pipeline integrating Ingestion, NLP emotion distribution scoring, impact evaluation, and executive reporting.",
+            "features": ["NLP Sentiment Distribution", "Category Polarity Scoring", "Severity Tier Evaluation", "Pentagon Pipeline Topology"],
+            "agents": ["agent_coordinator", "agent_researcher", "agent_sentiment", "agent_analyst", "agent_reporter"]
+        },
+        "security_forensics": {
+            "name": "SecOps Access Log & Privilege Escalation Squad (4 Agents)",
+            "paper_ref": "Domain Squad: Hub-and-Spoke / Star Topology",
+            "description": "4-agent security squad scanning system access logs, identifying unauthorized file sharing and root IAM escalation vectors.",
+            "features": ["Access Log Scanning", "Root Privilege Escalation Hunting", "FedRAMP & NIST Invariant Auditing", "Star Topology"],
+            "agents": ["agent_coordinator", "agent_forensics", "agent_threat_hunter", "agent_compliance"]
+        },
+        "cross_squad": {
+            "name": "Cross-Squad Enterprise Collaboration (7 Agents - Complaints ➔ Security Bridge)",
+            "paper_ref": "Hybrid Cross-Domain: Dual-Cluster Federation",
+            "description": "Cross-squad investigation bridging customer ticket complaints to backend server access logs, detecting correlated lateral movement.",
+            "features": ["Inter-Squad Escalation Bridge", "Cross-Domain Log Correlation", "NIST AC-3 Compliance Assessment", "Federated Dual-Cluster Topology"],
+            "agents": ["agent_coordinator", "agent_researcher", "agent_sentiment", "agent_forensics", "agent_threat_hunter", "agent_compliance", "agent_reporter"]
+        },
+        "adversarial_critic": {
+            "name": "Adversarial Critic & Debate Squad (5 Agents - P2P Mesh)",
+            "paper_ref": "P2P Debate: Bidirectional Mesh",
+            "description": "Peer-to-peer adversarial debate between Analyst and Critic to challenge confounding causal variables and reach verified consensus.",
+            "features": ["Hypothesis Proposal", "Adversarial Counter-Critique", "Causal Precedence Invariant", "Bidirectional P2P Mesh"],
+            "agents": ["agent_coordinator", "agent_researcher", "agent_analyst", "agent_critic", "agent_reporter"]
+        },
+        "rapid_consensus": {
+            "name": "Rapid Consensus Squad (3 Agents - Triangular Loop)",
+            "paper_ref": "Rapid Triage: Triangular Topology",
+            "description": "High-velocity 3-agent circular consensus without reporter overhead, accelerating verification 3x.",
+            "features": ["Circular Closed Loop", "Zero-Reporter Latency", "Rapid Snapshot Triage", "Triangular Topology"],
+            "agents": ["agent_coordinator", "agent_researcher", "agent_analyst"]
+        },
         "adaptive": {
-            "name": "Adaptive Multi-Agent Collaboration",
+            "name": "Adaptive Multi-Agent Collaboration (Canonical)",
             "paper_ref": "RM_MID Slide 11 & Mishra & Sharad Section 4",
             "description": "Full 4-agent collaborative state graph with dynamic tool selection, bi-directional clarification, escalation, handoff, and provenance synthesis.",
-            "features": ["Dynamic Clarification", "Anomaly Escalation", "Formal Handoff", "Provenance Footnotes"]
+            "features": ["Dynamic Clarification", "Anomaly Escalation", "Formal Handoff", "Provenance Footnotes"],
+            "agents": ["agent_coordinator", "agent_researcher", "agent_analyst", "agent_reporter"]
         },
         "w1_parallel": {
             "name": "W1: Parallel Disconnected Subtasks",
             "paper_ref": "Mishra & Sharad Section 7.2.1 (W1)",
             "description": "Issues parallel reads across multiple tools under a single root delegation, inducing causally disconnected components (|Comp(d)| > 1) followed by fan-in join.",
-            "features": ["Parallel Tool Reads", "Fan-In Join", "|Comp(d)| > 1 Stress Test", "Cross-Dataset Synthesis"]
+            "features": ["Parallel Tool Reads", "Fan-In Join", "|Comp(d)| > 1 Stress Test", "Cross-Dataset Synthesis"],
+            "agents": ["agent_coordinator", "agent_researcher", "agent_reporter"]
         },
         "w3_retry": {
             "name": "W3: Trial-and-Adapt / Dynamic Retries",
             "paper_ref": "Mishra & Sharad Section 7.2.1 (W3)",
             "description": "Implements iterative trial-and-adapt cycles with parameter refinement, backtracking, and retry logging upon intermediate observations.",
-            "features": ["Parameter Backtracking", "Retry Loop", "Dynamic Refinement", "State Recovery"]
+            "features": ["Parameter Backtracking", "Retry Loop", "Dynamic Refinement", "State Recovery"],
+            "agents": ["agent_coordinator", "agent_researcher", "agent_reporter"]
         }
     }

@@ -43,7 +43,7 @@ class WorkflowRunner:
         Executes the LangGraph multi-agent workflow, tracking node transitions and persisting telemetry.
         """
         workflow_id = f"wf_{uuid.uuid4().hex[:10]}"
-        conv_id = f"conv_{uuid.uuid4().hex[:8]}"
+        conv_id = f"conv_{workflow_id}"
         
         selected_mode = mode or WorkflowMode.DETERMINISTIC_DEMO
 
@@ -75,6 +75,12 @@ class WorkflowRunner:
             "research_delegation_id": None,
             "analysis_delegation_id": None,
             "report_delegation_id": None,
+            "sentiment_delegation_id": None,
+            "forensics_delegation_id": None,
+            "threat_hunter_delegation_id": None,
+            "compliance_delegation_id": None,
+            "critic_delegation_id": None,
+            "active_agents": None,
             "research_data": None,
             "secondary_data": None,
             "analysis_data": None,
@@ -117,7 +123,18 @@ class WorkflowRunner:
             events = self.gateway.store.list_execution_events(workflow_id=workflow_id)
             interactions = self.gateway.store.list_interactions(conversation_id=conv_id)
             
+            active_agents = final_state.get("active_agents")
+            if not active_agents:
+                agent_set = set()
+                for it in interactions:
+                    if getattr(it, "sender_agent_id", None):
+                        agent_set.add(it.sender_agent_id)
+                    if getattr(it, "receiver_agent_id", None):
+                        agent_set.add(it.receiver_agent_id)
+                active_agents = list(agent_set) if agent_set else ["agent_coordinator", "agent_researcher", "agent_analyst", "agent_reporter"]
+
             wf_record.stats = {
+                "conversation_id": conv_id,
                 "events_count": len(events),
                 "interactions_count": len(interactions),
                 "clarification_occurred": final_state.get("clarification_requested", False),
@@ -125,7 +142,7 @@ class WorkflowRunner:
                 "retry_count": final_state.get("retry_count", 0),
                 "node_history": node_history,
                 "workflow_type": workflow_type,
-                "active_agents": ["agent_coordinator", "agent_researcher", "agent_analyst", "agent_reporter"]
+                "active_agents": active_agents
             }
 
         except Exception as e:
@@ -149,7 +166,7 @@ class WorkflowRunner:
         Generator yielding real-time node transitions as LangGraph executes them.
         """
         workflow_id = f"wf_{uuid.uuid4().hex[:10]}"
-        conv_id = f"conv_{uuid.uuid4().hex[:8]}"
+        conv_id = f"conv_{workflow_id}"
         
         selected_mode = mode or WorkflowMode.DETERMINISTIC_DEMO
         active_capture_level = capture_level or self.gateway.capture_level
@@ -168,6 +185,12 @@ class WorkflowRunner:
             "research_delegation_id": None,
             "analysis_delegation_id": None,
             "report_delegation_id": None,
+            "sentiment_delegation_id": None,
+            "forensics_delegation_id": None,
+            "threat_hunter_delegation_id": None,
+            "compliance_delegation_id": None,
+            "critic_delegation_id": None,
+            "active_agents": None,
             "research_data": None,
             "secondary_data": None,
             "analysis_data": None,
