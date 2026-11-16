@@ -3,19 +3,10 @@ import {
   FileText,
   Share2,
   Key,
-  Shield,
   Bot,
-  User,
-  ArrowLeft,
-  ChevronRight,
-  CheckCircle2,
-  Play,
   RotateCcw,
-  Sparkles,
-  Layers,
+  Play,
   Search,
-  ExternalLink,
-  ShieldCheck,
   Zap,
 } from "lucide-react";
 
@@ -85,12 +76,12 @@ export default function ForensicBackwardTracer({
 
   if (!trace) {
     return (
-      <div style={{ textAlign: "center", padding: "48px 20px", color: "var(--text-muted, #5c6472)" }}>
-        <Zap size={36} color="var(--accent-primary, #e8a44a)" style={{ marginBottom: 12 }} />
-        <div style={{ fontSize: 15, color: "var(--text-secondary, #9ba3b0)", fontWeight: 600 }}>
+      <div style={{ textAlign: "center", padding: "48px 20px", color: "#5f6368" }}>
+        <Zap size={36} color="#1a73e8" style={{ marginBottom: 12 }} />
+        <div style={{ fontSize: 15, color: "#202124", fontWeight: 600 }}>
           Synthesizing Forensic Backward Lineage...
         </div>
-        <div style={{ fontSize: 12.5, color: "var(--text-muted, #5c6472)", marginTop: 4 }}>
+        <div style={{ fontSize: 12.5, color: "#5f6368", marginTop: 4 }}>
           Inspecting cross-graph causal records across Interaction, Execution & Authority graphs.
         </div>
       </div>
@@ -107,8 +98,8 @@ export default function ForensicBackwardTracer({
       {/* 1. Forensic Header & Replay Action Bar */}
       <div
         style={{
-          background: "linear-gradient(135deg, rgba(232, 164, 74, 0.12) 0%, rgba(45, 212, 191, 0.08) 100%)",
-          border: "1px solid rgba(232, 164, 74, 0.4)",
+          background: "#f8f9fa",
+          border: "1px solid #dadce0",
           borderRadius: 8,
           padding: "16px 20px",
           display: "flex",
@@ -124,51 +115,52 @@ export default function ForensicBackwardTracer({
               style={{
                 fontSize: 11,
                 padding: "2px 8px",
-                borderRadius: 4,
-                background: "var(--accent-primary, #e8a44a)",
-                color: "#111214",
-                fontWeight: 800,
-                letterSpacing: "0.05em",
+                borderRadius: 16,
+                background: "#e8f0fe",
+                color: "#1a73e8",
+                fontWeight: 700,
+                letterSpacing: "0.04em",
                 textTransform: "uppercase",
+                border: "1px solid #d2e3fc",
               }}
             >
               Forensic Audit
             </span>
-            <span style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary, #f0f2f5)" }}>
+            <span style={{ fontSize: 15, fontWeight: 600, color: "#202124" }}>
               End-to-Start Reverse Lineage Reconstruction
             </span>
           </div>
-          <div style={{ fontSize: 12.5, color: "var(--text-secondary, #9ba3b0)" }}>
-            Workflow: <code style={{ color: "var(--accent-primary, #e8a44a)" }}>{trace.workflow_id || selectedWorkflowId}</code> &bull; Verified across G_exec, G_auth, and G_intr
+          <div style={{ fontSize: 12.5, color: "#5f6368" }}>
+            Workflow: <code style={{ color: "#1a73e8", background: "#f1f3f4", padding: "1px 6px", borderRadius: 4 }}>{trace.workflow_id || selectedWorkflowId}</code> &bull; Verified across G_exec, G_auth, and G_intr
           </div>
         </div>
 
         <button
           onClick={isReplaying ? () => setIsReplaying(false) : handleStartReplay}
           style={{
-            background: isReplaying ? "rgba(232, 164, 74, 0.2)" : "var(--accent-primary, #e8a44a)",
-            border: "1px solid var(--accent-primary, #e8a44a)",
-            color: isReplaying ? "var(--accent-primary, #e8a44a)" : "#111214",
-            padding: "8px 16px",
-            borderRadius: 6,
+            background: isReplaying ? "#ffffff" : "#1a73e8",
+            border: isReplaying ? "1px solid #dadce0" : "1px solid #1a73e8",
+            color: isReplaying ? "#1a73e8" : "#ffffff",
+            padding: "8px 18px",
+            borderRadius: 24,
             fontSize: 13,
-            fontWeight: 700,
+            fontWeight: 600,
             cursor: "pointer",
             display: "flex",
             alignItems: "center",
             gap: 8,
             transition: "all 0.15s ease",
-            boxShadow: "0 2px 10px rgba(232, 164, 74, 0.3)",
+            boxShadow: "0 1px 3px 1px rgba(60,64,67,0.15)",
           }}
         >
           {isReplaying ? <RotateCcw size={15} /> : <Play size={15} />}
-          <span>{isReplaying ? `Replaying Step ${activeStepIndex + 1} of ${steps.length}...` : "⚡ Replay End-to-Start Causal Trace"}</span>
+          <span>{isReplaying ? `Replaying Step ${activeStepIndex + 1} of ${steps.length}...` : "Replay End-to-Start Causal Trace"}</span>
         </button>
       </div>
 
       {/* 2. Three Quick-Answer Cards for User Questions */}
       <div>
-        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted, #5c6472)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: "#5f6368", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>
           Forensic Answers &amp; Attribution Matrix
         </div>
 
@@ -176,29 +168,31 @@ export default function ForensicBackwardTracer({
           {/* Card 1: Which agent gave the final report? */}
           <div
             style={{
-              background: "var(--bg-surface, #1a1d21)",
-              border: "1px solid rgba(232, 164, 74, 0.4)",
+              background: "#ffffff",
+              border: "1px solid #dadce0",
               borderRadius: 8,
               padding: 16,
               display: "flex",
               flexDirection: "column",
               gap: 12,
               position: "relative",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+              boxShadow: "none",
+              transition: "box-shadow 0.15s ease",
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "var(--accent-primary, #e8a44a)", display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "#1a73e8", display: "flex", alignItems: "center", gap: 6 }}>
                 <FileText size={15} />
                 <span>1. Final Report Attribution</span>
               </span>
               <span
                 style={{
                   fontSize: 10.5,
-                  padding: "2px 6px",
-                  borderRadius: 4,
-                  background: "rgba(232, 164, 74, 0.18)",
-                  color: "var(--accent-primary, #e8a44a)",
+                  padding: "2px 8px",
+                  borderRadius: 16,
+                  background: "#e8f0fe",
+                  color: "#1a73e8",
+                  border: "1px solid #d2e3fc",
                   fontWeight: 600,
                 }}
               >
@@ -212,22 +206,22 @@ export default function ForensicBackwardTracer({
                   width: 38,
                   height: 38,
                   borderRadius: 8,
-                  background: "rgba(232, 164, 74, 0.15)",
-                  border: "1px solid var(--accent-primary, #e8a44a)",
+                  background: "#e8f0fe",
+                  border: "1px solid #d2e3fc",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  color: "var(--accent-primary, #e8a44a)",
+                  color: "#1a73e8",
                 }}
               >
                 <Bot size={22} />
               </div>
               <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-primary, #f0f2f5)" }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: "#202124" }}>
                   {reporter.agent_label || "Agent D: Reporter"}
                 </div>
-                <div style={{ fontSize: 11, color: "var(--text-secondary, #9ba3b0)" }}>
-                  Token: <code style={{ color: "var(--accent-primary, #e8a44a)" }}>{(reporter.delegation_id || "del_exec_001").substring(0, 16)}</code>
+                <div style={{ fontSize: 11, color: "#5f6368" }}>
+                  Token: <code style={{ color: "#1a73e8", background: "#f1f3f4", padding: "1px 4px", borderRadius: 4 }}>{(reporter.delegation_id || "del_exec_001").substring(0, 16)}</code>
                 </div>
               </div>
             </div>
@@ -235,12 +229,12 @@ export default function ForensicBackwardTracer({
             {/* Plain English explanation */}
             <div
               style={{
-                background: "var(--bg-base, #111214)",
+                background: "#f8f9fa",
                 padding: "10px 12px",
-                borderRadius: 6,
-                border: "1px solid var(--border-subtle, #2a2f38)",
+                borderRadius: 8,
+                border: "1px solid #dadce0",
                 fontSize: 12,
-                color: "var(--text-primary, #f0f2f5)",
+                color: "#202124",
                 lineHeight: 1.5,
               }}
             >
@@ -248,7 +242,6 @@ export default function ForensicBackwardTracer({
             </div>
 
             <button
-              className="pill-btn"
               onClick={() =>
                 onSelectEntity &&
                 onSelectEntity({
@@ -260,14 +253,22 @@ export default function ForensicBackwardTracer({
               }
               style={{
                 fontSize: 11.5,
-                background: "rgba(232, 164, 74, 0.1)",
-                borderColor: "var(--accent-primary, #e8a44a)",
-                color: "var(--accent-primary, #e8a44a)",
+                background: "#ffffff",
+                border: "1px solid #dadce0",
+                color: "#1a73e8",
+                borderRadius: 24,
+                padding: "6px 12px",
+                cursor: "pointer",
+                fontWeight: 600,
                 width: "100%",
+                display: "flex",
+                alignItems: "center",
                 justifyContent: "center",
+                gap: 5,
+                transition: "all 0.15s ease",
               }}
             >
-              <Search size={12} style={{ display: "inline", marginRight: 5 }} />
+              <Search size={12} />
               Inspect Reporting Agent Node
             </button>
           </div>
@@ -275,29 +276,31 @@ export default function ForensicBackwardTracer({
           {/* Card 2: Which agent transferred data to which agent? */}
           <div
             style={{
-              background: "var(--bg-surface, #1a1d21)",
-              border: "1px solid rgba(45, 212, 191, 0.4)",
+              background: "#ffffff",
+              border: "1px solid #dadce0",
               borderRadius: 8,
               padding: 16,
               display: "flex",
               flexDirection: "column",
               gap: 12,
               position: "relative",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+              boxShadow: "none",
+              transition: "box-shadow 0.15s ease",
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "var(--accent-secondary, #2dd4bf)", display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "#1a73e8", display: "flex", alignItems: "center", gap: 6 }}>
                 <Share2 size={15} />
                 <span>2. Inter-Agent Data Transfers</span>
               </span>
               <span
                 style={{
                   fontSize: 10.5,
-                  padding: "2px 6px",
-                  borderRadius: 4,
-                  background: "rgba(45, 212, 191, 0.18)",
-                  color: "var(--accent-secondary, #2dd4bf)",
+                  padding: "2px 8px",
+                  borderRadius: 16,
+                  background: "#e8f0fe",
+                  color: "#1a73e8",
+                  border: "1px solid #d2e3fc",
                   fontWeight: 600,
                 }}
               >
@@ -311,29 +314,29 @@ export default function ForensicBackwardTracer({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                background: "var(--bg-base, #111214)",
+                background: "#f8f9fa",
                 padding: "8px 10px",
-                borderRadius: 6,
-                border: "1px solid var(--border-subtle, #2a2f38)",
+                borderRadius: 8,
+                border: "1px solid #dadce0",
                 fontSize: 11,
               }}
             >
-              <span style={{ color: "#60a5fa", fontWeight: 600 }}>Researcher</span>
-              <span style={{ color: "var(--accent-secondary, #2dd4bf)" }}>&rarr; data &rarr;</span>
-              <span style={{ color: "#fbbf24", fontWeight: 600 }}>Analyst</span>
-              <span style={{ color: "var(--accent-secondary, #2dd4bf)" }}>&rarr; metrics &rarr;</span>
-              <span style={{ color: "#a78bfa", fontWeight: 600 }}>Reporter</span>
+              <span style={{ color: "#1a73e8", fontWeight: 600 }}>Researcher</span>
+              <span style={{ color: "#5f6368" }}>&rarr; data &rarr;</span>
+              <span style={{ color: "#b06000", fontWeight: 600 }}>Analyst</span>
+              <span style={{ color: "#5f6368" }}>&rarr; metrics &rarr;</span>
+              <span style={{ color: "#137333", fontWeight: 600 }}>Reporter</span>
             </div>
 
             {/* Plain English explanation */}
             <div
               style={{
-                background: "var(--bg-base, #111214)",
+                background: "#f8f9fa",
                 padding: "10px 12px",
-                borderRadius: 6,
-                border: "1px solid var(--border-subtle, #2a2f38)",
+                borderRadius: 8,
+                border: "1px solid #dadce0",
                 fontSize: 12,
-                color: "var(--text-primary, #f0f2f5)",
+                color: "#202124",
                 lineHeight: 1.5,
               }}
             >
@@ -346,22 +349,23 @@ export default function ForensicBackwardTracer({
                   key={idx}
                   onClick={() => onSelectEntity && onSelectEntity({ ...dt, entityCategory: "Data Transfer Message" })}
                   style={{
-                    background: dt.is_cross_squad ? "rgba(245, 158, 11, 0.08)" : "#111214",
-                    border: dt.is_cross_squad ? "1px solid rgba(245, 158, 11, 0.35)" : "1px solid #2a2f38",
+                    background: "#ffffff",
+                    border: "1px solid #dadce0",
                     padding: "6px 8px",
-                    borderRadius: 4,
+                    borderRadius: 6,
                     fontSize: 11,
                     cursor: "pointer",
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
+                    transition: "background 0.15s ease",
                   }}
                 >
-                  <span style={{ color: dt.is_cross_squad ? "#fbbf24" : "var(--accent-secondary, #2dd4bf)", fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }}>
-                    {dt.is_cross_squad && <span style={{ background: "#f59e0b", color: "#000", fontSize: 8.5, padding: "1px 4px", borderRadius: 3, fontWeight: 800 }}>⚡ SQUAD BRIDGE</span>}
+                  <span style={{ color: "#1a73e8", fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }}>
+                    {dt.is_cross_squad && <span style={{ background: "#fef7e0", color: "#b06000", border: "1px solid #feefc3", fontSize: 8.5, padding: "1px 4px", borderRadius: 4, fontWeight: 700 }}>SQUAD BRIDGE</span>}
                     <span>{dt.from_agent} &rarr; {dt.to_agent}</span>
                   </span>
-                  <span style={{ color: "var(--text-muted, #5c6472)", fontSize: 10 }}>{dt.interaction_type}</span>
+                  <span style={{ color: "#5f6368", fontSize: 10 }}>{dt.interaction_type}</span>
                 </div>
               ))}
             </div>
@@ -370,29 +374,31 @@ export default function ForensicBackwardTracer({
           {/* Card 3: Which agent transferred permissions to use tools? */}
           <div
             style={{
-              background: "var(--bg-surface, #1a1d21)",
-              border: "1px solid rgba(52, 211, 153, 0.4)",
+              background: "#ffffff",
+              border: "1px solid #dadce0",
               borderRadius: 8,
               padding: 16,
               display: "flex",
               flexDirection: "column",
               gap: 12,
               position: "relative",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.3)",
+              boxShadow: "none",
+              transition: "box-shadow 0.15s ease",
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: "var(--color-success, #34d399)", display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "#137333", display: "flex", alignItems: "center", gap: 6 }}>
                 <Key size={15} />
                 <span>3. Permission &amp; Tool Delegations</span>
               </span>
               <span
                 style={{
                   fontSize: 10.5,
-                  padding: "2px 6px",
-                  borderRadius: 4,
-                  background: "rgba(52, 211, 153, 0.18)",
-                  color: "var(--color-success, #34d399)",
+                  padding: "2px 8px",
+                  borderRadius: 16,
+                  background: "#e6f4ea",
+                  color: "#137333",
+                  border: "1px solid #ceead6",
                   fontWeight: 600,
                 }}
               >
@@ -406,29 +412,29 @@ export default function ForensicBackwardTracer({
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                background: "var(--bg-base, #111214)",
+                background: "#f8f9fa",
                 padding: "8px 10px",
-                borderRadius: 6,
-                border: "1px solid var(--border-subtle, #2a2f38)",
+                borderRadius: 8,
+                border: "1px solid #dadce0",
                 fontSize: 11,
               }}
             >
-              <span style={{ color: "#e8a44a", fontWeight: 600 }}>Principal</span>
-              <span style={{ color: "var(--color-success, #34d399)" }}>&rarr; root &rarr;</span>
-              <span style={{ color: "#60a5fa", fontWeight: 600 }}>Coordinator</span>
-              <span style={{ color: "var(--color-success, #34d399)" }}>&rarr; tools &rarr;</span>
-              <span style={{ color: "#34d399", fontWeight: 600 }}>Sub-Agents</span>
+              <span style={{ color: "#5f6368", fontWeight: 600 }}>Principal</span>
+              <span style={{ color: "#137333" }}>&rarr; root &rarr;</span>
+              <span style={{ color: "#1a73e8", fontWeight: 600 }}>Coordinator</span>
+              <span style={{ color: "#137333" }}>&rarr; tools &rarr;</span>
+              <span style={{ color: "#137333", fontWeight: 600 }}>Sub-Agents</span>
             </div>
 
             {/* Plain English explanation */}
             <div
               style={{
-                background: "var(--bg-base, #111214)",
+                background: "#f8f9fa",
                 padding: "10px 12px",
-                borderRadius: 6,
-                border: "1px solid var(--border-subtle, #2a2f38)",
+                borderRadius: 8,
+                border: "1px solid #dadce0",
                 fontSize: 12,
-                color: "var(--text-primary, #f0f2f5)",
+                color: "#202124",
                 lineHeight: 1.5,
               }}
             >
@@ -441,20 +447,21 @@ export default function ForensicBackwardTracer({
                   key={idx}
                   onClick={() => onSelectEntity && onSelectEntity({ ...pd, entityCategory: "Authority Delegation Grant" })}
                   style={{
-                    background: "#111214",
-                    border: "1px solid #2a2f38",
+                    background: "#ffffff",
+                    border: "1px solid #dadce0",
                     padding: "6px 8px",
-                    borderRadius: 4,
+                    borderRadius: 6,
                     fontSize: 11,
                     cursor: "pointer",
                     display: "flex",
                     justifyContent: "space-between",
+                    transition: "background 0.15s ease",
                   }}
                 >
-                  <span style={{ color: "var(--color-success, #34d399)", fontWeight: 600 }}>
+                  <span style={{ color: "#137333", fontWeight: 600 }}>
                     {pd.granter} &rarr; {pd.recipient}
                   </span>
-                  <span style={{ color: "var(--text-muted, #5c6472)" }}>{pd.scope}</span>
+                  <span style={{ color: "#5f6368" }}>{pd.scope}</span>
                 </div>
               ))}
             </div>
@@ -466,16 +473,16 @@ export default function ForensicBackwardTracer({
       <div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary, #f0f2f5)", display: "flex", alignItems: "center", gap: 8 }}>
-              <RotateCcw size={15} color="var(--accent-primary, #e8a44a)" />
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#202124", display: "flex", alignItems: "center", gap: 8 }}>
+              <RotateCcw size={15} color="#1a73e8" />
               <span>Interactive Reverse Causal Chain (End ◀─── Start)</span>
             </div>
-            <div style={{ fontSize: 12, color: "var(--text-secondary, #9ba3b0)" }}>
+            <div style={{ fontSize: 12, color: "#5f6368" }}>
               Step backward in time from final result compilation to original root delegation origin.
             </div>
           </div>
 
-          <div style={{ fontSize: 11.5, color: "var(--accent-primary, #e8a44a)", fontWeight: 600 }}>
+          <div style={{ fontSize: 11.5, color: "#1a73e8", fontWeight: 600 }}>
             Active: Step {steps[activeStepIndex]?.step || activeStepIndex + 1}
           </div>
         </div>
@@ -490,13 +497,13 @@ export default function ForensicBackwardTracer({
                 key={idx}
                 onClick={() => handleStepClick(st, idx)}
                 style={{
-                  background: isSelected ? "rgba(232, 164, 74, 0.12)" : "var(--bg-base, #111214)",
-                  border: isSelected ? "2px solid var(--accent-primary, #e8a44a)" : "1px solid var(--border-subtle, #2a2f38)",
+                  background: isSelected ? "#e8f0fe" : "#ffffff",
+                  border: isSelected ? "2px solid #1a73e8" : "1px solid #dadce0",
                   borderRadius: 8,
                   padding: "14px 18px",
                   cursor: "pointer",
                   transition: "all 0.18s ease",
-                  boxShadow: isSelected ? "0 0 16px rgba(232, 164, 74, 0.3)" : "none",
+                  boxShadow: isSelected ? "0 1px 3px 1px rgba(60,64,67,0.15)" : "none",
                   display: "flex",
                   flexDirection: "column",
                   gap: 10,
@@ -509,24 +516,25 @@ export default function ForensicBackwardTracer({
                         width: 32,
                         height: 32,
                         borderRadius: "50%",
-                        background: isSelected ? "var(--accent-primary, #e8a44a)" : "#22262c",
-                        color: isSelected ? "#111214" : "#f0f2f5",
+                        background: isSelected ? "#1a73e8" : "#f1f3f4",
+                        color: isSelected ? "#ffffff" : "#3c4043",
+                        border: isSelected ? "1px solid #1a73e8" : "1px solid #dadce0",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         fontSize: 13,
-                        fontWeight: 800,
+                        fontWeight: 700,
                       }}
                     >
                       {st.step}
                     </div>
 
                     <div>
-                      <div style={{ fontSize: 13.5, fontWeight: 700, color: isSelected ? "var(--accent-primary, #e8a44a)" : "var(--text-primary, #f0f2f5)" }}>
+                      <div style={{ fontSize: 13.5, fontWeight: 600, color: isSelected ? "#1a73e8" : "#202124" }}>
                         {st.title}
                       </div>
-                      <div style={{ fontSize: 11.5, color: "var(--text-secondary, #9ba3b0)" }}>
-                        {st.role} &bull; <strong style={{ color: "#f0f2f5" }}>{st.agent}</strong>
+                      <div style={{ fontSize: 11.5, color: "#5f6368" }}>
+                        {st.role} &bull; <strong style={{ color: "#202124" }}>{st.agent}</strong>
                       </div>
                     </div>
                   </div>
@@ -535,12 +543,12 @@ export default function ForensicBackwardTracer({
                     <span
                       style={{
                         fontSize: 10.5,
-                        padding: "3px 8px",
-                        borderRadius: 4,
-                        background: "rgba(45, 212, 191, 0.15)",
-                        color: "var(--accent-secondary, #2dd4bf)",
+                        padding: "3px 10px",
+                        borderRadius: 16,
+                        background: "#f1f3f4",
+                        color: "#3c4043",
                         fontWeight: 600,
-                        border: "1px solid rgba(45, 212, 191, 0.3)",
+                        border: "1px solid #dadce0",
                       }}
                     >
                       {st.invariant}
@@ -548,11 +556,12 @@ export default function ForensicBackwardTracer({
                     <span
                       style={{
                         fontSize: 10.5,
-                        padding: "3px 8px",
-                        borderRadius: 4,
-                        background: "rgba(167, 139, 250, 0.15)",
-                        color: "var(--accent-tertiary, #a78bfa)",
+                        padding: "3px 10px",
+                        borderRadius: 16,
+                        background: "#e8f0fe",
+                        color: "#1a73e8",
                         fontWeight: 600,
+                        border: "1px solid #d2e3fc",
                       }}
                     >
                       {st.timestamp || "Phase Link"}
@@ -560,16 +569,16 @@ export default function ForensicBackwardTracer({
                   </div>
                 </div>
 
-                <div style={{ fontSize: 12.5, color: "var(--text-primary, #f0f2f5)", lineHeight: 1.5, paddingLeft: 44 }}>
+                <div style={{ fontSize: 12.5, color: "#202124", lineHeight: 1.5, paddingLeft: 44 }}>
                   {st.description}
                 </div>
 
-                <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 11, color: "var(--text-muted, #5c6472)", paddingLeft: 44 }}>
-                  <span>Action: <code style={{ color: "#fbbf24" }}>{st.action}</code></span>
+                <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 11, color: "#5f6368", paddingLeft: 44 }}>
+                  <span>Action: <code style={{ color: "#b06000", background: "#fef7e0", padding: "1px 4px", borderRadius: 4 }}>{st.action}</code></span>
                   {st.delegation_id && (
-                    <span>Delegation: <code style={{ color: "#34d399" }}>{st.delegation_id}</code></span>
+                    <span>Delegation: <code style={{ color: "#137333", background: "#e6f4ea", padding: "1px 4px", borderRadius: 4 }}>{st.delegation_id}</code></span>
                   )}
-                  <span style={{ color: "var(--accent-primary, #e8a44a)", fontWeight: 600, marginLeft: "auto" }}>
+                  <span style={{ color: "#1a73e8", fontWeight: 600, marginLeft: "auto" }}>
                     Click to Inspect in Drawer &rarr;
                   </span>
                 </div>

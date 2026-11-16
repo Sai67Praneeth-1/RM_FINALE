@@ -1,14 +1,14 @@
 import React, { useMemo } from "react";
-import { X, Layers, Activity, Bot, Shield, ChevronRight } from "lucide-react";
+import { X, Layers, Activity, Bot, ChevronRight } from "lucide-react";
 
-// Relation Edge Colors for styling timeline elements
+// Relation Edge Colors for styling timeline elements in Google MD3 palette
 const RELATION_COLORS = {
-  wasDerivedFrom: "#a78bfa",
-  used: "#fbbf24",
-  wasGeneratedBy: "#2dd4bf",
-  wasAssociatedWith: "#60a5fa",
-  actedOnBehalfOf: "#e8a44a",
-  wasAttributedTo: "#34d399",
+  wasDerivedFrom: "#1a73e8",
+  used: "#f9ab00",
+  wasGeneratedBy: "#1e8e3e",
+  wasAssociatedWith: "#5f6368",
+  actedOnBehalfOf: "#d93025",
+  wasAttributedTo: "#129eaf",
 };
 
 export default function ProvenanceDrawer({
@@ -20,7 +20,7 @@ export default function ProvenanceDrawer({
 
   // Normalize node type and badge
   const nodeTypeBadge = useMemo(() => {
-    if (!node) return { text: "prov:Entity", color: "#4f46e5", bg: "rgba(79, 70, 229, 0.2)" };
+    if (!node) return { text: "prov:Entity", color: "#1a73e8", bg: "#e8f0fe", border: "#d2e3fc", icon: Layers };
 
     const raw = String(
       node.prov_category || node.prov_type || node.node_type || node.type || ""
@@ -35,9 +35,9 @@ export default function ProvenanceDrawer({
     ) {
       return {
         text: "prov:Agent",
-        color: "#059669",
-        bg: "rgba(5, 150, 105, 0.2)",
-        border: "#059669",
+        color: "#137333",
+        bg: "#e6f4ea",
+        border: "#ceead6",
         icon: Bot,
       };
     }
@@ -50,17 +50,17 @@ export default function ProvenanceDrawer({
     ) {
       return {
         text: "prov:Activity",
-        color: "#d97706",
-        bg: "rgba(217, 119, 6, 0.2)",
-        border: "#d97706",
+        color: "#b06000",
+        bg: "#fef7e0",
+        border: "#feefc3",
         icon: Activity,
       };
     }
     return {
       text: "prov:Entity",
-      color: "#4f46e5",
-      bg: "rgba(79, 70, 229, 0.2)",
-      border: "#4f46e5",
+      color: "#1a73e8",
+      bg: "#e8f0fe",
+      border: "#d2e3fc",
       icon: Layers,
     };
   }, [node]);
@@ -134,9 +134,9 @@ export default function ProvenanceDrawer({
         bottom: 0,
         width: 380,
         maxWidth: "92vw",
-        background: "var(--bg-surface, #1a1d21)",
-        borderLeft: "1px solid var(--border-subtle, #2a2f38)",
-        boxShadow: isOpen ? "-8px 0 28px rgba(0, 0, 0, 0.65)" : "none",
+        background: "#ffffff",
+        borderLeft: "1px solid #dadce0",
+        boxShadow: isOpen ? "-4px 0 24px rgba(60, 64, 67, 0.15)" : "none",
         zIndex: 1000,
         display: "flex",
         flexDirection: "column",
@@ -149,24 +149,24 @@ export default function ProvenanceDrawer({
       <div
         style={{
           padding: "16px 20px",
-          borderBottom: "1px solid var(--border-subtle, #2a2f38)",
+          borderBottom: "1px solid #dadce0",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
-          background: "var(--bg-elevated, #22262c)",
+          background: "#f8f9fa",
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <div
             style={{
-              padding: "4px 8px",
-              borderRadius: 4,
+              padding: "4px 10px",
+              borderRadius: 16,
               background: nodeTypeBadge.bg,
-              border: `1px solid ${nodeTypeBadge.color}`,
+              border: `1px solid ${nodeTypeBadge.border}`,
               color: nodeTypeBadge.color,
               fontSize: 11,
               fontWeight: 700,
-              letterSpacing: "0.05em",
+              letterSpacing: "0.04em",
               display: "flex",
               alignItems: "center",
               gap: 5,
@@ -175,7 +175,7 @@ export default function ProvenanceDrawer({
             <BadgeIcon size={13} />
             <span>{nodeTypeBadge.text}</span>
           </div>
-          <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text-primary, #f0f2f5)" }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: "#202124" }}>
             Provenance Inspector
           </span>
         </div>
@@ -185,17 +185,23 @@ export default function ProvenanceDrawer({
           style={{
             background: "transparent",
             border: "none",
-            color: "var(--text-muted, #5c6472)",
+            color: "#5f6368",
             cursor: "pointer",
-            padding: 4,
-            borderRadius: 4,
+            padding: 6,
+            borderRadius: 20,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            transition: "color 0.15s ease",
+            transition: "all 0.15s ease",
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "#f0f2f5")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "#5c6472")}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = "#202124";
+            e.currentTarget.style.background = "#f1f3f4";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = "#5f6368";
+            e.currentTarget.style.background = "transparent";
+          }}
           title="Close Drawer"
         >
           <X size={18} />
@@ -211,6 +217,7 @@ export default function ProvenanceDrawer({
           display: "flex",
           flexDirection: "column",
           gap: 20,
+          background: "#ffffff",
         }}
       >
         {node && (
@@ -221,19 +228,20 @@ export default function ProvenanceDrawer({
                 style={{
                   fontSize: 10.5,
                   fontWeight: 700,
-                  color: "var(--text-muted, #5c6472)",
+                  color: "#5f6368",
                   textTransform: "uppercase",
                   letterSpacing: "0.06em",
                   marginBottom: 4,
                 }}
               >
-                Node Identifier & Label
+                Node Identifier &amp; Label
               </div>
               <h4
                 style={{
                   margin: "0 0 6px 0",
-                  color: "var(--text-primary, #f0f2f5)",
+                  color: "#202124",
                   fontSize: 15,
+                  fontWeight: 600,
                   wordBreak: "break-word",
                 }}
               >
@@ -241,13 +249,13 @@ export default function ProvenanceDrawer({
               </h4>
               <div
                 style={{
-                  background: "var(--bg-base, #111214)",
+                  background: "#f8f9fa",
                   padding: "6px 10px",
                   borderRadius: 6,
-                  border: "1px solid var(--border-subtle, #2a2f38)",
-                  fontFamily: "monospace",
+                  border: "1px solid #dadce0",
+                  fontFamily: "Roboto Mono, monospace",
                   fontSize: 11,
-                  color: "var(--accent-primary, #e8a44a)",
+                  color: "#1a73e8",
                   wordBreak: "break-all",
                 }}
               >
@@ -261,7 +269,7 @@ export default function ProvenanceDrawer({
                 style={{
                   fontSize: 10.5,
                   fontWeight: 700,
-                  color: "var(--text-muted, #5c6472)",
+                  color: "#5f6368",
                   textTransform: "uppercase",
                   letterSpacing: "0.06em",
                   marginBottom: 8,
@@ -272,29 +280,31 @@ export default function ProvenanceDrawer({
               {generatedByActivity ? (
                 <div
                   style={{
-                    background: "rgba(45, 212, 191, 0.08)",
-                    border: "1px solid #2dd4bf",
-                    borderRadius: 6,
+                    background: "#e6f4ea",
+                    border: "1px solid #ceead6",
+                    borderRadius: 8,
                     padding: "10px 12px",
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: "#2dd4bf" }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, color: "#137333" }}>
                       {generatedByActivity.label}
                     </span>
                     <span
                       style={{
                         fontSize: 10,
-                        background: "rgba(45, 212, 191, 0.2)",
-                        color: "#2dd4bf",
-                        padding: "1px 5px",
-                        borderRadius: 3,
+                        background: "#ffffff",
+                        color: "#137333",
+                        border: "1px solid #ceead6",
+                        padding: "1px 6px",
+                        borderRadius: 12,
+                        fontWeight: 600,
                       }}
                     >
                       {Math.round(generatedByActivity.confidence * 100)}% Conf
                     </span>
                   </div>
-                  <div style={{ fontSize: 11, color: "var(--text-secondary, #9ba3b0)", marginTop: 4 }}>
+                  <div style={{ fontSize: 11, color: "#5f6368", marginTop: 4 }}>
                     <code>{generatedByActivity.activity}</code>
                   </div>
                 </div>
@@ -302,12 +312,12 @@ export default function ProvenanceDrawer({
                 <div
                   style={{
                     fontSize: 12,
-                    color: "var(--text-muted, #5c6472)",
+                    color: "#5f6368",
                     fontStyle: "italic",
-                    background: "var(--bg-base, #111214)",
+                    background: "#f8f9fa",
                     padding: "8px 12px",
-                    borderRadius: 6,
-                    border: "1px solid var(--border-subtle, #2a2f38)",
+                    borderRadius: 8,
+                    border: "1px solid #dadce0",
                   }}
                 >
                   Root Entity or External Origin (No generating activity in workflow)
@@ -321,7 +331,7 @@ export default function ProvenanceDrawer({
                 style={{
                   fontSize: 10.5,
                   fontWeight: 700,
-                  color: "var(--text-muted, #5c6472)",
+                  color: "#5f6368",
                   textTransform: "uppercase",
                   letterSpacing: "0.06em",
                   marginBottom: 8,
@@ -335,9 +345,9 @@ export default function ProvenanceDrawer({
                     <div
                       key={idx}
                       style={{
-                        background: "rgba(251, 191, 36, 0.08)",
-                        border: "1px solid #fbbf24",
-                        borderRadius: 6,
+                        background: "#fef7e0",
+                        border: "1px solid #feefc3",
+                        borderRadius: 8,
                         padding: "8px 12px",
                         display: "flex",
                         justifyContent: "space-between",
@@ -345,20 +355,22 @@ export default function ProvenanceDrawer({
                       }}
                     >
                       <div>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: "#fbbf24" }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: "#b06000" }}>
                           {u.label}
                         </div>
-                        <div style={{ fontSize: 10.5, color: "var(--text-secondary, #9ba3b0)" }}>
+                        <div style={{ fontSize: 10.5, color: "#5f6368" }}>
                           <code>{u.activity}</code>
                         </div>
                       </div>
                       <span
                         style={{
                           fontSize: 10,
-                          background: "rgba(251, 191, 36, 0.2)",
-                          color: "#fbbf24",
-                          padding: "1px 5px",
-                          borderRadius: 3,
+                          background: "#ffffff",
+                          color: "#b06000",
+                          border: "1px solid #feefc3",
+                          padding: "1px 6px",
+                          borderRadius: 12,
+                          fontWeight: 600,
                         }}
                       >
                         {Math.round(u.confidence * 100)}%
@@ -370,12 +382,12 @@ export default function ProvenanceDrawer({
                 <div
                   style={{
                     fontSize: 12,
-                    color: "var(--text-muted, #5c6472)",
+                    color: "#5f6368",
                     fontStyle: "italic",
-                    background: "var(--bg-base, #111214)",
+                    background: "#f8f9fa",
                     padding: "8px 12px",
-                    borderRadius: 6,
-                    border: "1px solid var(--border-subtle, #2a2f38)",
+                    borderRadius: 8,
+                    border: "1px solid #dadce0",
                   }}
                 >
                   No downstream consumption recorded.
@@ -389,7 +401,7 @@ export default function ProvenanceDrawer({
                 style={{
                   fontSize: 10.5,
                   fontWeight: 700,
-                  color: "var(--text-muted, #5c6472)",
+                  color: "#5f6368",
                   textTransform: "uppercase",
                   letterSpacing: "0.06em",
                   marginBottom: 10,
@@ -398,8 +410,8 @@ export default function ProvenanceDrawer({
                   alignItems: "center",
                 }}
               >
-                <span>Ancestors & Backward Lineage</span>
-                <span style={{ color: "var(--accent-primary, #e8a44a)" }}>
+                <span>Ancestors &amp; Backward Lineage</span>
+                <span style={{ color: "#1a73e8", fontWeight: 600 }}>
                   {lineagePath.length} Step{lineagePath.length === 1 ? "" : "s"}
                 </span>
               </div>
@@ -408,7 +420,7 @@ export default function ProvenanceDrawer({
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {lineagePath.map((item, idx) => {
                     const rel = item.relation || item.relation_type || "wasDerivedFrom";
-                    const relColor = RELATION_COLORS[rel] || "#9ba3b0";
+                    const relColor = RELATION_COLORS[rel] || "#5f6368";
                     const conf = Number(item.confidence ?? 1.0);
                     const confPct = Math.round(conf * 100);
 
@@ -416,10 +428,11 @@ export default function ProvenanceDrawer({
                       <div
                         key={idx}
                         style={{
-                          background: "var(--bg-base, #111214)",
-                          border: "1px solid var(--border-subtle, #2a2f38)",
-                          borderRadius: 6,
+                          background: "#ffffff",
+                          border: "1px solid #dadce0",
+                          borderRadius: 8,
                           padding: "10px 12px",
+                          boxShadow: "0 1px 2px rgba(60,64,67,0.08)",
                         }}
                       >
                         {/* Step Sequence Header */}
@@ -434,7 +447,7 @@ export default function ProvenanceDrawer({
                           <span
                             style={{
                               fontSize: 11,
-                              fontWeight: 700,
+                              fontWeight: 600,
                               color: relColor,
                               textTransform: "none",
                             }}
@@ -445,7 +458,7 @@ export default function ProvenanceDrawer({
                             style={{
                               fontSize: 10,
                               fontWeight: 600,
-                              color: confPct > 80 ? "var(--color-success, #34d399)" : "var(--color-warning, #fbbf24)",
+                              color: confPct > 80 ? "#137333" : "#b06000",
                             }}
                           >
                             {confPct}% Confidence
@@ -459,7 +472,7 @@ export default function ProvenanceDrawer({
                             alignItems: "center",
                             gap: 6,
                             fontSize: 11.5,
-                            color: "var(--text-primary, #f0f2f5)",
+                            color: "#202124",
                             marginBottom: 8,
                           }}
                         >
@@ -495,7 +508,7 @@ export default function ProvenanceDrawer({
                           style={{
                             width: "100%",
                             height: 4,
-                            background: "var(--border-subtle, #2a2f38)",
+                            background: "#f1f3f4",
                             borderRadius: 2,
                             overflow: "hidden",
                           }}
@@ -518,12 +531,12 @@ export default function ProvenanceDrawer({
                 <div
                   style={{
                     fontSize: 12,
-                    color: "var(--text-muted, #5c6472)",
+                    color: "#5f6368",
                     fontStyle: "italic",
-                    background: "var(--bg-base, #111214)",
+                    background: "#f8f9fa",
                     padding: "8px 12px",
-                    borderRadius: 6,
-                    border: "1px solid var(--border-subtle, #2a2f38)",
+                    borderRadius: 8,
+                    border: "1px solid #dadce0",
                   }}
                 >
                   No ancestor lineage path available for this element.

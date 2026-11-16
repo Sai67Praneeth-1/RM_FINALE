@@ -1,26 +1,9 @@
 import React, { useState, useEffect, useMemo } from "react";
 import {
   X,
-  ExternalLink,
-  Layers,
-  Activity,
-  Key,
-  Share2,
   Compass,
-  Zap,
-  Bot,
-  User,
-  CheckCircle2,
-  AlertTriangle,
-  Clock,
   Sparkles,
-  ArrowRight,
   Maximize2,
-  ChevronRight,
-  Search,
-  Code,
-  Shield,
-  FileText,
 } from "lucide-react";
 import ForensicBackwardTracer from "./ForensicBackwardTracer";
 import MermaidViewer from "./MermaidViewer";
@@ -37,7 +20,7 @@ export default function CommandGraphInspector({
   const [loading, setLoading] = useState(true);
   const [commandData, setCommandData] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [graphSubTab, setGraphSubTab] = useState("sequence"); // "sequence" | "execution" | "authority" | "unified"
+  const [graphSubTab, setGraphSubTab] = useState("sequence"); // "sequence" | "execution" | "authority"
 
   // Fetch command-level telemetry
   useEffect(() => {
@@ -166,7 +149,6 @@ export default function CommandGraphInspector({
   }, [workflowId, chatId]);
 
   const stream = commandData?.execution_stream || [];
-  const graphs = commandData?.three_graphs || {};
   const trace = useMemo(() => {
     if (commandData?.backward_trace) return commandData.backward_trace;
     if (commandData?.forensic_backward_trace || commandData?.answers) {
@@ -215,11 +197,11 @@ export default function CommandGraphInspector({
     lines.push("  E1 --> E2[Compute Distribution Metrics: Analyst]");
     lines.push("  E2 --> E3[Synthesize Final Executive Report: Reporter]");
     lines.push("  E3 --> Output([Final Answer Delivered to Chat])");
-    lines.push("  style Start fill:#111214,stroke:#e8a44a,stroke-width:2px;");
-    lines.push("  style Output fill:#111214,stroke:#34d399,stroke-width:2px;");
-    lines.push("  style E1 fill:#1a1d21,stroke:#60a5fa,stroke-width:1px;");
-    lines.push("  style E2 fill:#1a1d21,stroke:#fbbf24,stroke-width:1px;");
-    lines.push("  style E3 fill:#1a1d21,stroke:#a78bfa,stroke-width:1px;");
+    lines.push("  style Start fill:#e8f0fe,stroke:#1a73e8,stroke-width:2px;");
+    lines.push("  style Output fill:#e6f4ea,stroke:#137333,stroke-width:2px;");
+    lines.push("  style E1 fill:#ffffff,stroke:#dadce0,stroke-width:1px;");
+    lines.push("  style E2 fill:#ffffff,stroke:#dadce0,stroke-width:1px;");
+    lines.push("  style E3 fill:#ffffff,stroke:#dadce0,stroke-width:1px;");
     return lines.join("\n");
   }, [commandData]);
 
@@ -230,11 +212,11 @@ export default function CommandGraphInspector({
     lines.push("  C -->|Scoped Token: del_res| R[Researcher: read_dataset]");
     lines.push("  C -->|Scoped Token: del_ana| A[Analyst: compute_metrics]");
     lines.push("  C -->|Scoped Token: del_rep| S[Reporter: compile_report]");
-    lines.push("  style P fill:#22262c,stroke:#e8a44a,stroke-width:2px;");
-    lines.push("  style C fill:#1a1d21,stroke:#60a5fa,stroke-width:1.5px;");
-    lines.push("  style R fill:#1a1d21,stroke:#34d399,stroke-width:1px;");
-    lines.push("  style A fill:#1a1d21,stroke:#fbbf24,stroke-width:1px;");
-    lines.push("  style S fill:#1a1d21,stroke:#a78bfa,stroke-width:1px;");
+    lines.push("  style P fill:#f1f3f4,stroke:#1a73e8,stroke-width:2px;");
+    lines.push("  style C fill:#ffffff,stroke:#dadce0,stroke-width:1.5px;");
+    lines.push("  style R fill:#ffffff,stroke:#dadce0,stroke-width:1px;");
+    lines.push("  style A fill:#ffffff,stroke:#dadce0,stroke-width:1px;");
+    lines.push("  style S fill:#ffffff,stroke:#dadce0,stroke-width:1px;");
     return lines.join("\n");
   }, [commandData]);
 
@@ -244,19 +226,19 @@ export default function CommandGraphInspector({
         display: "flex",
         flexDirection: "column",
         height: "100%",
-        background: "var(--bg-surface, #1a1d21)",
-        border: "1px solid var(--border-subtle, #2a2f38)",
-        borderRadius: 12,
+        background: "#ffffff",
+        border: "1px solid #dadce0",
+        borderRadius: 8,
         overflow: "hidden",
-        boxShadow: "-4px 0 24px rgba(0,0,0,0.4)",
+        boxShadow: "0 1px 3px 1px rgba(60,64,67,0.15)",
       }}
     >
       {/* 1. Header with Command Context & Actions */}
       <div
         style={{
           padding: "14px 18px",
-          background: "var(--bg-elevated, #22262c)",
-          borderBottom: "1px solid var(--border-subtle, #2a2f38)",
+          background: "#ffffff",
+          borderBottom: "1px solid #dadce0",
           display: "flex",
           alignItems: "center",
           justifyContent: "space-between",
@@ -269,12 +251,12 @@ export default function CommandGraphInspector({
               width: 32,
               height: 32,
               borderRadius: 8,
-              background: "rgba(232, 164, 74, 0.2)",
-              border: "1px solid var(--accent-primary, #e8a44a)",
+              background: "#e8f0fe",
+              border: "1px solid #d2e3fc",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              color: "var(--accent-primary, #e8a44a)",
+              color: "#1a73e8",
               flexShrink: 0,
             }}
           >
@@ -282,25 +264,26 @@ export default function CommandGraphInspector({
           </div>
           <div style={{ minWidth: 0 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--text-primary, #f0f2f5)", whiteSpace: "nowrap" }}>
+              <span style={{ fontSize: 13.5, fontWeight: 600, color: "#202124", whiteSpace: "nowrap" }}>
                 Command Inspector
               </span>
               <span
                 style={{
                   fontSize: 10,
-                  padding: "1px 6px",
-                  borderRadius: 4,
-                  background: "rgba(52, 211, 153, 0.15)",
-                  color: "var(--color-success, #34d399)",
-                  border: "1px solid rgba(52, 211, 153, 0.3)",
+                  padding: "2px 8px",
+                  borderRadius: 16,
+                  background: "#e6f4ea",
+                  color: "#137333",
+                  border: "1px solid #ceead6",
                   fontWeight: 700,
+                  letterSpacing: "0.04em",
                 }}
               >
                 LIVE TELEMETRY
               </span>
             </div>
-            <div style={{ fontSize: 11, color: "var(--text-secondary, #9ba3b0)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-              Workflow: <code style={{ color: "var(--accent-primary, #e8a44a)" }}>{workflowId}</code>
+            <div style={{ fontSize: 11, color: "#5f6368", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              Workflow: <code style={{ color: "#1a73e8", background: "#f1f3f4", padding: "1px 6px", borderRadius: 4 }}>{workflowId}</code>
             </div>
           </div>
         </div>
@@ -309,16 +292,19 @@ export default function CommandGraphInspector({
           {onExpandFullScreen && (
             <button
               onClick={() => onExpandFullScreen(workflowId)}
-              className="pill-btn"
               style={{
                 fontSize: 11,
-                padding: "4px 8px",
+                padding: "5px 12px",
                 display: "flex",
                 alignItems: "center",
                 gap: 4,
-                background: "rgba(96, 165, 250, 0.12)",
-                color: "#60a5fa",
-                borderColor: "#60a5fa",
+                background: "#e8f0fe",
+                color: "#1a73e8",
+                border: "1px solid #d2e3fc",
+                borderRadius: 24,
+                cursor: "pointer",
+                fontWeight: 600,
+                transition: "all 0.15s ease",
               }}
               title="Expand to Full-Page Three-Graph Explorer"
             >
@@ -332,17 +318,23 @@ export default function CommandGraphInspector({
             style={{
               background: "transparent",
               border: "none",
-              color: "var(--text-muted, #5c6472)",
+              color: "#5f6368",
               cursor: "pointer",
-              padding: 4,
-              borderRadius: 4,
+              padding: 6,
+              borderRadius: 20,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              transition: "color 0.15s ease",
+              transition: "background 0.15s ease, color 0.15s ease",
             }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = "#f0f2f5")}
-            onMouseLeave={(e) => (e.currentTarget.style.color = "#5c6472")}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = "#202124";
+              e.currentTarget.style.background = "#f1f3f4";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = "#5f6368";
+              e.currentTarget.style.background = "transparent";
+            }}
             title="Close Inspector"
           >
             <X size={18} />
@@ -354,10 +346,10 @@ export default function CommandGraphInspector({
       <div
         style={{
           display: "flex",
-          borderBottom: "1px solid var(--border-subtle, #2a2f38)",
-          background: "var(--bg-base, #111214)",
+          borderBottom: "1px solid #dadce0",
+          background: "#f8f9fa",
           padding: "0 12px",
-          gap: 4,
+          gap: 6,
         }}
       >
         {[
@@ -372,10 +364,10 @@ export default function CommandGraphInspector({
               padding: "10px 14px",
               background: "transparent",
               border: "none",
-              borderBottom: activeTab === t.id ? "2px solid var(--accent-primary, #e8a44a)" : "2px solid transparent",
-              color: activeTab === t.id ? "var(--accent-primary, #e8a44a)" : "var(--text-secondary, #9ba3b0)",
+              borderBottom: activeTab === t.id ? "2px solid #1a73e8" : "2px solid transparent",
+              color: activeTab === t.id ? "#1a73e8" : "#5f6368",
               fontSize: 12,
-              fontWeight: activeTab === t.id ? 700 : 500,
+              fontWeight: activeTab === t.id ? 600 : 500,
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
@@ -388,10 +380,11 @@ export default function CommandGraphInspector({
               <span
                 style={{
                   fontSize: 10,
-                  padding: "1px 5px",
-                  borderRadius: 10,
-                  background: activeTab === t.id ? "rgba(232, 164, 74, 0.25)" : "#22262c",
-                  color: activeTab === t.id ? "var(--accent-primary, #e8a44a)" : "#9ba3b0",
+                  padding: "1px 6px",
+                  borderRadius: 12,
+                  background: activeTab === t.id ? "#e8f0fe" : "#f1f3f4",
+                  color: activeTab === t.id ? "#1a73e8" : "#5f6368",
+                  fontWeight: 600,
                 }}
               >
                 {t.count}
@@ -402,24 +395,24 @@ export default function CommandGraphInspector({
       </div>
 
       {/* 3. Content Body (Scrollable) */}
-      <div style={{ flex: 1, overflowY: "auto", padding: 16 }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: 16, background: "#ffffff" }}>
         {loading ? (
-          <div style={{ textAlign: "center", padding: "40px 20px", color: "var(--text-muted, #5c6472)" }}>
-            <Sparkles size={28} color="var(--accent-primary, #e8a44a)" style={{ marginBottom: 10, animation: "spin 2s linear infinite" }} />
-            <div style={{ fontSize: 13, color: "var(--text-secondary, #9ba3b0)", fontWeight: 600 }}>Loading Command Telemetry...</div>
+          <div style={{ textAlign: "center", padding: "40px 20px", color: "#5f6368" }}>
+            <Sparkles size={28} color="#1a73e8" style={{ marginBottom: 10, animation: "spin 2s linear infinite" }} />
+            <div style={{ fontSize: 13, color: "#202124", fontWeight: 600 }}>Loading Command Telemetry...</div>
           </div>
         ) : (
           <>
             {/* TAB 1: EXECUTION STREAM */}
             {activeTab === "stream" && (
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 11.5, color: "var(--text-muted, #5c6472)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 11.5, color: "#5f6368" }}>
                   <span>Chronological Multi-Agent Actions &bull; {stream.length} Events</span>
-                  <span style={{ color: "var(--accent-primary, #e8a44a)", fontWeight: 600 }}>Command: {workflowId}</span>
+                  <span style={{ color: "#1a73e8", fontWeight: 600 }}>Command: {workflowId}</span>
                 </div>
 
                 {stream.length === 0 ? (
-                  <div style={{ textAlign: "center", padding: "36px 16px", color: "var(--text-muted, #5c6472)", fontSize: 13 }}>
+                  <div style={{ textAlign: "center", padding: "36px 16px", color: "#5f6368", fontSize: 13 }}>
                     No tool executions or inter-agent interactions recorded for this turn.
                   </div>
                 ) : (
@@ -433,8 +426,8 @@ export default function CommandGraphInspector({
                           key={item.id || idx}
                           onClick={() => setSelectedItem(item)}
                           style={{
-                            background: isSelected ? "rgba(232, 164, 74, 0.12)" : "var(--bg-base, #111214)",
-                            border: isSelected ? "1px solid var(--accent-primary, #e8a44a)" : "1px solid var(--border-subtle, #2a2f38)",
+                            background: isSelected ? "#e8f0fe" : "#ffffff",
+                            border: isSelected ? "1px solid #1a73e8" : "1px solid #dadce0",
                             borderRadius: 8,
                             padding: "10px 12px",
                             cursor: "pointer",
@@ -442,6 +435,7 @@ export default function CommandGraphInspector({
                             display: "flex",
                             flexDirection: "column",
                             gap: 6,
+                            boxShadow: isSelected ? "0 1px 3px 1px rgba(60,64,67,0.15)" : "none",
                           }}
                         >
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -449,34 +443,36 @@ export default function CommandGraphInspector({
                               <span
                                 style={{
                                   fontSize: 10,
-                                  padding: "2px 6px",
-                                  borderRadius: 4,
-                                  background: isInteraction ? "rgba(56, 189, 248, 0.18)" : "rgba(245, 158, 11, 0.18)",
-                                  color: isInteraction ? "#38bdf8" : "#fbbf24",
+                                  padding: "2px 8px",
+                                  borderRadius: 16,
+                                  background: isInteraction ? "#e8f0fe" : "#fef7e0",
+                                  color: isInteraction ? "#1a73e8" : "#b06000",
+                                  border: isInteraction ? "1px solid #d2e3fc" : "1px solid #feefc3",
                                   fontWeight: 700,
+                                  letterSpacing: "0.03em",
                                 }}
                               >
                                 {isInteraction ? "INTERACTION" : "TOOL CALL"}
                               </span>
-                              <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-primary, #f0f2f5)" }}>
+                              <span style={{ fontSize: 12.5, fontWeight: 600, color: "#202124" }}>
                                 {isInteraction ? `${item.from_agent} → ${item.to_agent}` : `${item.agent}: ${item.tool_name}`}
                               </span>
                             </div>
 
-                            <span style={{ fontSize: 10, color: "var(--text-muted, #5c6472)" }}>
+                            <span style={{ fontSize: 10.5, color: "#5f6368" }}>
                               Step {idx + 1}
                             </span>
                           </div>
 
-                          <div style={{ fontSize: 11.5, color: "var(--text-secondary, #9ba3b0)", lineHeight: 1.4 }}>
+                          <div style={{ fontSize: 11.5, color: "#3c4043", lineHeight: 1.4 }}>
                             {isInteraction ? item.preview : `Operation: ${item.operation}`}
                           </div>
 
                           {!isInteraction && item.resource_id && (
-                            <div style={{ fontSize: 10.5, color: "var(--text-muted, #5c6472)", display: "flex", gap: 12 }}>
-                              <span>Target: <code style={{ color: "var(--accent-secondary, #2dd4bf)" }}>{item.resource_id}</code></span>
+                            <div style={{ fontSize: 10.5, color: "#5f6368", display: "flex", gap: 12 }}>
+                              <span>Target: <code style={{ color: "#1a73e8", background: "#f1f3f4", padding: "1px 4px", borderRadius: 4 }}>{item.resource_id}</code></span>
                               {item.delegation_id && (
-                                <span>Token: <code style={{ color: "var(--color-success, #34d399)" }}>{item.delegation_id.substring(0, 14)}...</code></span>
+                                <span>Token: <code style={{ color: "#137333", background: "#f1f3f4", padding: "1px 4px", borderRadius: 4 }}>{item.delegation_id.substring(0, 14)}...</code></span>
                               )}
                             </div>
                           )}
@@ -492,23 +488,23 @@ export default function CommandGraphInspector({
                     style={{
                       marginTop: 10,
                       padding: 12,
-                      background: "var(--bg-elevated, #22262c)",
+                      background: "#f8f9fa",
                       borderRadius: 8,
-                      border: "1px solid var(--border-subtle, #2a2f38)",
+                      border: "1px solid #dadce0",
                     }}
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                      <span style={{ fontSize: 11, fontWeight: 700, color: "var(--accent-primary, #e8a44a)" }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: "#1a73e8" }}>
                         Payload &amp; Invariant Proof
                       </span>
                       <button
                         onClick={() => setSelectedItem(null)}
-                        style={{ background: "transparent", border: "none", color: "#9ba3b0", cursor: "pointer" }}
+                        style={{ background: "transparent", border: "none", color: "#5f6368", cursor: "pointer", padding: 2 }}
                       >
-                        <X size={13} />
+                        <X size={14} />
                       </button>
                     </div>
-                    <pre style={{ margin: 0, fontSize: 10.5, color: "#9ba3b0", overflowX: "auto", fontFamily: "monospace" }}>
+                    <pre style={{ margin: 0, fontSize: 10.5, color: "#202124", overflowX: "auto", fontFamily: "Roboto Mono, monospace" }}>
                       {JSON.stringify(selectedItem.raw || selectedItem, null, 2)}
                     </pre>
                   </div>
@@ -520,7 +516,7 @@ export default function CommandGraphInspector({
             {activeTab === "graphs" && (
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
                 {/* Sub-selector */}
-                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", borderBottom: "1px solid #2a2f38", paddingBottom: 10 }}>
+                <div style={{ display: "flex", gap: 6, flexWrap: "wrap", borderBottom: "1px solid #dadce0", paddingBottom: 10 }}>
                   {[
                     { id: "sequence", label: "Sequence Diagram" },
                     { id: "execution", label: "Causal Execution" },
@@ -530,14 +526,15 @@ export default function CommandGraphInspector({
                       key={sub.id}
                       onClick={() => setGraphSubTab(sub.id)}
                       style={{
-                        padding: "5px 10px",
-                        borderRadius: 6,
-                        fontSize: 11,
-                        fontWeight: graphSubTab === sub.id ? 700 : 500,
-                        background: graphSubTab === sub.id ? "var(--accent-primary, #e8a44a)" : "var(--bg-base, #111214)",
-                        color: graphSubTab === sub.id ? "#111214" : "var(--text-secondary, #9ba3b0)",
-                        border: "1px solid var(--border-subtle, #2a2f38)",
+                        padding: "6px 14px",
+                        borderRadius: 24,
+                        fontSize: 11.5,
+                        fontWeight: graphSubTab === sub.id ? 600 : 500,
+                        background: graphSubTab === sub.id ? "#1a73e8" : "#ffffff",
+                        color: graphSubTab === sub.id ? "#ffffff" : "#3c4043",
+                        border: graphSubTab === sub.id ? "1px solid #1a73e8" : "1px solid #dadce0",
                         cursor: "pointer",
+                        transition: "all 0.15s ease",
                       }}
                     >
                       {sub.label}
@@ -546,7 +543,7 @@ export default function CommandGraphInspector({
                 </div>
 
                 {/* Render Mermaid Chart */}
-                <div style={{ background: "var(--bg-base, #111214)", borderRadius: 8, border: "1px solid #2a2f38", padding: 10 }}>
+                <div style={{ background: "#ffffff", borderRadius: 8, border: "1px solid #dadce0", padding: 10 }}>
                   {graphSubTab === "sequence" && (
                     <MermaidViewer
                       chart={mermaidSequenceChart}
