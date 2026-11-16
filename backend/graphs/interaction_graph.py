@@ -20,6 +20,22 @@ AGENT_ROLES = {
     "agent_critic": {"role": "Adversarial Reasoning Critic", "model": "Google Gemini 3.5 Flash", "tools": ["verify_causality", "detect_inconsistencies"]},
 }
 
+AGENT_SQUADS = {
+    "agent_coordinator": {"squad_id": "squad_command", "squad_name": "Command & Governance Squad", "squad_short": "Command", "squad_icon": "👑", "squad_color": "#3b82f6"},
+    "Coordinator_Agent": {"squad_id": "squad_command", "squad_name": "Command & Governance Squad", "squad_short": "Command", "squad_icon": "👑", "squad_color": "#3b82f6"},
+    "agent_reporter": {"squad_id": "squad_command", "squad_name": "Command & Governance Squad", "squad_short": "Command", "squad_icon": "👑", "squad_color": "#3b82f6"},
+    "Synthesizer_Agent": {"squad_id": "squad_command", "squad_name": "Command & Governance Squad", "squad_short": "Command", "squad_icon": "👑", "squad_color": "#3b82f6"},
+    "agent_researcher": {"squad_id": "squad_complaints", "squad_name": "Complaints & Sentiment Squad", "squad_short": "Complaints", "squad_icon": "🏢", "squad_color": "#10b981"},
+    "Executor_Agent": {"squad_id": "squad_complaints", "squad_name": "Complaints & Sentiment Squad", "squad_short": "Complaints", "squad_icon": "🏢", "squad_color": "#10b981"},
+    "agent_sentiment": {"squad_id": "squad_complaints", "squad_name": "Complaints & Sentiment Squad", "squad_short": "Complaints", "squad_icon": "🏢", "squad_color": "#10b981"},
+    "agent_forensics": {"squad_id": "squad_secops", "squad_name": "SecOps Forensics Squad", "squad_short": "SecOps", "squad_icon": "🛡️", "squad_color": "#ef4444"},
+    "agent_threat_hunter": {"squad_id": "squad_secops", "squad_name": "SecOps Forensics Squad", "squad_short": "SecOps", "squad_icon": "🛡️", "squad_color": "#ef4444"},
+    "agent_compliance": {"squad_id": "squad_secops", "squad_name": "SecOps Forensics Squad", "squad_short": "SecOps", "squad_icon": "🛡️", "squad_color": "#ef4444"},
+    "agent_analyst": {"squad_id": "squad_analytics", "squad_name": "Statistical Analytics Squad", "squad_short": "Analytics", "squad_icon": "📊", "squad_color": "#f59e0b"},
+    "agent_critic": {"squad_id": "squad_critic", "squad_name": "Adversarial Debate Squad", "squad_short": "Critic", "squad_icon": "🎯", "squad_color": "#f97316"},
+    "Critic_Agent": {"squad_id": "squad_critic", "squad_name": "Adversarial Debate Squad", "squad_short": "Critic", "squad_icon": "🎯", "squad_color": "#f97316"},
+}
+
 class InteractionGraphBuilder:
     def __init__(self, event_store: EventStore):
         self.store = event_store
@@ -51,6 +67,13 @@ class InteractionGraphBuilder:
                         "model": "Google Gemini 3.5 Flash",
                         "tools": ["standard_cim_tool"]
                     })
+                    squad = AGENT_SQUADS.get(ag_id, {
+                        "squad_id": "squad_command",
+                        "squad_name": "Command & Governance Squad",
+                        "squad_short": "Command",
+                        "squad_icon": "👑",
+                        "squad_color": "#3b82f6"
+                    })
                     clean_label = ag_id.replace("agent_", "").replace("_", " ").title()
                     G.add_node(
                         ag_id,
@@ -59,13 +82,22 @@ class InteractionGraphBuilder:
                         agent_id=ag_id,
                         role=meta["role"],
                         model=meta["model"],
-                        tools=meta["tools"]
+                        tools=meta["tools"],
+                        squad_id=squad["squad_id"],
+                        squad_name=squad["squad_name"],
+                        squad_short=squad["squad_short"],
+                        squad_icon=squad["squad_icon"],
+                        squad_color=squad["squad_color"]
                     )
 
             # Add directed communication edge
             summary_disp = r.semantic_summary or r.interaction_type.value
             if len(summary_disp) > 40:
                 summary_disp = summary_disp[:37] + "..."
+
+            src_squad = AGENT_SQUADS.get(r.sender_agent_id, {}).get("squad_id", "squad_command")
+            tgt_squad = AGENT_SQUADS.get(r.receiver_agent_id, {}).get("squad_id", "squad_command")
+            is_cross_squad = src_squad != tgt_squad
 
             edge_key = r.interaction_id
             G.add_edge(
@@ -89,7 +121,10 @@ class InteractionGraphBuilder:
                 reply_to_message_id=r.reply_to_message_id,
                 downstream_action_ids=r.downstream_action_ids,
                 provenance_refs=r.provenance_refs,
-                capture_level=r.capture_level.value if hasattr(r.capture_level, "value") else int(r.capture_level)
+                capture_level=r.capture_level.value if hasattr(r.capture_level, "value") else int(r.capture_level),
+                from_squad=src_squad,
+                to_squad=tgt_squad,
+                is_cross_squad=is_cross_squad
             )
 
         return G

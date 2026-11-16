@@ -547,8 +547,29 @@ def get_backward_trace(workflow_id: str = Query(...)):
         "agent_researcher": "Agent B (Researcher)",
         "agent_analyst": "Agent C (Analyst)",
         "agent_reporter": "Agent D (Reporter)",
+        "agent_forensics": "Forensics Scanner",
+        "agent_threat_hunter": "Threat Hunter",
+        "agent_compliance": "Compliance Auditor",
+        "agent_sentiment": "Sentiment Specialist",
+        "agent_critic": "Adversarial Critic",
         "principal_alice": "Principal Alice",
         "user_chat_principal": "Principal User"
+    }
+
+    agent_squads_map = {
+        "agent_coordinator": {"id": "squad_command", "name": "Command & Governance Squad", "icon": "👑"},
+        "Coordinator_Agent": {"id": "squad_command", "name": "Command & Governance Squad", "icon": "👑"},
+        "agent_reporter": {"id": "squad_command", "name": "Command & Governance Squad", "icon": "👑"},
+        "Synthesizer_Agent": {"id": "squad_command", "name": "Command & Governance Squad", "icon": "👑"},
+        "agent_researcher": {"id": "squad_complaints", "name": "Complaints & Sentiment Squad", "icon": "🏢"},
+        "Executor_Agent": {"id": "squad_complaints", "name": "Complaints & Sentiment Squad", "icon": "🏢"},
+        "agent_sentiment": {"id": "squad_complaints", "name": "Complaints & Sentiment Squad", "icon": "🏢"},
+        "agent_forensics": {"id": "squad_secops", "name": "SecOps Forensics Squad", "icon": "🛡️"},
+        "agent_threat_hunter": {"id": "squad_secops", "name": "SecOps Forensics Squad", "icon": "🛡️"},
+        "agent_compliance": {"id": "squad_secops", "name": "SecOps Forensics Squad", "icon": "🛡️"},
+        "agent_analyst": {"id": "squad_analytics", "name": "Statistical Analytics Squad", "icon": "📊"},
+        "agent_critic": {"id": "squad_critic", "name": "Adversarial Debate Squad", "icon": "🎯"},
+        "Critic_Agent": {"id": "squad_critic", "name": "Adversarial Debate Squad", "icon": "🎯"},
     }
 
     # 2. Extract final reporter and artifact
@@ -588,16 +609,28 @@ def get_backward_trace(workflow_id: str = Query(...)):
             from_name = agent_names.get(it.sender_agent_id, it.sender_agent_id)
             to_name = agent_names.get(it.receiver_agent_id, it.receiver_agent_id)
             summary_text = it.semantic_summary or it.content or f"{itype.replace('_', ' ').title()} payload"
+            
+            src_squad = agent_squads_map.get(it.sender_agent_id, {"id": "squad_command", "name": "Command & Governance Squad", "icon": "👑"})
+            tgt_squad = agent_squads_map.get(it.receiver_agent_id, {"id": "squad_command", "name": "Command & Governance Squad", "icon": "👑"})
+            is_cross = src_squad["id"] != tgt_squad["id"]
+            
+            prefix = f"⚡ [CROSS-SQUAD BRIDGE: {src_squad['icon']} {src_squad['name']} ➔ {tgt_squad['icon']} {tgt_squad['name']}] " if is_cross else f"[{src_squad['icon']} {src_squad['name']}] "
+
             data_transfers.append({
                 "from_agent": it.sender_agent_id,
                 "to_agent": it.receiver_agent_id,
                 "from_agent_label": from_name,
                 "to_agent_label": to_name,
+                "from_squad": src_squad["id"],
+                "from_squad_label": f"{src_squad['icon']} {src_squad['name']}",
+                "to_squad": tgt_squad["id"],
+                "to_squad_label": f"{tgt_squad['icon']} {tgt_squad['name']}",
+                "is_cross_squad": is_cross,
                 "interaction_type": itype,
                 "data_summary": summary_text,
                 "interaction_id": it.interaction_id,
                 "timestamp": it.timestamp,
-                "answer_text": f"{from_name} transferred data ({summary_text}) to {to_name} via message {it.interaction_id}."
+                "answer_text": f"{prefix}{from_name} transferred data ({summary_text}) to {to_name} via message {it.interaction_id}."
             })
 
     if not data_transfers:
@@ -607,33 +640,48 @@ def get_backward_trace(workflow_id: str = Query(...)):
                 "to_agent": "agent_analyst",
                 "from_agent_label": "Agent B (Researcher)",
                 "to_agent_label": "Agent C (Analyst)",
+                "from_squad": "squad_complaints",
+                "from_squad_label": "🏢 Complaints & Sentiment Squad",
+                "to_squad": "squad_analytics",
+                "to_squad_label": "📊 Statistical Analytics Squad",
+                "is_cross_squad": True,
                 "interaction_type": "information_transfer",
                 "data_summary": "Transferred extracted complaint records to Analysis Agent",
                 "interaction_id": "itr_transfer_01",
                 "timestamp": wf.start_time,
-                "answer_text": "Agent B (Researcher) transferred extracted complaints to Agent C (Analyst) via message itr_transfer_01."
+                "answer_text": "⚡ [CROSS-SQUAD BRIDGE: 🏢 Complaints Squad ➔ 📊 Analytics Squad] Agent B (Researcher) transferred extracted complaints to Agent C (Analyst) via message itr_transfer_01."
             },
             {
                 "from_agent": "agent_analyst",
                 "to_agent": "agent_coordinator",
                 "from_agent_label": "Agent C (Analyst)",
                 "to_agent_label": "Agent A (Coordinator)",
+                "from_squad": "squad_analytics",
+                "from_squad_label": "📊 Statistical Analytics Squad",
+                "to_squad": "squad_command",
+                "to_squad_label": "👑 Command & Governance Squad",
+                "is_cross_squad": True,
                 "interaction_type": "result",
                 "data_summary": "Quantitative analysis findings and severity metrics",
                 "interaction_id": "itr_result_01",
                 "timestamp": wf.start_time,
-                "answer_text": "Agent C (Analyst) transferred quantitative analysis findings to Agent A (Coordinator) via message itr_result_01."
+                "answer_text": "⚡ [CROSS-SQUAD BRIDGE: 📊 Analytics Squad ➔ 👑 Command Squad] Agent C (Analyst) transferred quantitative analysis findings to Agent A (Coordinator) via message itr_result_01."
             },
             {
                 "from_agent": "agent_coordinator",
                 "to_agent": "agent_reporter",
                 "from_agent_label": "Agent A (Coordinator)",
                 "to_agent_label": "Agent D (Reporter)",
+                "from_squad": "squad_command",
+                "from_squad_label": "👑 Command & Governance Squad",
+                "to_squad": "squad_command",
+                "to_squad_label": "👑 Command & Governance Squad",
+                "is_cross_squad": False,
                 "interaction_type": "handoff",
                 "data_summary": "Handed off verified findings for final executive report synthesis",
                 "interaction_id": "itr_handoff_01",
                 "timestamp": wf.start_time,
-                "answer_text": "Agent A (Coordinator) handed off verified findings to Agent D (Reporter) via message itr_handoff_01."
+                "answer_text": "[👑 Command & Governance Squad] Agent A (Coordinator) handed off verified findings to Agent D (Reporter) via message itr_handoff_01."
             }
         ]
 

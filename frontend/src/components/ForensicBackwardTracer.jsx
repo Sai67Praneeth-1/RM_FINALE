@@ -346,20 +346,22 @@ export default function ForensicBackwardTracer({
                   key={idx}
                   onClick={() => onSelectEntity && onSelectEntity({ ...dt, entityCategory: "Data Transfer Message" })}
                   style={{
-                    background: "#111214",
-                    border: "1px solid #2a2f38",
+                    background: dt.is_cross_squad ? "rgba(245, 158, 11, 0.08)" : "#111214",
+                    border: dt.is_cross_squad ? "1px solid rgba(245, 158, 11, 0.35)" : "1px solid #2a2f38",
                     padding: "6px 8px",
                     borderRadius: 4,
                     fontSize: 11,
                     cursor: "pointer",
                     display: "flex",
                     justifyContent: "space-between",
+                    alignItems: "center",
                   }}
                 >
-                  <span style={{ color: "var(--accent-secondary, #2dd4bf)", fontWeight: 600 }}>
-                    {dt.from_agent} &rarr; {dt.to_agent}
+                  <span style={{ color: dt.is_cross_squad ? "#fbbf24" : "var(--accent-secondary, #2dd4bf)", fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }}>
+                    {dt.is_cross_squad && <span style={{ background: "#f59e0b", color: "#000", fontSize: 8.5, padding: "1px 4px", borderRadius: 3, fontWeight: 800 }}>⚡ SQUAD BRIDGE</span>}
+                    <span>{dt.from_agent} &rarr; {dt.to_agent}</span>
                   </span>
-                  <span style={{ color: "var(--text-muted, #5c6472)" }}>{dt.interaction_type}</span>
+                  <span style={{ color: "var(--text-muted, #5c6472)", fontSize: 10 }}>{dt.interaction_type}</span>
                 </div>
               ))}
             </div>
