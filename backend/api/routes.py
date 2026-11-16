@@ -988,7 +988,8 @@ def detect_squad_type(prompt: str, dataset_name: Optional[str] = None) -> str:
     has_cross_explicit = any(k in p_lower for k in [
         "cross-squad", "cross squad", "inter-squad", "inter squad", "both datasets",
         "cross domain", "cross-domain", "hybrid squad", "hybrid", "full collaboration",
-        "enterprise cross", "cross team", "cross-team", "correlate with"
+        "enterprise cross", "cross team", "cross-team", "correlate with", "all squads",
+        "all the squads", "every squad", "across squads"
     ])
     
     if has_cross_explicit or (has_complaint_signal and has_security_signal):
