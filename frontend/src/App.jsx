@@ -43,12 +43,15 @@ import {
   Radio,
   Server,
   Zap,
+  Compass,
+  Maximize2,
 } from "lucide-react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import AgentInteractionGraph from "./AgentInteractionGraph";
 import ThreeGraphViewer from "./ThreeGraphViewer";
 import ProvenanceDAG from "./components/ProvenanceDAG";
 import ProvenanceDrawer from "./components/ProvenanceDrawer";
+import CommandGraphInspector from "./components/CommandGraphInspector";
 
 const API_BASE = "http://127.0.0.1:8000/api";
 
@@ -181,6 +184,8 @@ export default function App() {
   const [selectedSquad, setSelectedSquad] = useState("auto");
   const [isListening, setIsListening] = useState(false);
   const [expandedProofs, setExpandedProofs] = useState({});
+  const [selectedCommandWfId, setSelectedCommandWfId] = useState(null);
+  const [showCommandInspector, setShowCommandInspector] = useState(true);
 
   // MongoDB Chat History & Sessions State (ChatGPT style)
   const [chatList, setChatList] = useState([]);
@@ -1045,6 +1050,8 @@ export default function App() {
       if (data.workflow_id || data.workflow_run?.workflow_id) {
         const newWfId = data.workflow_id || data.workflow_run?.workflow_id;
         setSelectedWorkflowId(newWfId);
+        setSelectedCommandWfId(newWfId);
+        setShowCommandInspector(true);
         const targetScope = data.conversation_id ? `chat:${data.conversation_id}` : `wf:${newWfId}`;
         setSelectedEventScope(targetScope);
         fetchEvents(targetScope);
@@ -1455,39 +1462,83 @@ export default function App() {
 
         {/* View 1: Chat with Lead Agent */}
         {activeTab === "chat" && (
-          <div className="content-panel">
-            <div className="chat-container">
-              {activeChatId && (
-                <div style={{
+          <div className="content-panel" style={{ height: "calc(100vh - 90px)", minHeight: 0, padding: 16 }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: showCommandInspector && selectedCommandWfId ? "minmax(0, 58%) minmax(0, 42%)" : "1fr",
+                gap: 16,
+                flex: 1,
+                minHeight: 0,
+                height: "100%",
+              }}
+            >
+              <div
+                className="chat-container"
+                style={{
                   display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "8px 14px",
-                  background: "#0b1329",
-                  borderRadius: 8,
-                  marginBottom: 10,
-                  border: "1px solid #1e293b"
-                }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-                    <MessageSquare size={14} color="#38bdf8" />
-                    <span style={{ color: "#f8fafc", fontWeight: 600, fontSize: 13, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                      {chatList.find((c) => c.id === activeChatId)?.title || "Active Investigation"}
-                    </span>
-                    <span style={{ fontSize: 10.5, color: "#34d399", background: "rgba(16, 185, 129, 0.12)", border: "1px solid rgba(16, 185, 129, 0.3)", padding: "1px 6px", borderRadius: 4 }}>
-                      MongoDB Synced
-                    </span>
+                  flexDirection: "column",
+                  height: "100%",
+                  minHeight: 0,
+                  overflow: "hidden",
+                  maxWidth: showCommandInspector && selectedCommandWfId ? "100%" : "1000px",
+                  margin: "0 auto",
+                  width: "100%",
+                }}
+              >
+                {activeChatId && (
+                  <div style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    padding: "8px 14px",
+                    background: "#0b1329",
+                    borderRadius: 8,
+                    marginBottom: 10,
+                    border: "1px solid #1e293b",
+                    flexWrap: "wrap",
+                    gap: 8,
+                  }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                      <MessageSquare size={14} color="#38bdf8" />
+                      <span style={{ color: "#f8fafc", fontWeight: 600, fontSize: 13, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {chatList.find((c) => c.id === activeChatId)?.title || "Active Investigation"}
+                      </span>
+                      <span style={{ fontSize: 10.5, color: "#34d399", background: "rgba(16, 185, 129, 0.12)", border: "1px solid rgba(16, 185, 129, 0.3)", padding: "1px 6px", borderRadius: 4 }}>
+                        MongoDB Synced
+                      </span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      {selectedCommandWfId && (
+                        <button
+                          className="pill-btn"
+                          style={{
+                            padding: "3px 10px",
+                            fontSize: 11.5,
+                            background: showCommandInspector ? "rgba(232, 164, 74, 0.2)" : "transparent",
+                            borderColor: "var(--accent-primary, #e8a44a)",
+                            color: "var(--accent-primary, #e8a44a)",
+                            fontWeight: 600,
+                          }}
+                          onClick={() => setShowCommandInspector((prev) => !prev)}
+                          title="Toggle Command Telemetry & Backward Trace side panel"
+                        >
+                          <Compass size={12} style={{ display: "inline", marginRight: 4 }} />
+                          {showCommandInspector ? "Hide Inspector" : "Show Inspector"}
+                        </button>
+                      )}
+                      <button
+                        className="pill-btn"
+                        style={{ padding: "3px 8px", fontSize: 11.5 }}
+                        onClick={handleStartNewChat}
+                        title="Start a new chat session (Alt+N)"
+                      >
+                        <Plus size={12} style={{ display: "inline", marginRight: 3 }} />
+                        New Chat
+                      </button>
+                    </div>
                   </div>
-                  <button
-                    className="pill-btn"
-                    style={{ padding: "3px 8px", fontSize: 11.5 }}
-                    onClick={handleStartNewChat}
-                    title="Start a new chat session (Alt+N)"
-                  >
-                    <Plus size={12} style={{ display: "inline", marginRight: 3 }} />
-                    New Chat
-                  </button>
-                </div>
-              )}
+                )}
 
               {/* Hybrid Squad Architecture Selector */}
               <div
@@ -1583,77 +1634,131 @@ export default function App() {
                         />
                       )}
 
-                      {/* Prominent Action Bar bridging Chat prompt & Three-Graph Explorer */}
-                      {(msg.workflow_id || msg.metadata?.workflow_id || msg.workflow_run?.workflow_id) && (
-                        <div
-                          style={{
-                            marginTop: 12,
-                            padding: "12px 16px",
-                            borderRadius: 8,
-                            background: "linear-gradient(135deg, rgba(232, 164, 74, 0.12) 0%, rgba(45, 212, 191, 0.08) 100%)",
-                            border: "1px solid rgba(232, 164, 74, 0.45)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            flexWrap: "wrap",
-                            gap: 12,
-                            boxShadow: "0 4px 16px rgba(0,0,0,0.25)",
-                          }}
-                        >
-                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                            <div
-                              style={{
-                                width: 32,
-                                height: 32,
-                                borderRadius: 8,
-                                background: "rgba(232, 164, 74, 0.2)",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                color: "var(--accent-primary, #e8a44a)",
-                              }}
-                            >
-                              <Network size={18} />
-                            </div>
-                            <div>
-                              <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-primary, #f0f2f5)" }}>
-                                Multi-Agent Execution Recorded
-                              </div>
-                              <div style={{ fontSize: 11.5, color: "var(--text-secondary, #9ba3b0)" }}>
-                                Workflow: <code style={{ color: "var(--accent-primary, #e8a44a)" }}>{msg.workflow_id || msg.metadata?.workflow_id || msg.workflow_run?.workflow_id}</code> &bull; Correlated across Interaction, Execution &amp; Authority graphs
-                              </div>
-                            </div>
-                          </div>
+                      {/* Inline Command Telemetry & Trace Bar */}
+                      {(msg.workflow_id || msg.metadata?.workflow_id || msg.workflow_run?.workflow_id) && (() => {
+                        const msgWfId = msg.workflow_id || msg.metadata?.workflow_id || msg.workflow_run?.workflow_id;
+                        const isSelected = selectedCommandWfId === msgWfId && showCommandInspector;
+                        const agentCount = msg.agent_count || (msg.interactions && new Set(msg.interactions.flatMap((i) => [i.sender_agent_id || i.from_agent, i.receiver_agent_id || i.to_agent]).filter(Boolean)).size) || 4;
+                        const toolCount = msg.tool_count || msg.tool_calls?.length || msg.workflow_run?.event_count || msg.events?.length || 3;
 
-                          <button
-                            onClick={() => {
-                              const wf = msg.workflow_id || msg.metadata?.workflow_id || msg.workflow_run?.workflow_id;
-                              setSelectedWorkflowId(wf);
-                              navigate(`/graphs?workflow_id=${encodeURIComponent(wf)}&auto_trace=true`);
-                            }}
+                        return (
+                          <div
                             style={{
-                              background: "var(--accent-primary, #e8a44a)",
-                              color: "#111214",
-                              border: "none",
-                              borderRadius: 6,
-                              padding: "8px 16px",
-                              fontSize: 13,
-                              fontWeight: 700,
+                              marginTop: 12,
+                              padding: "10px 14px",
+                              borderRadius: 8,
+                              background: isSelected ? "rgba(232, 164, 74, 0.14)" : "var(--bg-elevated, #22262c)",
+                              border: isSelected ? "1.5px solid var(--accent-primary, #e8a44a)" : "1px solid var(--border-subtle, #2a2f38)",
                               display: "flex",
                               alignItems: "center",
-                              gap: 8,
-                              cursor: "pointer",
-                              transition: "all 0.15s ease",
-                              boxShadow: "0 2px 10px rgba(232, 164, 74, 0.35)",
+                              justifyContent: "space-between",
+                              flexWrap: "wrap",
+                              gap: 10,
+                              boxShadow: isSelected ? "0 0 16px rgba(232, 164, 74, 0.2)" : "none",
+                              transition: "all 0.2s ease",
                             }}
-                            onMouseEnter={(e) => (e.currentTarget.style.filter = "brightness(1.1)")}
-                            onMouseLeave={(e) => (e.currentTarget.style.filter = "none")}
                           >
-                            <Search size={15} />
-                            <span>🔍 Inspect in Three-Graph Explorer (Trace Lineage)</span>
-                          </button>
-                        </div>
-                      )}
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  padding: "3px 8px",
+                                  borderRadius: 6,
+                                  background: "rgba(96, 165, 250, 0.15)",
+                                  border: "1px solid rgba(96, 165, 250, 0.35)",
+                                  color: "#60a5fa",
+                                  fontWeight: 700,
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 5,
+                                }}
+                                title={`${agentCount} autonomous agents collaborated in this turn`}
+                              >
+                                <Bot size={13} />
+                                {agentCount} Agents
+                              </span>
+
+                              <span
+                                style={{
+                                  fontSize: 11,
+                                  padding: "3px 8px",
+                                  borderRadius: 6,
+                                  background: "rgba(245, 158, 11, 0.15)",
+                                  border: "1px solid rgba(245, 158, 11, 0.35)",
+                                  color: "#fbbf24",
+                                  fontWeight: 700,
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 5,
+                                }}
+                                title={`${toolCount} verified tool executions with authority delegation`}
+                              >
+                                <Zap size={13} />
+                                {toolCount} Tool Calls
+                              </span>
+
+                              <span style={{ fontSize: 11, color: "var(--text-muted, #5c6472)" }}>
+                                Workflow: <code style={{ color: "var(--accent-primary, #e8a44a)" }}>{msgWfId}</code>
+                              </span>
+                            </div>
+
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <button
+                                onClick={() => {
+                                  if (isSelected) {
+                                    setShowCommandInspector(false);
+                                  } else {
+                                    setSelectedCommandWfId(msgWfId);
+                                    setShowCommandInspector(true);
+                                  }
+                                }}
+                                style={{
+                                  background: isSelected ? "var(--accent-primary, #e8a44a)" : "rgba(232, 164, 74, 0.18)",
+                                  color: isSelected ? "#111214" : "var(--accent-primary, #e8a44a)",
+                                  border: "1px solid var(--accent-primary, #e8a44a)",
+                                  borderRadius: 6,
+                                  padding: "6px 12px",
+                                  fontSize: 12,
+                                  fontWeight: 700,
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 6,
+                                  cursor: "pointer",
+                                  transition: "all 0.15s ease",
+                                  boxShadow: isSelected ? "0 2px 8px rgba(232, 164, 74, 0.35)" : "none",
+                                }}
+                                title="Inspect end-to-start backward trace, data transfers & permissions side-by-side with chat"
+                              >
+                                <Compass size={14} />
+                                <span>{isSelected ? "📊 Inspector Active (Split View)" : "📊 View Command Graphs & Trace"}</span>
+                              </button>
+
+                              <button
+                                onClick={() => {
+                                  setSelectedWorkflowId(msgWfId);
+                                  navigate(`/graphs?workflow_id=${encodeURIComponent(msgWfId)}&auto_trace=true`);
+                                }}
+                                style={{
+                                  background: "transparent",
+                                  color: "var(--text-secondary, #9ba3b0)",
+                                  border: "1px solid var(--border-subtle, #2a2f38)",
+                                  borderRadius: 6,
+                                  padding: "6px 10px",
+                                  fontSize: 11.5,
+                                  display: "inline-flex",
+                                  alignItems: "center",
+                                  gap: 4,
+                                  cursor: "pointer",
+                                }}
+                                title="Open in Full-Page Three-Graph Explorer"
+                              >
+                                <Maximize2 size={12} />
+                                <span>Full Page</span>
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })()}
 
                       {/* Pure Data Response - Transparency available on-demand in dedicated tabs */}
                       {(msg.final_output || msg.workflow_run || msg.workflow_id || msg.metadata?.workflow_id) && (
@@ -1730,8 +1835,24 @@ export default function App() {
                 </button>
               </div>
             </div>
+
+            {/* Right Column: Command Telemetry & Three-Graph Inspector */}
+            {showCommandInspector && selectedCommandWfId && (
+              <div style={{ height: "100%", minHeight: 0, overflow: "hidden" }}>
+                <CommandGraphInspector
+                  workflowId={selectedCommandWfId}
+                  chatId={activeChatId}
+                  onClose={() => setShowCommandInspector(false)}
+                  onExpandFullScreen={(wf) => {
+                    setSelectedWorkflowId(wf);
+                    navigate(`/graphs?workflow_id=${encodeURIComponent(wf)}&auto_trace=true`);
+                  }}
+                />
+              </div>
+            )}
           </div>
-        )}
+        </div>
+      )}
 
         {/* View 2: Hugging Face Multi-Agent Research Simulation */}
         {activeTab === "hf_simulation" && (
