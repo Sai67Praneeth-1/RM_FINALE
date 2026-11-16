@@ -885,6 +885,17 @@ def is_data_audit_request(prompt: str) -> bool:
     """
     p_lower = prompt.lower().strip()
 
+    # PRIORITY 0: Queries about inter-agent communication, multi-agent systems, task delegation, or agent collaboration ALWAYS trigger workflow
+    agent_comm_terms = [
+        "interagent", "inter-agent", "multiagent", "multi-agent",
+        "agent communication", "agents communicate", "agent collaboration", "agents collaborate",
+        "task delegation", "delegate task", "delegation chain", "how do agents communicate",
+        "how agents communicate", "show me interagent", "show interagent", "demonstrate communication",
+        "show communication graph", "agent interaction graph", "interaction graph", "agent workflow"
+    ]
+    if any(t in p_lower for t in agent_comm_terms):
+        return True
+
     # Fast exclusion: Basic math and arithmetic (e.g. 5*100, 2+2, 100/5)
     if any(op in p_lower for op in ["*", "+", "/", "="]) and len(p_lower) < 25 and not any(w in p_lower for w in ["audit", "complaint", "log"]):
         return False
@@ -1117,12 +1128,19 @@ def chat_with_coordinator(req: ChatRequest):
         run_mode = WorkflowMode.LIVE_API
     cap_enum = CaptureLevel(req.capture_level or 2)
 
+    wf_type = "adaptive"
+    if any(k in msg_lower for k in ["parallel", "disconnected", "w1", "concurrent"]):
+        wf_type = "w1_parallel"
+    elif any(k in msg_lower for k in ["retry", "retries", "trial", "adapt", "backtrack", "w3"]):
+        wf_type = "w3_retry"
+
     run = runner.execute_workflow(
         task_description=msg,
         dataset_name=target_dataset,
         principal_id="user_chat_principal",
         mode=run_mode,
-        capture_level=cap_enum
+        capture_level=cap_enum,
+        workflow_type=wf_type
     )
 
     delegations = store.get_delegation_closure(run.root_delegation_id) if run.root_delegation_id else store.list_delegations(limit=50)

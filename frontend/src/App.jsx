@@ -1487,13 +1487,16 @@ export default function App() {
 
               <div className="suggestion-pills">
                 <button className="pill-btn" onClick={() => sendChatMessage("What are the customers mostly complaining of?")}>
-                  💬 What are customers mostly complaining of?
-                </button>
-                <button className="pill-btn" onClick={() => sendChatMessage("Who are our enterprise customers and what issues are they facing?")}>
-                  🚨 Status of Enterprise accounts?
+                  💬 Customer Complaints Audit
                 </button>
                 <button className="pill-btn" onClick={() => sendChatMessage("Check system access logs for unauthorized root escalation and file sharing")}>
-                  🛡️ Audit system logs for violations
+                  🛡️ Security & Root Escalation Audit
+                </button>
+                <button className="pill-btn" onClick={() => sendChatMessage("Demonstrate inter-agent communication and task delegation across agents")}>
+                  📡 Live Inter-Agent Communication & Delegation
+                </button>
+                <button className="pill-btn" onClick={() => sendChatMessage("Who are our enterprise customers and what issues are they facing?")}>
+                  🚨 Enterprise Accounts Status
                 </button>
                 <button
                   className="pill-btn"
@@ -1522,8 +1525,8 @@ export default function App() {
                           interactions={msg.interactions}
                           workflowId={msg.workflow_run?.workflow_id}
                           compact={true}
-                          defaultCollapsed={true}
-                          title="Inter-Agent Interaction Graph"
+                          defaultCollapsed={false}
+                          title="Dynamic Inter-Agent Communication Graph"
                         />
                       )}
 

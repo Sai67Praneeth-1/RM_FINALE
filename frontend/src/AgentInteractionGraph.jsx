@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   Bot,
   ArrowRight,
@@ -15,100 +15,143 @@ import {
   Sparkles,
   ChevronDown,
   ChevronUp,
+  Plus,
+  Trash2,
+  Move,
+  RefreshCw,
+  X,
+  Sliders,
 } from "lucide-react";
 
-// Known agent visual metadata & coordinate anchors for intuitive topology
-const AGENT_META = {
+// Dynamic metadata library for specialized agents
+const KNOWN_AGENTS = {
   agent_coordinator: {
-    label: "Agent A: Coordinator",
-    role: "Lead Orchestrator & Delegator",
+    label: "Coordinator",
+    role: "Lead Orchestrator & Task Delegator",
     model: "Google Gemini 3.5 Flash",
+    tools: ["mint_delegation", "verify_invariants"],
     color: "#3b82f6",
     fillColor: "rgba(59, 130, 246, 0.15)",
     borderColor: "#60a5fa",
-    x: 350,
-    y: 75,
   },
   Coordinator_Agent: {
-    label: "Coordinator Agent",
-    role: "Lead Orchestrator & Delegator",
+    label: "Coordinator",
+    role: "Lead Orchestrator & Task Delegator",
     model: "Google Gemini 3.5 Flash",
+    tools: ["mint_delegation", "verify_invariants"],
     color: "#3b82f6",
     fillColor: "rgba(59, 130, 246, 0.15)",
     borderColor: "#60a5fa",
-    x: 350,
-    y: 75,
   },
   agent_researcher: {
-    label: "Agent B: Researcher",
-    role: "Dataset Extraction & CIM Tools",
+    label: "Researcher",
+    role: "CFPB Complaint Extraction",
     model: "Google Gemini 3.5 Flash",
+    tools: ["read_sample_dataset", "query_cfpb_records"],
     color: "#10b981",
     fillColor: "rgba(16, 185, 129, 0.15)",
     borderColor: "#34d399",
-    x: 130,
-    y: 240,
   },
   Executor_Agent: {
-    label: "Executor Agent",
-    role: "Technical Execution & Tools",
+    label: "Executor",
+    role: "CIM Data Ingestion & Extraction",
     model: "Google Gemini 3.5 Flash",
+    tools: ["read_sample_dataset", "query_cfpb_records"],
     color: "#10b981",
     fillColor: "rgba(16, 185, 129, 0.15)",
     borderColor: "#34d399",
-    x: 130,
-    y: 240,
   },
   agent_analyst: {
-    label: "Agent C: Analyst",
-    role: "Anomaly & Statistical Evaluation",
+    label: "Analyst",
+    role: "Statistical Anomaly Evaluator",
     model: "Google Gemini 3.5 Flash",
+    tools: ["calculate_anomaly_rates", "compute_aggregates"],
     color: "#f59e0b",
     fillColor: "rgba(245, 158, 11, 0.15)",
     borderColor: "#fbbf24",
-    x: 570,
-    y: 240,
   },
   Critic_Agent: {
-    label: "Critic Agent",
-    role: "Vulnerability & Reasoning Audit",
+    label: "Critic",
+    role: "Adversarial Reasoning Auditor",
     model: "Google Gemini 3.5 Flash",
+    tools: ["verify_causality", "detect_inconsistencies"],
     color: "#f59e0b",
     fillColor: "rgba(245, 158, 11, 0.15)",
     borderColor: "#fbbf24",
-    x: 570,
-    y: 240,
   },
   agent_reporter: {
-    label: "Agent D: Reporter",
-    role: "Consensus Formulation & Output",
+    label: "Reporter",
+    role: "W3C PROV & Synthesis",
     model: "Google Gemini 3.5 Flash",
+    tools: ["export_w3c_prov", "generate_markdown_report"],
     color: "#ec4899",
     fillColor: "rgba(236, 72, 153, 0.15)",
     borderColor: "#f472b6",
-    x: 350,
-    y: 395,
   },
   Synthesizer_Agent: {
-    label: "Synthesizer Agent",
-    role: "Consensus Formulation & Output",
+    label: "Synthesizer",
+    role: "Executive Resolution Formulator",
     model: "Google Gemini 3.5 Flash",
+    tools: ["export_w3c_prov", "generate_markdown_report"],
     color: "#ec4899",
     fillColor: "rgba(236, 72, 153, 0.15)",
     borderColor: "#f472b6",
-    x: 350,
-    y: 395,
+  },
+  agent_forensics: {
+    label: "Forensics Scanner",
+    role: "Access Log & Security Forensics",
+    model: "Google Gemini 3.5 Flash",
+    tools: ["scan_system_access_logs", "inspect_auth_events"],
+    color: "#06b6d4",
+    fillColor: "rgba(6, 182, 212, 0.15)",
+    borderColor: "#22d3ee",
+  },
+  agent_threat_hunter: {
+    label: "Threat Hunter",
+    role: "Privilege Escalation Detector",
+    model: "Google Gemini 3.5 Flash",
+    tools: ["detect_unauthorized_root", "verify_ip_anomalies"],
+    color: "#ef4444",
+    fillColor: "rgba(239, 68, 68, 0.15)",
+    borderColor: "#f87171",
+  },
+  agent_compliance: {
+    label: "Compliance Auditor",
+    role: "FedRAMP & NIST Policy Auditor",
+    model: "Google Gemini 3.5 Flash",
+    tools: ["audit_nist_sp_800_53", "validate_cim_invariants"],
+    color: "#8b5cf6",
+    fillColor: "rgba(139, 92, 246, 0.15)",
+    borderColor: "#a78bfa",
+  },
+  agent_sentiment: {
+    label: "Sentiment Specialist",
+    role: "Consumer Experience & NLP",
+    model: "Google Gemini 3.5 Flash",
+    tools: ["analyze_sentiment_polarity", "extract_customer_intents"],
+    color: "#14b8a6",
+    fillColor: "rgba(20, 184, 166, 0.15)",
+    borderColor: "#2dd4bf",
   },
 };
 
 const DEFAULT_META = {
-  label: "Agent Node",
-  role: "Autonomous Agent",
+  label: "Specialized Agent",
+  role: "Collaborative Autonomous Node",
   model: "Google Gemini 3.5 Flash",
+  tools: ["cim_tool_execution", "envelope_exchange"],
   color: "#8b5cf6",
   fillColor: "rgba(139, 92, 246, 0.15)",
   borderColor: "#a78bfa",
 };
+
+const AVAILABLE_AGENT_OPTIONS = [
+  { id: "agent_threat_hunter", name: "Threat Hunter", role: "Privilege Escalation Detector", color: "#ef4444" },
+  { id: "agent_compliance", name: "Compliance Auditor", role: "FedRAMP & NIST Invariant Auditor", color: "#8b5cf6" },
+  { id: "agent_sentiment", name: "Sentiment Specialist", role: "Consumer Experience & NLP", color: "#14b8a6" },
+  { id: "agent_forensics", name: "Forensics Scanner", role: "Access Log & Security Forensics", color: "#06b6d4" },
+  { id: "agent_critic", name: "Adversarial Critic", role: "Reasoning & Vulnerability Auditor", color: "#f59e0b" },
+];
 
 export default function AgentInteractionGraph({
   graph,
@@ -124,57 +167,240 @@ export default function AgentInteractionGraph({
   const [activeStepIdx, setActiveStepIdx] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
 
-  // Parse nodes & edges safely
-  const nodes = graph?.nodes || [];
-  const edges = graph?.edges || [];
+  // Dynamic graph nodes & edges with real-time add/remove
+  const [localNodes, setLocalNodes] = useState([]);
+  const [localEdges, setLocalEdges] = useState([]);
+  const [nodePositions, setNodePositions] = useState({});
+  const [draggingNodeId, setDraggingNodeId] = useState(null);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [showAddMenu, setShowAddMenu] = useState(false);
 
-  // Compute positions dynamically if not in AGENT_META
-  const nodePositions = React.useMemo(() => {
+  const svgRef = useRef(null);
+
+  // Synchronize incoming props to local state
+  useEffect(() => {
+    const rawNodes = graph?.nodes || [];
+    const rawEdges = graph?.edges || [];
+
+    // Ensure initial set exists
+    let initialNodes = [...rawNodes];
+    if (initialNodes.length === 0) {
+      initialNodes = [
+        { id: "agent_coordinator", label: "Coordinator", node_type: "agent" },
+        { id: "agent_researcher", label: "Researcher", node_type: "agent" },
+        { id: "agent_analyst", label: "Analyst", node_type: "agent" },
+        { id: "agent_reporter", label: "Reporter", node_type: "agent" },
+      ];
+    }
+
+    setLocalNodes(initialNodes);
+    setLocalEdges(rawEdges);
+    setNodePositions(computeDynamicLayout(initialNodes));
+  }, [graph, interactions, workflowId]);
+
+  // Compute adaptive balanced layout for N nodes
+  function computeDynamicLayout(nodesList) {
     const pos = {};
-    const unanchored = [];
+    const count = nodesList.length;
+    if (count === 0) return pos;
 
-    nodes.forEach((n) => {
-      const id = n.id || n.agent_id || n.name;
-      if (AGENT_META[id]) {
-        pos[id] = { ...AGENT_META[id], ...n };
-      } else {
-        unanchored.push({ ...n, id });
-      }
+    const findCoordIdx = nodesList.findIndex((n) => {
+      const id = (n.id || "").toLowerCase();
+      return id.includes("coord") || id.includes("lead") || id.includes("orchestrat");
     });
 
-    if (unanchored.length > 0) {
-      const count = unanchored.length;
+    const hasCoord = findCoordIdx !== -1;
+    let others = [...nodesList];
+    let coordNode = null;
+
+    if (hasCoord) {
+      coordNode = others.splice(findCoordIdx, 1)[0];
+      const coordMeta = KNOWN_AGENTS[coordNode.id] || DEFAULT_META;
+      pos[coordNode.id] = {
+        ...coordMeta,
+        ...coordNode,
+        label: coordNode.label || coordMeta.label,
+        x: 350,
+        y: 75,
+      };
+    }
+
+    const otherCount = others.length;
+    if (otherCount === 0) return pos;
+
+    if (hasCoord) {
+      if (otherCount === 1) {
+        const meta = KNOWN_AGENTS[others[0].id] || DEFAULT_META;
+        pos[others[0].id] = { ...meta, ...others[0], label: others[0].label || meta.label, x: 350, y: 350 };
+      } else if (otherCount === 2) {
+        const meta0 = KNOWN_AGENTS[others[0].id] || DEFAULT_META;
+        const meta1 = KNOWN_AGENTS[others[1].id] || DEFAULT_META;
+        pos[others[0].id] = { ...meta0, ...others[0], label: others[0].label || meta0.label, x: 170, y: 310 };
+        pos[others[1].id] = { ...meta1, ...others[1], label: others[1].label || meta1.label, x: 530, y: 310 };
+      } else if (otherCount === 3) {
+        const meta0 = KNOWN_AGENTS[others[0].id] || DEFAULT_META;
+        const meta1 = KNOWN_AGENTS[others[1].id] || DEFAULT_META;
+        const meta2 = KNOWN_AGENTS[others[2].id] || DEFAULT_META;
+        pos[others[0].id] = { ...meta0, ...others[0], label: others[0].label || meta0.label, x: 140, y: 240 };
+        pos[others[1].id] = { ...meta1, ...others[1], label: others[1].label || meta1.label, x: 560, y: 240 };
+        pos[others[2].id] = { ...meta2, ...others[2], label: others[2].label || meta2.label, x: 350, y: 395 };
+      } else if (otherCount === 4) {
+        const coords = [
+          { x: 130, y: 190 },
+          { x: 570, y: 190 },
+          { x: 190, y: 390 },
+          { x: 510, y: 390 },
+        ];
+        others.forEach((n, idx) => {
+          const meta = KNOWN_AGENTS[n.id] || DEFAULT_META;
+          pos[n.id] = { ...meta, ...n, label: n.label || meta.label, ...coords[idx] };
+        });
+      } else {
+        const cx = 350;
+        const cy = 250;
+        const rx = 240;
+        const ry = 160;
+        others.forEach((n, idx) => {
+          const angle = Math.PI * 0.15 + (idx / (otherCount - 1)) * (Math.PI * 0.7);
+          const meta = KNOWN_AGENTS[n.id] || DEFAULT_META;
+          pos[n.id] = {
+            ...meta,
+            ...n,
+            label: n.label || meta.label,
+            x: Math.round(cx + rx * Math.cos(angle)),
+            y: Math.round(cy + ry * Math.sin(angle)),
+          };
+        });
+      }
+    } else {
       const cx = 350;
       const cy = 240;
-      const rx = 240;
-      const ry = 160;
-
-      unanchored.forEach((n, idx) => {
-        const angle = (idx / count) * 2 * Math.PI - Math.PI / 2;
+      const rx = 230;
+      const ry = 150;
+      others.forEach((n, idx) => {
+        const angle = (idx / otherCount) * 2 * Math.PI - Math.PI / 2;
+        const meta = KNOWN_AGENTS[n.id] || DEFAULT_META;
         pos[n.id] = {
-          ...DEFAULT_META,
+          ...meta,
           ...n,
-          label: n.label || n.id,
-          x: cx + rx * Math.cos(angle),
-          y: cy + ry * Math.sin(angle),
+          label: n.label || meta.label,
+          x: Math.round(cx + rx * Math.cos(angle)),
+          y: Math.round(cy + ry * Math.sin(angle)),
         };
       });
     }
 
     return pos;
-  }, [nodes]);
+  }
+
+  // Interactive mouse / touch drag coordinates
+  const getSvgCoordinates = (e) => {
+    if (!svgRef.current) return { x: 0, y: 0 };
+    const rect = svgRef.current.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const scaleX = 700 / (rect.width || 700);
+    const scaleY = 480 / (rect.height || 480);
+    return {
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY,
+    };
+  };
+
+  const handleMouseDownNode = (nodeId, e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const pt = getSvgCoordinates(e);
+    const curr = nodePositions[nodeId] || { x: 350, y: 240 };
+    setDraggingNodeId(nodeId);
+    setDragOffset({ x: pt.x - curr.x, y: pt.y - curr.y });
+  };
+
+  const handleMouseMoveCanvas = (e) => {
+    if (!draggingNodeId) return;
+    const pt = getSvgCoordinates(e);
+    setNodePositions((prev) => ({
+      ...prev,
+      [draggingNodeId]: {
+        ...prev[draggingNodeId],
+        x: Math.round(Math.max(85, Math.min(615, pt.x - dragOffset.x))),
+        y: Math.round(Math.max(45, Math.min(435, pt.y - dragOffset.y))),
+      },
+    }));
+  };
+
+  const handleMouseUpCanvas = () => {
+    setDraggingNodeId(null);
+  };
+
+  // Add dynamic agent to the live graph
+  const handleAddAgent = (agentOption) => {
+    setShowAddMenu(false);
+    if (localNodes.some((n) => n.id === agentOption.id)) {
+      alert(`${agentOption.name} is already present in this topology!`);
+      return;
+    }
+
+    const newNode = {
+      id: agentOption.id,
+      label: agentOption.name,
+      node_type: "agent",
+      role: agentOption.role,
+    };
+
+    const newNodes = [...localNodes, newNode];
+    setLocalNodes(newNodes);
+
+    // Create real interactive edges from coordinator and to analyst/reporter
+    const coordId = localNodes.find((n) => n.id.includes("coord"))?.id || "agent_coordinator";
+    const newEdges = [
+      ...localEdges,
+      {
+        key: `del_${agentOption.id}_${Date.now()}`,
+        source: coordId,
+        target: agentOption.id,
+        interaction_type: "delegation",
+        semantic_summary: `Delegated specialized scope '${agentOption.role}' to ${agentOption.name}`,
+        timestamp: new Date().toISOString(),
+      },
+      {
+        key: `resp_${agentOption.id}_${Date.now()}`,
+        source: agentOption.id,
+        target: "agent_reporter",
+        interaction_type: "result",
+        semantic_summary: `${agentOption.name} delivered analytical verification findings`,
+        timestamp: new Date().toISOString(),
+      },
+    ];
+    setLocalEdges(newEdges);
+    setNodePositions(computeDynamicLayout(newNodes));
+  };
+
+  // Remove agent from the live graph
+  const handleRemoveAgent = (agentId) => {
+    if (agentId.includes("coord")) {
+      alert("Cannot remove Lead Coordinator! It holds root authority.");
+      return;
+    }
+    const filteredNodes = localNodes.filter((n) => n.id !== agentId);
+    const filteredEdges = localEdges.filter((e) => e.source !== agentId && e.target !== agentId);
+    setLocalNodes(filteredNodes);
+    setLocalEdges(filteredEdges);
+    setNodePositions(computeDynamicLayout(filteredNodes));
+    if (selectedNode?.id === agentId) setSelectedNode(null);
+  };
 
   // Order interactions sequentially for step-by-step playback
-  const chronologicalSteps = React.useMemo(() => {
-    if (edges.length > 0) {
-      return [...edges].sort((a, b) => {
+  const chronologicalSteps = useMemo(() => {
+    if (localEdges.length > 0) {
+      return [...localEdges].sort((a, b) => {
         const tA = a.timestamp || "";
         const tB = b.timestamp || "";
         return tA.localeCompare(tB);
       });
     }
     return [];
-  }, [edges]);
+  }, [localEdges]);
 
   // Auto-play replay animation loop
   useEffect(() => {
@@ -192,19 +418,14 @@ export default function AgentInteractionGraph({
     return () => clearInterval(timer);
   }, [isPlaying, chronologicalSteps.length]);
 
-  // Automatically select the active step edge when activeStepIdx changes
   useEffect(() => {
     if (activeStepIdx !== null && chronologicalSteps[activeStepIdx]) {
       setSelectedEdge(chronologicalSteps[activeStepIdx]);
     }
   }, [activeStepIdx, chronologicalSteps]);
 
-  if (!nodes || nodes.length === 0) {
-    return null;
-  }
-
   // Calculate curved SVG path with directional curvature
-  const calculatePath = (srcId, tgtId, edgeIdx = 0, totalParallel = 1) => {
+  const calculatePath = (srcId, tgtId, edgeIdx = 0) => {
     const src = nodePositions[srcId] || { x: 200, y: 200 };
     const tgt = nodePositions[tgtId] || { x: 500, y: 200 };
 
@@ -212,12 +433,10 @@ export default function AgentInteractionGraph({
     const dy = tgt.y - src.y;
     const dist = Math.sqrt(dx * dx + dy * dy) || 1;
 
-    // Normal vector for curve offset
     const nx = -dy / dist;
     const ny = dx / dist;
 
-    // Arc curvature: offset depends on edge direction to separate opposing flows
-    const curvature = 36 * (edgeIdx % 2 === 0 ? 1 : -1) * (1 + Math.floor(edgeIdx / 2) * 0.4);
+    const curvature = 36 * (edgeIdx % 2 === 0 ? 1 : -1) * (1 + Math.floor(edgeIdx / 2) * 0.35);
 
     const midX = (src.x + tgt.x) / 2 + nx * curvature;
     const midY = (src.y + tgt.y) / 2 + ny * curvature;
@@ -232,10 +451,10 @@ export default function AgentInteractionGraph({
   const getEdgeColor = (type, isHighlighted) => {
     if (isHighlighted) return "#38bdf8";
     const t = (type || "").toLowerCase();
-    if (t.includes("delegat")) return "#60a5fa"; // blue
-    if (t.includes("finding") || t.includes("data") || t.includes("response")) return "#10b981"; // emerald
-    if (t.includes("analys") || t.includes("audit") || t.includes("critic")) return "#f59e0b"; // amber
-    if (t.includes("report") || t.includes("synth")) return "#ec4899"; // pink
+    if (t.includes("delegat")) return "#60a5fa";
+    if (t.includes("finding") || t.includes("data") || t.includes("response") || t.includes("result")) return "#10b981";
+    if (t.includes("analys") || t.includes("audit") || t.includes("critic")) return "#f59e0b";
+    if (t.includes("report") || t.includes("synth")) return "#ec4899";
     return "#94a3b8";
   };
 
@@ -248,48 +467,49 @@ export default function AgentInteractionGraph({
         borderRadius: 12,
         padding: compact ? "12px 14px" : "18px 20px",
         boxShadow: "0 8px 30px rgba(0, 0, 0, 0.5)",
+        position: "relative",
       }}
     >
       {/* Header bar */}
       <div
         style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
           marginBottom: isCollapsed ? 0 : 12,
           paddingBottom: isCollapsed ? 0 : 10,
-          borderBottom: isCollapsed ? 'none' : '1px solid #1e293b',
+          borderBottom: isCollapsed ? "none" : "1px solid #1e293b",
         }}
       >
         <div
           onClick={() => setIsCollapsed(!isCollapsed)}
-          style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', userSelect: 'none' }}
-          title={isCollapsed ? 'Click to expand interaction graph' : 'Click to collapse interaction graph'}
+          style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer", userSelect: "none" }}
+          title={isCollapsed ? "Click to expand interaction graph" : "Click to collapse interaction graph"}
         >
           <div
             style={{
               width: 28,
               height: 28,
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, #3b82f6, #8b5cf6)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#fff",
               flexShrink: 0,
             }}
           >
             <Share2 size={15} />
           </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <h4
                 style={{
                   margin: 0,
                   fontSize: compact ? 13.5 : 15,
                   fontWeight: 700,
-                  color: '#60a5fa',
-                  letterSpacing: '0.2px',
+                  color: "#60a5fa",
+                  letterSpacing: "0.2px",
                 }}
               >
                 {title}
@@ -297,88 +517,162 @@ export default function AgentInteractionGraph({
               <span
                 style={{
                   fontSize: 10.5,
-                  padding: '1px 6px',
+                  padding: "1px 6px",
                   borderRadius: 4,
-                  background: isCollapsed ? 'rgba(56, 189, 248, 0.15)' : 'rgba(148, 163, 184, 0.12)',
-                  color: isCollapsed ? '#38bdf8' : '#94a3b8',
-                  border: isCollapsed ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid rgba(148, 163, 184, 0.2)',
+                  background: isCollapsed ? "rgba(56, 189, 248, 0.15)" : "rgba(148, 163, 184, 0.12)",
+                  color: isCollapsed ? "#38bdf8" : "#94a3b8",
+                  border: isCollapsed ? "1px solid rgba(56, 189, 248, 0.3)" : "1px solid rgba(148, 163, 184, 0.2)",
                   fontWeight: 600,
                 }}
               >
-                {isCollapsed ? 'Click to Expand Graph ▼' : 'Active View ▲'}
+                {isCollapsed ? "Click to Expand Graph ▼" : `${localNodes.length} Agents Active ▲`}
               </span>
             </div>
-            <span style={{ fontSize: 11, color: '#94a3b8' }}>
-              {nodes.length} Agent Nodes &bull; {edges.length} Observed Communication Messages &bull; Verified CIM Invariants
+            <span style={{ fontSize: 11, color: "#94a3b8" }}>
+              {localNodes.length} Dynamic Agents &bull; {localEdges.length} Observed Messages &bull; Draggable Physics
             </span>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {!isCollapsed && edges.length > 0 && (
-            <button
-              onClick={() => setIsPlaying(!isPlaying)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 5,
-                padding: '4px 10px',
-                background: isPlaying ? '#059669' : '#1e293b',
-                border: '1px solid rgba(255,255,255,0.15)',
-                borderRadius: 6,
-                color: '#fff',
-                fontSize: 11,
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-              title={isPlaying ? 'Pause Flow Replay' : 'Replay Agent-to-Agent Communication Flow'}
-            >
-              {isPlaying ? <Pause size={12} /> : <Play size={12} />}
-              <span>{isPlaying ? 'Pause Flow' : 'Replay Flow'}</span>
-            </button>
-          )}
-
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {!isCollapsed && (
-            <button
-              onClick={() => {
-                setActiveStepIdx(null);
-                setSelectedEdge(null);
-                setSelectedNode(null);
-                setIsPlaying(false);
-              }}
-              style={{
-                padding: '4px 8px',
-                background: '#1e293b',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: 6,
-                color: '#94a3b8',
-                fontSize: 11,
-                cursor: 'pointer',
-              }}
-              title='Reset Graph Selection'
-            >
-              <RotateCcw size={12} />
-            </button>
+            <>
+              {/* Dynamic Add Agent Button */}
+              <div style={{ position: "relative" }}>
+                <button
+                  onClick={() => setShowAddMenu(!showAddMenu)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                    padding: "4px 8px",
+                    background: "rgba(16, 185, 129, 0.15)",
+                    border: "1px solid rgba(16, 185, 129, 0.35)",
+                    borderRadius: 6,
+                    color: "#34d399",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                  title="Add specialized agent node to live topology"
+                >
+                  <Plus size={12} />
+                  <span>Add Agent</span>
+                </button>
+
+                {showAddMenu && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: "100%",
+                      right: 0,
+                      marginTop: 4,
+                      background: "#0f172a",
+                      border: "1px solid #334155",
+                      borderRadius: 8,
+                      padding: 6,
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: 4,
+                      zIndex: 50,
+                      width: 220,
+                      boxShadow: "0 10px 25px rgba(0,0,0,0.5)",
+                    }}
+                  >
+                    <div style={{ fontSize: 10, color: "#64748b", fontWeight: 700, padding: "4px 8px", textTransform: "uppercase" }}>
+                      Select Specialized Agent:
+                    </div>
+                    {AVAILABLE_AGENT_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.id}
+                        onClick={() => handleAddAgent(opt)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "space-between",
+                          padding: "6px 8px",
+                          background: "#1e293b",
+                          border: "1px solid #334155",
+                          borderRadius: 6,
+                          color: "#f8fafc",
+                          fontSize: 11,
+                          cursor: "pointer",
+                          textAlign: "left",
+                        }}
+                      >
+                        <span style={{ fontWeight: 600, color: opt.color }}>{opt.name}</span>
+                        <Plus size={11} color="#94a3b8" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Reset / Auto-Layout */}
+              <button
+                onClick={() => setNodePositions(computeDynamicLayout(localNodes))}
+                style={{
+                  padding: "4px 8px",
+                  background: "#1e293b",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                  borderRadius: 6,
+                  color: "#94a3b8",
+                  fontSize: 11,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+                title="Reset to balanced geometric topology"
+              >
+                <RefreshCw size={11} />
+                <span>Auto-Layout</span>
+              </button>
+
+              {/* Replay Button */}
+              {localEdges.length > 0 && (
+                <button
+                  onClick={() => setIsPlaying(!isPlaying)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 5,
+                    padding: "4px 10px",
+                    background: isPlaying ? "#059669" : "#1e293b",
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    borderRadius: 6,
+                    color: "#fff",
+                    fontSize: 11,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                  }}
+                  title={isPlaying ? "Pause Flow Replay" : "Replay Agent-to-Agent Communication Flow"}
+                >
+                  {isPlaying ? <Pause size={12} /> : <Play size={12} />}
+                  <span>{isPlaying ? "Pause" : "Replay"}</span>
+                </button>
+              )}
+            </>
           )}
 
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
             style={{
-              padding: '4px 10px',
-              background: isCollapsed ? 'rgba(59, 130, 246, 0.15)' : '#1e293b',
-              border: isCollapsed ? '1px solid #3b82f6' : '1px solid rgba(255,255,255,0.1)',
+              padding: "4px 10px",
+              background: isCollapsed ? "rgba(59, 130, 246, 0.15)" : "#1e293b",
+              border: isCollapsed ? "1px solid #3b82f6" : "1px solid rgba(255,255,255,0.1)",
               borderRadius: 6,
-              color: isCollapsed ? '#93c5fd' : '#94a3b8',
+              color: isCollapsed ? "#93c5fd" : "#94a3b8",
               fontSize: 11.5,
               fontWeight: 600,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
               gap: 5,
             }}
-            title={isCollapsed ? 'Expand Graph' : 'Collapse Graph'}
+            title={isCollapsed ? "Expand Graph" : "Collapse Graph"}
           >
-            <span>{isCollapsed ? 'Expand' : 'Collapse'}</span>
+            <span>{isCollapsed ? "Expand" : "Collapse"}</span>
             {isCollapsed ? <ChevronDown size={14} /> : <ChevronUp size={14} />}
           </button>
         </div>
@@ -386,7 +680,7 @@ export default function AgentInteractionGraph({
 
       {!isCollapsed && (
         <>
-          {/* Chronological Step Sequence Ribbon */}
+          {/* Interactive Step Sequence Ribbon */}
           {chronologicalSteps.length > 0 && (
             <div
               style={{
@@ -437,7 +731,7 @@ export default function AgentInteractionGraph({
             </div>
           )}
 
-          {/* SVG Canvas */}
+          {/* SVG Canvas with Draggable Physics & Living Animation */}
           <div
             style={{
               position: "relative",
@@ -447,20 +741,24 @@ export default function AgentInteractionGraph({
               borderRadius: 10,
               border: "1px solid #1e293b",
               overflow: "hidden",
+              userSelect: "none",
             }}
           >
             <svg
+              ref={svgRef}
               viewBox="0 0 700 480"
-              style={{ width: "100%", height: "100%", display: "block" }}
+              style={{ width: "100%", height: "100%", display: "block", cursor: draggingNodeId ? "grabbing" : "default" }}
+              onMouseMove={handleMouseMoveCanvas}
+              onMouseUp={handleMouseUpCanvas}
+              onTouchMove={handleMouseMoveCanvas}
+              onTouchEnd={handleMouseUpCanvas}
             >
               <defs>
-                {/* Glow filter */}
                 <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
                   <feGaussianBlur stdDeviation="3" result="blur" />
                   <feComposite in="SourceGraphic" in2="blur" operator="over" />
                 </filter>
 
-                {/* Arrow markers for edges */}
                 <marker
                   id="arrow-default"
                   viewBox="0 0 10 10"
@@ -483,31 +781,9 @@ export default function AgentInteractionGraph({
                 >
                   <path d="M 0 0 L 10 5 L 0 10 z" fill="#38bdf8" />
                 </marker>
-                <marker
-                  id="arrow-emerald"
-                  viewBox="0 0 10 10"
-                  refX="38"
-                  refY="5"
-                  markerWidth="6"
-                  markerHeight="6"
-                  orient="auto-start-reverse"
-                >
-                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#10b981" />
-                </marker>
-                <marker
-                  id="arrow-amber"
-                  viewBox="0 0 10 10"
-                  refX="38"
-                  refY="5"
-                  markerWidth="6"
-                  markerHeight="6"
-                  orient="auto-start-reverse"
-                >
-                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#f59e0b" />
-                </marker>
               </defs>
 
-              {/* Grid Background lines */}
+              {/* Subdued Grid Background */}
               <g stroke="rgba(255, 255, 255, 0.03)" strokeWidth="1">
                 {Array.from({ length: 14 }).map((_, i) => (
                   <line key={`v-${i}`} x1={i * 50} y1="0" x2={i * 50} y2="480" />
@@ -517,10 +793,10 @@ export default function AgentInteractionGraph({
                 ))}
               </g>
 
-              {/* Interaction Edges (Drawn First behind Nodes) */}
-              {edges.map((edge, idx) => {
+              {/* Interaction Edges */}
+              {localEdges.map((edge, idx) => {
                 const isSelected = selectedEdge?.key === edge.key || activeStepIdx === idx;
-                const pathData = calculatePath(edge.source, edge.target, idx, edges.length);
+                const pathData = calculatePath(edge.source, edge.target, idx);
                 const edgeColor = getEdgeColor(edge.interaction_type, isSelected);
 
                 return (
@@ -533,7 +809,6 @@ export default function AgentInteractionGraph({
                     }}
                     style={{ cursor: "pointer" }}
                   >
-                    {/* Invisible fat hit area for easy hover/clicking */}
                     <path
                       d={pathData.d}
                       fill="none"
@@ -541,19 +816,17 @@ export default function AgentInteractionGraph({
                       strokeWidth="20"
                     />
 
-                    {/* Edge shadow / outer glow */}
                     {isSelected && (
                       <path
                         d={pathData.d}
                         fill="none"
                         stroke={edgeColor}
                         strokeWidth="7"
-                        opacity="0.3"
+                        opacity="0.35"
                         filter="url(#glow)"
                       />
                     )}
 
-                    {/* Base Edge Line */}
                     <path
                       d={pathData.d}
                       fill="none"
@@ -564,7 +837,16 @@ export default function AgentInteractionGraph({
                       markerEnd="url(#arrow-default)"
                     />
 
-                    {/* Step sequence badge on the midpoint */}
+                    {/* Animated Flowing Packet (Proves Real-time Living Graph) */}
+                    <circle r="4.5" fill={edgeColor} filter="url(#glow)">
+                      <animateMotion
+                        path={pathData.d}
+                        dur={`${2.2 + (idx % 3) * 0.4}s`}
+                        repeatCount="indefinite"
+                      />
+                    </circle>
+
+                    {/* Step Sequence Badge on Midpoint */}
                     <g transform={`translate(${pathData.midX}, ${pathData.midY})`}>
                       <circle
                         r={isSelected ? 11 : 9}
@@ -587,29 +869,30 @@ export default function AgentInteractionGraph({
                 );
               })}
 
-              {/* Agent Nodes */}
+              {/* Draggable Agent Nodes */}
               {Object.entries(nodePositions).map(([id, node]) => {
                 const isSelected = selectedNode?.id === id;
-                const isConnected =
-                  selectedEdge?.source === id || selectedEdge?.target === id;
+                const isConnected = selectedEdge?.source === id || selectedEdge?.target === id;
+                const isDragging = draggingNodeId === id;
 
                 return (
                   <g
                     key={id}
                     transform={`translate(${node.x}, ${node.y})`}
+                    onMouseDown={(e) => handleMouseDownNode(id, e)}
+                    onTouchStart={(e) => handleMouseDownNode(id, e)}
                     onClick={() => {
                       setSelectedNode(node);
                       setSelectedEdge(null);
                     }}
-                    style={{ cursor: "pointer" }}
+                    style={{ cursor: isDragging ? "grabbing" : "grab" }}
                   >
-                    {/* Node glow when active or selected */}
-                    {(isSelected || isConnected) && (
+                    {(isSelected || isConnected || isDragging) && (
                       <rect
                         x="-88"
-                        y="-40"
+                        y="-42"
                         width="176"
-                        height="80"
+                        height="84"
                         rx="14"
                         fill="none"
                         stroke={node.color || "#3b82f6"}
@@ -622,9 +905,9 @@ export default function AgentInteractionGraph({
                     {/* Main Node Box */}
                     <rect
                       x="-84"
-                      y="-36"
+                      y="-38"
                       width="168"
-                      height="72"
+                      height="76"
                       rx="12"
                       fill="#0f172a"
                       stroke={isSelected || isConnected ? "#38bdf8" : node.borderColor || "#334155"}
@@ -634,7 +917,7 @@ export default function AgentInteractionGraph({
                     {/* Header gradient banner */}
                     <rect
                       x="-83"
-                      y="-35"
+                      y="-37"
                       width="166"
                       height="26"
                       rx="10"
@@ -642,25 +925,33 @@ export default function AgentInteractionGraph({
                     />
 
                     {/* Pulse status indicator */}
-                    <circle cx="-66" cy="-22" r="4" fill="#10b981" />
-                    <circle cx="-66" cy="-22" r="7" fill="#10b981" opacity="0.25" />
+                    <circle cx="-66" cy="-24" r="4" fill="#10b981" />
+                    <circle cx="-66" cy="-24" r="7" fill="#10b981" opacity="0.25" />
 
                     {/* Agent Name */}
                     <text
                       x="-54"
-                      y="-18"
+                      y="-20"
                       fill="#f8fafc"
                       fontSize="11"
                       fontWeight="700"
                       fontFamily="system-ui, sans-serif"
                     >
-                      {node.label?.split(":")[0] || node.id?.replace("agent_", "")}
+                      {node.label || id.replace("agent_", "")}
                     </text>
+
+                    {/* Drag Grip Indicator */}
+                    <g transform="translate(60, -28)" opacity="0.6">
+                      <circle cx="0" cy="0" r="1.5" fill="#94a3b8" />
+                      <circle cx="5" cy="0" r="1.5" fill="#94a3b8" />
+                      <circle cx="0" cy="5" r="1.5" fill="#94a3b8" />
+                      <circle cx="5" cy="5" r="1.5" fill="#94a3b8" />
+                    </g>
 
                     {/* Role Description */}
                     <text
                       x="0"
-                      y="6"
+                      y="4"
                       textAnchor="middle"
                       fill="#94a3b8"
                       fontSize="9.5"
@@ -669,15 +960,15 @@ export default function AgentInteractionGraph({
                       {node.role?.length > 25 ? node.role.substring(0, 23) + "..." : node.role}
                     </text>
 
-                    {/* Model Pill Badge */}
+                    {/* Real Tool Badge */}
                     <g transform="translate(0, 22)">
                       <rect
-                        x="-60"
-                        y="-8"
-                        width="120"
-                        height="16"
-                        rx="8"
-                        fill="#1e293b"
+                        x="-70"
+                        y="-7"
+                        width="140"
+                        height="15"
+                        rx="4"
+                        fill="#111827"
                         stroke="rgba(255, 255, 255, 0.1)"
                         strokeWidth="1"
                       />
@@ -685,12 +976,12 @@ export default function AgentInteractionGraph({
                         x="0"
                         y="4"
                         textAnchor="middle"
-                        fill="#cbd5e1"
-                        fontSize="8.5"
+                        fill="#38bdf8"
+                        fontSize="8"
                         fontFamily="monospace"
                         fontWeight="600"
                       >
-                        {node.model?.split("/")[1] || node.model?.substring(0, 16) || "Agent"}
+                        ⚙️ {node.tools ? node.tools[0] : "CIM Tool"}
                       </text>
                     </g>
                   </g>
@@ -747,26 +1038,53 @@ export default function AgentInteractionGraph({
                       <strong>Privacy:</strong> <span>Capture Level 2 (Summary &bull; Redacted)</span>
                     </div>
                     <div>
-                      <strong>Timestamp:</strong> <span>{selectedEdge.timestamp?.split("T")[1]?.substring(0, 8) || "Recorded"}</span>
+                      <strong>Timestamp:</strong> <span>{selectedEdge.timestamp?.split("T")[1]?.substring(0, 8) || "Live"}</span>
                     </div>
                   </div>
                 </>
-              ) : (
+              ) : selectedNode ? (
                 <>
                   <div>
-                    <div style={{ color: "#60a5fa", fontWeight: 700, fontSize: 13, marginBottom: 2 }}>
-                      {selectedNode.label || selectedNode.id}
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                      <strong style={{ color: "#38bdf8", fontSize: 13 }}>{selectedNode.label || selectedNode.id}</strong>
+                      <span style={{ fontSize: 10, background: "rgba(56, 189, 248, 0.15)", color: "#38bdf8", padding: "1px 6px", borderRadius: 4 }}>
+                        {selectedNode.model || "Google Gemini 3.5 Flash"}
+                      </span>
                     </div>
-                    <div style={{ color: "#cbd5e1" }}>
-                      Role: <strong>{selectedNode.role}</strong>
+                    <div style={{ color: "#cbd5e1", fontSize: 11.5, marginBottom: 6 }}>
+                      {selectedNode.role || "Autonomous Specialized Agent"}
+                    </div>
+                    <div style={{ fontSize: 11, color: "#94a3b8" }}>
+                      <strong>Active Tools:</strong> {(selectedNode.tools || ["read_dataset", "query_records"]).join(", ")}
                     </div>
                   </div>
-                  <div style={{ fontSize: 11, color: "#94a3b8" }}>
-                    <div>Model: <code>{selectedNode.model}</code></div>
-                    <div>Authority: <span>Cryptographically Delegated</span></div>
+                  <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "flex-end", gap: 6 }}>
+                    <div style={{ fontSize: 11, color: "#10b981" }}>
+                      &bull; State: <strong>Online &amp; Active</strong>
+                    </div>
+                    {!selectedNode.id.includes("coord") && (
+                      <button
+                        onClick={() => handleRemoveAgent(selectedNode.id)}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 4,
+                          padding: "3px 8px",
+                          background: "rgba(239, 68, 68, 0.15)",
+                          border: "1px solid rgba(239, 68, 68, 0.3)",
+                          borderRadius: 4,
+                          color: "#f87171",
+                          fontSize: 10.5,
+                          cursor: "pointer",
+                        }}
+                      >
+                        <Trash2 size={11} />
+                        <span>Remove Agent from Team</span>
+                      </button>
+                    )}
                   </div>
                 </>
-              )}
+              ) : null}
             </div>
           )}
         </>

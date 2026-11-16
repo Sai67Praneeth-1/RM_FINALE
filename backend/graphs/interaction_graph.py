@@ -8,6 +8,18 @@ import networkx as nx
 from typing import List, Dict, Any, Optional
 from backend.storage.event_store import EventStore
 
+AGENT_ROLES = {
+    "agent_coordinator": {"role": "Lead Orchestrator & Task Delegator", "model": "Google Gemini 3.5 Flash", "tools": ["mint_delegation", "verify_invariants"]},
+    "agent_researcher": {"role": "CIM Data Ingestion & Extraction", "model": "Google Gemini 3.5 Flash", "tools": ["query_cfpb_records", "read_sample_dataset"]},
+    "agent_analyst": {"role": "Statistical Anomaly Evaluator", "model": "Google Gemini 3.5 Flash", "tools": ["calculate_anomaly_rates", "compute_aggregates"]},
+    "agent_reporter": {"role": "W3C PROV & Synthesis Reporter", "model": "Google Gemini 3.5 Flash", "tools": ["export_w3c_prov", "generate_markdown_report"]},
+    "agent_forensics": {"role": "Security Forensics Scanner", "model": "Google Gemini 3.5 Flash", "tools": ["scan_system_access_logs", "extract_auth_tokens"]},
+    "agent_threat_hunter": {"role": "Privilege Escalation Hunter", "model": "Google Gemini 3.5 Flash", "tools": ["detect_root_escalation", "trace_unauthorized_sharing"]},
+    "agent_compliance": {"role": "Compliance & Policy Auditor", "model": "Google Gemini 3.5 Flash", "tools": ["audit_rbac_policies", "verify_temporal_invariants"]},
+    "agent_sentiment": {"role": "Consumer Sentiment Specialist", "model": "Google Gemini 3.5 Flash", "tools": ["analyze_sentiment_distribution", "extract_topic_clusters"]},
+    "agent_critic": {"role": "Adversarial Reasoning Critic", "model": "Google Gemini 3.5 Flash", "tools": ["verify_causality", "detect_inconsistencies"]},
+}
+
 class InteractionGraphBuilder:
     def __init__(self, event_store: EventStore):
         self.store = event_store
@@ -30,22 +42,25 @@ class InteractionGraphBuilder:
         )
         G = nx.MultiDiGraph()
 
-        # Add agent nodes
+        # Add agent nodes with rich metadata
         for r in records:
-            if r.sender_agent_id not in G:
-                G.add_node(
-                    r.sender_agent_id,
-                    label=r.sender_agent_id.replace("agent_", "").title(),
-                    node_type="agent",
-                    agent_id=r.sender_agent_id
-                )
-            if r.receiver_agent_id not in G:
-                G.add_node(
-                    r.receiver_agent_id,
-                    label=r.receiver_agent_id.replace("agent_", "").title(),
-                    node_type="agent",
-                    agent_id=r.receiver_agent_id
-                )
+            for ag_id in [r.sender_agent_id, r.receiver_agent_id]:
+                if ag_id not in G:
+                    meta = AGENT_ROLES.get(ag_id, {
+                        "role": "Autonomous Specialized Agent",
+                        "model": "Google Gemini 3.5 Flash",
+                        "tools": ["standard_cim_tool"]
+                    })
+                    clean_label = ag_id.replace("agent_", "").replace("_", " ").title()
+                    G.add_node(
+                        ag_id,
+                        label=clean_label,
+                        node_type="agent",
+                        agent_id=ag_id,
+                        role=meta["role"],
+                        model=meta["model"],
+                        tools=meta["tools"]
+                    )
 
             # Add directed communication edge
             summary_disp = r.semantic_summary or r.interaction_type.value
