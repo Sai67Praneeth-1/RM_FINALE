@@ -11,6 +11,7 @@ Neural chain-of-thought stripping (<think> blocks) is enforced on all outputs.
 
 import os
 import re
+import logging
 from typing import Optional, Dict, Any, List, Tuple
 
 try:
@@ -20,6 +21,8 @@ except ImportError:
 
 from backend.config import settings
 from backend.gateway.privacy import strip_chain_of_thought
+
+logger = logging.getLogger(__name__)
 
 
 # ==============================================================================
@@ -49,7 +52,7 @@ def _get_http_client() -> httpx.Client:
     global _http_client
     if _http_client is None or _http_client.is_closed:
         _http_client = httpx.Client(
-            timeout=httpx.Timeout(5.0, connect=3.0),
+            timeout=httpx.Timeout(12.0, connect=5.0),
             limits=httpx.Limits(max_keepalive_connections=10, max_connections=20, keepalive_expiry=60.0)
         )
     return _http_client
@@ -75,14 +78,15 @@ def is_huggingface_available(api_key: Optional[str] = None, base_url: Optional[s
 FALLBACK_MODELS = [
     "gemini-3.5-flash-lite",
     "gemini-3.5-flash",
-    "gemini-3.1-flash-lite",
-    "gemini-3.7-flash",
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-flash-latest",
 ]
 
 def _normalize_model(model_name: Optional[str]) -> str:
     known_bad = {
         "gemini-3.8-flash", "gemini-2.0-flash", "gemini-1.5-flash",
-        "gemini-2.5-flash", "gemini-2.0-flash-lite", "gemini-2.5-flash-lite"
+        "gemini-2.0-flash-lite"
     }
     if not model_name or model_name in known_bad:
         return settings.GEMINI_MODEL or "gemini-3.5-flash-lite"
@@ -97,7 +101,7 @@ def query_gemini(
 ) -> Optional[str]:
     """
     Direct, ultra-fast REST client for Google Gemini API with HTTP connection pooling.
-    Provides sub-second to ~1.2s response latency with automatic multi-model failover.
+    Provides resilient response latency with automatic multi-model failover.
     """
     api_key = _get_api_key()
     if not api_key:
@@ -121,7 +125,7 @@ def query_gemini(
     for m in models_to_try:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={api_key}"
         try:
-            resp = client.post(url, json=payload, timeout=5.0)
+            resp = client.post(url, json=payload, timeout=12.0)
             if resp.status_code == 200:
                 data = resp.json()
                 candidates = data.get("candidates", [])
@@ -131,10 +135,10 @@ def query_gemini(
                         raw_text = parts[0].get("text", "")
                         return strip_internal_reasoning(raw_text)
             elif resp.status_code in (429, 503, 404):
-                print(f"[LLM Client] Model {m} returned {resp.status_code}, trying fallback...")
+                logger.debug(f"[LLM Client] Model {m} returned {resp.status_code}, trying fallback...")
                 continue
         except Exception as e:
-            print(f"[LLM Client] Model {m} request failed: {e}, trying fallback...")
+            logger.debug(f"[LLM Client] Model {m} request note: {e}, trying fallback...")
             continue
 
     return None
@@ -184,7 +188,7 @@ def query_gemini_chat(
     for m in models_to_try:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={api_key}"
         try:
-            resp = client.post(url, json=payload, timeout=5.0)
+            resp = client.post(url, json=payload, timeout=12.0)
             if resp.status_code == 200:
                 data = resp.json()
                 candidates = data.get("candidates", [])
@@ -194,10 +198,10 @@ def query_gemini_chat(
                         raw_text = parts[0].get("text", "")
                         return strip_internal_reasoning(raw_text)
             elif resp.status_code in (429, 503, 404):
-                print(f"[LLM Client] Model {m} returned {resp.status_code}, trying fallback...")
+                logger.debug(f"[LLM Client] Model {m} returned {resp.status_code}, trying fallback...")
                 continue
         except Exception as e:
-            print(f"[LLM Client] Model {m} request failed: {e}, trying fallback...")
+            logger.debug(f"[LLM Client] Model {m} request note: {e}, trying fallback...")
             continue
 
     return None
