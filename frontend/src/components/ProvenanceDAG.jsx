@@ -11,29 +11,29 @@ import {
 import "@xyflow/react/dist/style.css";
 import dagre from "@dagrejs/dagre";
 
-// Edge Colors by W3C PROV Relation Type
+// Edge Colors by W3C PROV Relation Type using Google MD3 palette
 const RELATION_COLORS = {
-  wasDerivedFrom: "#a78bfa",
-  used: "#fbbf24",
-  wasGeneratedBy: "#2dd4bf",
-  wasAssociatedWith: "#60a5fa",
-  actedOnBehalfOf: "#e8a44a",
-  wasAttributedTo: "#34d399",
+  wasDerivedFrom: "#1a73e8",
+  used: "#f9ab00",
+  wasGeneratedBy: "#1e8e3e",
+  wasAssociatedWith: "#5f6368",
+  actedOnBehalfOf: "#d93025",
+  wasAttributedTo: "#129eaf",
 };
 
-// 1. Entity Node Component (Indigo #4f46e5 rectangle)
+// 1. Entity Node Component (Google Blue card)
 function EntityNode({ data, selected }) {
   return (
     <div
       style={{
         padding: "10px 14px",
-        borderRadius: "6px",
-        background: "rgba(79, 70, 229, 0.16)",
-        border: `2px solid ${selected ? "#818cf8" : "#4f46e5"}`,
+        borderRadius: "8px",
+        background: selected ? "#e8f0fe" : "#ffffff",
+        border: `2px solid ${selected ? "#1a73e8" : "#dadce0"}`,
         boxShadow: selected
-          ? "0 0 14px rgba(99, 102, 241, 0.6)"
-          : "0 2px 8px rgba(0, 0, 0, 0.35)",
-        color: "#f0f2f5",
+          ? "0 1px 4px 1px rgba(26, 115, 232, 0.25)"
+          : "0 1px 2px rgba(60, 64, 67, 0.1)",
+        color: "#202124",
         width: 180,
         boxSizing: "border-box",
         textAlign: "center",
@@ -44,13 +44,13 @@ function EntityNode({ data, selected }) {
       <Handle
         type="target"
         position={Position.Top}
-        style={{ background: "#4f46e5", width: 8, height: 8 }}
+        style={{ background: "#1a73e8", width: 8, height: 8 }}
       />
       <div
         style={{
           fontSize: 9.5,
           fontWeight: 700,
-          color: "#a5b4fc",
+          color: "#1a73e8",
           textTransform: "uppercase",
           letterSpacing: "0.06em",
           marginBottom: 4,
@@ -65,6 +65,7 @@ function EntityNode({ data, selected }) {
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
+          color: "#202124",
         }}
         title={data.label || data.id}
       >
@@ -74,7 +75,7 @@ function EntityNode({ data, selected }) {
         <div
           style={{
             fontSize: 10,
-            color: "#9ba3b0",
+            color: "#5f6368",
             marginTop: 2,
             overflow: "hidden",
             textOverflow: "ellipsis",
@@ -87,25 +88,25 @@ function EntityNode({ data, selected }) {
       <Handle
         type="source"
         position={Position.Bottom}
-        style={{ background: "#4f46e5", width: 8, height: 8 }}
+        style={{ background: "#1a73e8", width: 8, height: 8 }}
       />
     </div>
   );
 }
 
-// 2. Activity Node Component (Amber #d97706 diamond via border-radius)
+// 2. Activity Node Component (Google Amber card)
 function ActivityNode({ data, selected }) {
   return (
     <div
       style={{
         padding: "10px 14px",
-        borderRadius: "18px 4px 18px 4px",
-        background: "rgba(217, 119, 6, 0.16)",
-        border: `2px solid ${selected ? "#fcd34d" : "#d97706"}`,
+        borderRadius: "8px",
+        background: selected ? "#fef7e0" : "#ffffff",
+        border: `2px solid ${selected ? "#f9ab00" : "#dadce0"}`,
         boxShadow: selected
-          ? "0 0 14px rgba(217, 119, 6, 0.6)"
-          : "0 2px 8px rgba(0, 0, 0, 0.35)",
-        color: "#f0f2f5",
+          ? "0 1px 4px 1px rgba(249, 171, 0, 0.25)"
+          : "0 1px 2px rgba(60, 64, 67, 0.1)",
+        color: "#202124",
         width: 180,
         boxSizing: "border-box",
         textAlign: "center",
@@ -116,13 +117,13 @@ function ActivityNode({ data, selected }) {
       <Handle
         type="target"
         position={Position.Top}
-        style={{ background: "#d97706", width: 8, height: 8 }}
+        style={{ background: "#f9ab00", width: 8, height: 8 }}
       />
       <div
         style={{
           fontSize: 9.5,
           fontWeight: 700,
-          color: "#fcd34d",
+          color: "#b06000",
           textTransform: "uppercase",
           letterSpacing: "0.06em",
           marginBottom: 4,
@@ -137,6 +138,7 @@ function ActivityNode({ data, selected }) {
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
+          color: "#202124",
         }}
         title={data.label || data.id}
       >
@@ -146,7 +148,7 @@ function ActivityNode({ data, selected }) {
         <div
           style={{
             fontSize: 10,
-            color: "#9ba3b0",
+            color: "#5f6368",
             marginTop: 2,
             overflow: "hidden",
             textOverflow: "ellipsis",
@@ -159,25 +161,25 @@ function ActivityNode({ data, selected }) {
       <Handle
         type="source"
         position={Position.Bottom}
-        style={{ background: "#d97706", width: 8, height: 8 }}
+        style={{ background: "#f9ab00", width: 8, height: 8 }}
       />
     </div>
   );
 }
 
-// 3. Agent Node Component (Emerald #059669 hexagon via clip-path/border-radius)
+// 3. Agent Node Component (Google Green card)
 function AgentNode({ data, selected }) {
   return (
     <div
       style={{
         padding: "10px 14px",
-        borderRadius: "12px",
-        background: "rgba(5, 150, 105, 0.18)",
-        border: `2px solid ${selected ? "#6ee7b7" : "#059669"}`,
+        borderRadius: "8px",
+        background: selected ? "#e6f4ea" : "#ffffff",
+        border: `2px solid ${selected ? "#1e8e3e" : "#dadce0"}`,
         boxShadow: selected
-          ? "0 0 14px rgba(5, 150, 105, 0.6)"
-          : "0 2px 8px rgba(0, 0, 0, 0.35)",
-        color: "#f0f2f5",
+          ? "0 1px 4px 1px rgba(30, 142, 62, 0.25)"
+          : "0 1px 2px rgba(60, 64, 67, 0.1)",
+        color: "#202124",
         width: 180,
         boxSizing: "border-box",
         textAlign: "center",
@@ -188,13 +190,13 @@ function AgentNode({ data, selected }) {
       <Handle
         type="target"
         position={Position.Top}
-        style={{ background: "#059669", width: 8, height: 8 }}
+        style={{ background: "#1e8e3e", width: 8, height: 8 }}
       />
       <div
         style={{
           fontSize: 9.5,
           fontWeight: 700,
-          color: "#6ee7b7",
+          color: "#137333",
           textTransform: "uppercase",
           letterSpacing: "0.06em",
           marginBottom: 4,
@@ -209,6 +211,7 @@ function AgentNode({ data, selected }) {
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
+          color: "#202124",
         }}
         title={data.label || data.id}
       >
@@ -218,7 +221,7 @@ function AgentNode({ data, selected }) {
         <div
           style={{
             fontSize: 10,
-            color: "#9ba3b0",
+            color: "#5f6368",
             marginTop: 2,
             overflow: "hidden",
             textOverflow: "ellipsis",
@@ -231,7 +234,7 @@ function AgentNode({ data, selected }) {
       <Handle
         type="source"
         position={Position.Bottom}
-        style={{ background: "#059669", width: 8, height: 8 }}
+        style={{ background: "#1e8e3e", width: 8, height: 8 }}
       />
     </div>
   );
@@ -384,7 +387,7 @@ export default function ProvenanceDAG({ nodes = [], edges = [], onNodeClick }) {
         const srcId = String(e.source || e.source_id);
         const tgtId = String(e.target || e.target_id);
         const relation = e.relation || e.relation_type || "wasDerivedFrom";
-        const edgeColor = RELATION_COLORS[relation] || "#9ba3b0";
+        const edgeColor = RELATION_COLORS[relation] || "#5f6368";
         const edgeId = e.id || `edge-${srcId}-${tgtId}-${idx}`;
 
         return {
@@ -395,8 +398,8 @@ export default function ProvenanceDAG({ nodes = [], edges = [], onNodeClick }) {
           type: "smoothstep",
           animated: relation === "used" || relation === "wasGeneratedBy",
           style: { stroke: edgeColor, strokeWidth: 2 },
-          labelStyle: { fill: "#f0f2f5", fontSize: 11, fontWeight: 600 },
-          labelBgStyle: { fill: "#1a1d21", fillOpacity: 0.9, rx: 4, ry: 4 },
+          labelStyle: { fill: "#202124", fontSize: 11, fontWeight: 600 },
+          labelBgStyle: { fill: "#ffffff", stroke: "#dadce0", strokeWidth: 1, rx: 4, ry: 4 },
           labelBgPadding: [6, 4],
           markerEnd: {
             type: MarkerType.ArrowClosed,
@@ -435,10 +438,10 @@ export default function ProvenanceDAG({ nodes = [], edges = [], onNodeClick }) {
           justifyContent: "center",
           height: "100%",
           minHeight: 480,
-          background: "var(--bg-surface, #1a1d21)",
-          border: "1px dashed var(--border-subtle, #2a2f38)",
+          background: "#ffffff",
+          border: "1px dashed #dadce0",
           borderRadius: 8,
-          color: "var(--text-muted, #5c6472)",
+          color: "#5f6368",
           padding: 32,
         }}
       >
@@ -447,13 +450,13 @@ export default function ProvenanceDAG({ nodes = [], edges = [], onNodeClick }) {
           style={{
             fontSize: 15,
             fontWeight: 600,
-            color: "var(--text-secondary, #9ba3b0)",
+            color: "#202124",
             marginBottom: 6,
           }}
         >
           No provenance data for this workflow. Run a workflow first.
         </div>
-        <div style={{ fontSize: 12.5, color: "var(--text-muted, #5c6472)" }}>
+        <div style={{ fontSize: 12.5, color: "#5f6368" }}>
           Run an investigation to stream W3C PROV evidence trees and multi-agent lineage.
         </div>
       </div>
@@ -465,9 +468,9 @@ export default function ProvenanceDAG({ nodes = [], edges = [], onNodeClick }) {
       style={{
         width: "100%",
         height: 540,
-        background: "var(--bg-base, #111214)",
+        background: "#f8f9fa",
         borderRadius: "8px",
-        border: "1px solid var(--border-subtle, #2a2f38)",
+        border: "1px solid #dadce0",
         position: "relative",
         overflow: "hidden",
       }}
@@ -483,30 +486,30 @@ export default function ProvenanceDAG({ nodes = [], edges = [], onNodeClick }) {
         maxZoom={1.8}
         proOptions={{ hideAttribution: true }}
       >
-        <Background color="#2a2f38" gap={16} size={1} />
+        <Background color="#dadce0" gap={16} size={1} />
         <Controls
           style={{
-            background: "var(--bg-surface, #1a1d21)",
-            border: "1px solid var(--border-subtle, #2a2f38)",
-            borderRadius: 6,
-            fill: "#f0f2f5",
+            background: "#ffffff",
+            border: "1px solid #dadce0",
+            borderRadius: 8,
+            boxShadow: "0 1px 3px rgba(60,64,67,0.15)",
           }}
         />
         <MiniMap
           nodeStrokeColor={(n) => {
-            if (n.type === "agent") return "#059669";
-            if (n.type === "activity") return "#d97706";
-            return "#4f46e5";
+            if (n.type === "agent") return "#1e8e3e";
+            if (n.type === "activity") return "#f9ab00";
+            return "#1a73e8";
           }}
           nodeColor={(n) => {
-            if (n.type === "agent") return "rgba(5, 150, 105, 0.4)";
-            if (n.type === "activity") return "rgba(217, 119, 6, 0.4)";
-            return "rgba(79, 70, 229, 0.4)";
+            if (n.type === "agent") return "#e6f4ea";
+            if (n.type === "activity") return "#fef7e0";
+            return "#e8f0fe";
           }}
           style={{
-            background: "var(--bg-surface, #1a1d21)",
-            border: "1px solid var(--border-subtle, #2a2f38)",
-            borderRadius: 6,
+            background: "#ffffff",
+            border: "1px solid #dadce0",
+            borderRadius: 8,
           }}
         />
       </ReactFlow>
@@ -518,12 +521,12 @@ export default function ProvenanceDAG({ nodes = [], edges = [], onNodeClick }) {
           bottom: 14,
           left: 14,
           zIndex: 10,
-          background: "rgba(26, 29, 33, 0.94)",
+          background: "rgba(255, 255, 255, 0.96)",
           backdropFilter: "blur(8px)",
-          border: "1px solid var(--border-subtle, #2a2f38)",
+          border: "1px solid #dadce0",
           borderRadius: 8,
           padding: "10px 14px",
-          boxShadow: "0 4px 16px rgba(0, 0, 0, 0.45)",
+          boxShadow: "0 1px 3px 1px rgba(60, 64, 67, 0.15)",
           fontSize: 11.5,
           pointerEvents: "auto",
         }}
@@ -532,7 +535,7 @@ export default function ProvenanceDAG({ nodes = [], edges = [], onNodeClick }) {
           style={{
             fontSize: 10,
             fontWeight: 700,
-            color: "var(--text-secondary, #9ba3b0)",
+            color: "#5f6368",
             textTransform: "uppercase",
             marginBottom: 8,
             letterSpacing: "0.06em",
@@ -546,14 +549,14 @@ export default function ProvenanceDAG({ nodes = [], edges = [], onNodeClick }) {
               style={{
                 width: 12,
                 height: 12,
-                borderRadius: 2,
-                background: "#4f46e5",
+                borderRadius: 3,
+                background: "#e8f0fe",
                 display: "inline-block",
-                border: "1px solid #818cf8",
+                border: "1.5px solid #1a73e8",
               }}
             />
-            <span style={{ color: "#f0f2f5", fontWeight: 500 }}>
-              prov:Entity (Indigo #4f46e5)
+            <span style={{ color: "#202124", fontWeight: 500 }}>
+              prov:Entity (Google Blue)
             </span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -561,14 +564,14 @@ export default function ProvenanceDAG({ nodes = [], edges = [], onNodeClick }) {
               style={{
                 width: 12,
                 height: 12,
-                borderRadius: "4px 1px 4px 1px",
-                background: "#d97706",
+                borderRadius: 3,
+                background: "#fef7e0",
                 display: "inline-block",
-                border: "1px solid #fcd34d",
+                border: "1.5px solid #f9ab00",
               }}
             />
-            <span style={{ color: "#f0f2f5", fontWeight: 500 }}>
-              prov:Activity (Amber #d97706)
+            <span style={{ color: "#202124", fontWeight: 500 }}>
+              prov:Activity (Google Amber)
             </span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -576,14 +579,14 @@ export default function ProvenanceDAG({ nodes = [], edges = [], onNodeClick }) {
               style={{
                 width: 12,
                 height: 12,
-                borderRadius: 6,
-                background: "#059669",
+                borderRadius: 3,
+                background: "#e6f4ea",
                 display: "inline-block",
-                border: "1px solid #6ee7b7",
+                border: "1.5px solid #1e8e3e",
               }}
             />
-            <span style={{ color: "#f0f2f5", fontWeight: 500 }}>
-              prov:Agent (Emerald #059669)
+            <span style={{ color: "#202124", fontWeight: 500 }}>
+              prov:Agent (Google Green)
             </span>
           </div>
         </div>
