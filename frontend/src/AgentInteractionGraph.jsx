@@ -15,8 +15,6 @@ import {
   Sparkles,
   ChevronDown,
   ChevronUp,
-  Plus,
-  Trash2,
   Move,
   RefreshCw,
   X,
@@ -267,14 +265,6 @@ const DEFAULT_META = {
   squadId: "squad_command",
 };
 
-const AVAILABLE_AGENT_OPTIONS = [
-  { id: "agent_threat_hunter", name: "Threat Hunter", role: "Privilege Escalation Detector", color: "#ef4444", squad: "squad_secops" },
-  { id: "agent_compliance", name: "Compliance Auditor", role: "FedRAMP & NIST Invariant Auditor", color: "#8b5cf6", squad: "squad_secops" },
-  { id: "agent_sentiment", name: "Sentiment Specialist", role: "Consumer Experience & NLP", color: "#14b8a6", squad: "squad_complaints" },
-  { id: "agent_forensics", name: "Forensics Scanner", role: "Access Log & Security Forensics", color: "#06b6d4", squad: "squad_secops" },
-  { id: "agent_critic", name: "Adversarial Critic", role: "Reasoning & Vulnerability Auditor", color: "#f97316", squad: "squad_critic" },
-];
-
 export default function AgentInteractionGraph({
   graph,
   interactions = [],
@@ -295,13 +285,12 @@ export default function AgentInteractionGraph({
   const [activeStepIdx, setActiveStepIdx] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
 
-  // Dynamic graph nodes & edges with real-time add/remove
+  // Dynamic graph nodes & edges
   const [localNodes, setLocalNodes] = useState([]);
   const [localEdges, setLocalEdges] = useState([]);
   const [nodePositions, setNodePositions] = useState({});
   const [draggingNodeId, setDraggingNodeId] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const [showAddMenu, setShowAddMenu] = useState(false);
 
   const svgRef = useRef(null);
 
@@ -700,69 +689,6 @@ export default function AgentInteractionGraph({
     setDraggingNodeId(null);
   };
 
-  // Add dynamic agent to the live graph
-  const handleAddAgent = (agentOption) => {
-    setShowAddMenu(false);
-    if (localNodes.some((n) => n.id === agentOption.id)) {
-      alert(`${agentOption.name} is already present in this topology!`);
-      return;
-    }
-
-    const newNode = {
-      id: agentOption.id,
-      label: agentOption.name,
-      node_type: "agent",
-      role: agentOption.role,
-      squad_id: agentOption.squad,
-    };
-
-    const newNodes = [...localNodes, newNode];
-    setLocalNodes(newNodes);
-
-    const coordId = localNodes.find((n) => n.id.includes("coord"))?.id || "agent_coordinator";
-    const newEdges = [
-      ...localEdges,
-      {
-        key: `del_${agentOption.id}_${Date.now()}`,
-        source: coordId,
-        target: agentOption.id,
-        interaction_type: "delegation",
-        semantic_summary: `Delegated specialized scope '${agentOption.role}' to ${agentOption.name}`,
-        timestamp: new Date().toISOString(),
-        from_squad: "squad_command",
-        to_squad: agentOption.squad,
-        is_cross_squad: agentOption.squad !== "squad_command",
-      },
-      {
-        key: `resp_${agentOption.id}_${Date.now()}`,
-        source: agentOption.id,
-        target: "agent_reporter",
-        interaction_type: "result",
-        semantic_summary: `${agentOption.name} delivered analytical verification findings`,
-        timestamp: new Date().toISOString(),
-        from_squad: agentOption.squad,
-        to_squad: "squad_command",
-        is_cross_squad: agentOption.squad !== "squad_command",
-      },
-    ];
-    setLocalEdges(newEdges);
-    setNodePositions(computeDynamicLayout(newNodes));
-  };
-
-  // Remove agent from the live graph
-  const handleRemoveAgent = (agentId) => {
-    if (agentId.includes("coord")) {
-      alert("Cannot remove Lead Coordinator! It holds root authority.");
-      return;
-    }
-    const filteredNodes = localNodes.filter((n) => n.id !== agentId);
-    const filteredEdges = localEdges.filter((e) => e.source !== agentId && e.target !== agentId);
-    setLocalNodes(filteredNodes);
-    setLocalEdges(filteredEdges);
-    setNodePositions(computeDynamicLayout(filteredNodes));
-    if (selectedNode?.id === agentId) setSelectedNode(null);
-  };
-
   // Order interactions sequentially for step-by-step playback
   const chronologicalSteps = useMemo(() => {
     if (localEdges.length > 0) {
@@ -976,79 +902,6 @@ export default function AgentInteractionGraph({
                   <option value="agent">👥 Agent Detail View ({localNodes.length} Agents)</option>
                 </select>
               </div>
-
-              {/* Dynamic Add Agent Button (only in Agent view) */}
-              {viewMode === "agent" && (
-                <div style={{ position: "relative" }}>
-                  <button
-                    onClick={() => setShowAddMenu(!showAddMenu)}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 4,
-                      padding: "5px 9px",
-                      background: "rgba(16, 185, 129, 0.15)",
-                      border: "1px solid rgba(16, 185, 129, 0.35)",
-                      borderRadius: 6,
-                      color: "#34d399",
-                      fontSize: 11,
-                      fontWeight: 600,
-                      cursor: "pointer",
-                    }}
-                    title="Add specialized agent node to live topology"
-                  >
-                    <Plus size={12} />
-                    <span>Add Agent</span>
-                  </button>
-
-                  {showAddMenu && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: "100%",
-                        right: 0,
-                        marginTop: 4,
-                        background: "#0f172a",
-                        border: "1px solid #334155",
-                        borderRadius: 8,
-                        padding: 6,
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 4,
-                        zIndex: 50,
-                        width: 220,
-                        boxShadow: "0 10px 25px rgba(0,0,0,0.5)",
-                      }}
-                    >
-                      <div style={{ fontSize: 10, color: "#64748b", fontWeight: 700, padding: "4px 8px", textTransform: "uppercase" }}>
-                        Select Specialized Agent:
-                      </div>
-                      {AVAILABLE_AGENT_OPTIONS.map((opt) => (
-                        <button
-                          key={opt.id}
-                          onClick={() => handleAddAgent(opt)}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "space-between",
-                            padding: "6px 8px",
-                            background: "#1e293b",
-                            border: "1px solid #334155",
-                            borderRadius: 6,
-                            color: "#f8fafc",
-                            fontSize: 11,
-                            cursor: "pointer",
-                            textAlign: "left",
-                          }}
-                        >
-                          <span style={{ fontWeight: 600, color: opt.color }}>{opt.name}</span>
-                          <Plus size={11} color="#94a3b8" />
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
 
               {/* Reset / Auto-Layout */}
               <button
@@ -1986,26 +1839,6 @@ export default function AgentInteractionGraph({
                     <div style={{ fontSize: 11, color: "#10b981" }}>
                       &bull; State: <strong>Online &amp; Active</strong>
                     </div>
-                    {!selectedNode.id.includes("coord") && (
-                      <button
-                        onClick={() => handleRemoveAgent(selectedNode.id)}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 4,
-                          padding: "3px 8px",
-                          background: "rgba(239, 68, 68, 0.15)",
-                          border: "1px solid rgba(239, 68, 68, 0.3)",
-                          borderRadius: 4,
-                          color: "#f87171",
-                          fontSize: 10.5,
-                          cursor: "pointer",
-                        }}
-                      >
-                        <Trash2 size={11} />
-                        <span>Remove Agent from Team</span>
-                      </button>
-                    )}
                   </div>
                 </>
               ) : null}
