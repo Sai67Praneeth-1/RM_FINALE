@@ -1933,31 +1933,18 @@ export default function App() {
         {activeTab === "hf_simulation" && (
           <div className="content-panel">
             <div className="stat-card" style={{ marginBottom: 20, background: "#ffffff", border: "1px solid #dadce0", borderRadius: 8 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                <div>
-                  <h3 style={{ color: "#1a73e8", fontSize: 18, fontWeight: 700, marginBottom: 6 }}>
-                    Gemini Multi-Agent Research Simulation
-                  </h3>
-                  <p style={{ color: "#5f6368", fontSize: 13, lineHeight: 1.5 }}>
-                    Dynamic inter-agent dialogue between specialized agents (<strong>Coordinator_Agent</strong>, <strong>Executor_Agent</strong>, <strong>Critic_Agent</strong>, <strong>Synthesizer_Agent</strong>) powered by Google Gemini.
-                  </p>
-                </div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <div className="pill-badge active" style={{ fontSize: 11 }}>
-                    <ShieldCheck size={13} />
-                    <span>&lt;think&gt; Reasoning Stripped</span>
-                  </div>
-                  <div className="pill-badge" style={{ fontSize: 11 }}>
-                    <Sparkles size={13} color="#f59e0b" />
-                    <span>3-Graph Observed</span>
-                  </div>
-                </div>
+              <div style={{ marginBottom: 12 }}>
+                <h3 style={{ color: "#1a73e8", fontSize: 18, fontWeight: 700, marginBottom: 6 }}>
+                  Gemini Multi-Agent Research Simulation
+                </h3>
+                <p style={{ color: "#5f6368", fontSize: 13, lineHeight: 1.5 }}>
+                  Dynamic inter-agent dialogue between specialized agents (<strong>Coordinator_Agent</strong>, <strong>Executor_Agent</strong>, <strong>Critic_Agent</strong>, <strong>Synthesizer_Agent</strong>) powered by Google Gemini.
+                </p>
               </div>
 
               <div style={{ background: "#e8f0fe", border: "1px solid #dadce0", padding: 12, borderRadius: 8, fontSize: 12.5, color: "#1a73e8", marginBottom: 16 }}>
                 🧠 <strong>Goal-Driven Multi-Agent Protocol:</strong> Agents collaborate dynamically across turns until the research goal is conclusively answered.
-                The <code>Safety Loop Limit</code> acts strictly as a circuit-breaker to stop runaway loops. 
-                Internal neural reasoning chains (<code>&lt;think&gt;...&lt;/think&gt;</code>) are automatically stripped before public logging.
+                The <code>Safety Loop Limit</code> acts strictly as a circuit-breaker to stop runaway loops.
               </div>
 
               {/* Goal Presets */}
@@ -2235,11 +2222,6 @@ export default function App() {
                 {/* Dialogue View */}
                 {activeSimTab === "dialogue" && (
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                    <div style={{ background: "rgba(16, 185, 129, 0.08)", border: "1px solid rgba(16, 185, 129, 0.25)", padding: 10, borderRadius: 6, fontSize: 12, color: "#6ee7b7" }}>
-                      🛡️ <strong>Transparency Verified:</strong> All internal reasoning chains (<code>&lt;think&gt;...&lt;/think&gt;</code>) 
-                      were stripped before logging. Only public inter-agent communication envelopes are preserved.
-                    </div>
-
                     {simResult.communication_log?.map((entry, idx) => {
                       const isCoord = entry.content?.includes("[Coordinator_Agent]");
                       const isExec = entry.content?.includes("[Executor_Agent]");
