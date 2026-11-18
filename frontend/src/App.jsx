@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   MessageSquare,
   Network,
@@ -400,10 +400,6 @@ export default function App() {
 
     // Read query parameters for deep linking
     const scopeParam = searchParams.get("scope");
-    if (scopeParam && scopeParam !== selectedEventScope) {
-      setSelectedEventScope(scopeParam);
-    }
-
     const wfParam = searchParams.get("workflow_id");
     if (wfParam && wfParam !== selectedWorkflowId) {
       setSelectedWorkflowId(wfParam);
@@ -423,7 +419,17 @@ export default function App() {
       const targetWf = wfParam || selectedWorkflowId;
       if (targetWf) fetchProvenance(targetWf);
     } else if (currentTab === "events") {
-      fetchEvents(scopeParam || selectedEventScope);
+      fetchRecentWorkflows();
+      fetchChatList();
+      const resolvedScope = scopeParam || "all";
+      if (resolvedScope !== selectedEventScope) {
+        setSelectedEventScope(resolvedScope);
+      }
+      fetchEvents(resolvedScope);
+    } else {
+      if (scopeParam && scopeParam !== selectedEventScope) {
+        setSelectedEventScope(scopeParam);
+      }
     }
   }, [location.pathname, location.search]);
 
@@ -872,10 +878,13 @@ export default function App() {
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
-        setEventsList(data || []);
+        setEventsList(Array.isArray(data) ? data : []);
+      } else {
+        setEventsList([]);
       }
     } catch (e) {
       console.error("fetchEvents error:", e);
+      setEventsList([]);
     } finally {
       setEventsLoading(false);
     }
@@ -885,13 +894,42 @@ export default function App() {
     let timer = null;
     if (activeTab === "events" && isLiveSync) {
       timer = setInterval(() => {
-        fetchEvents();
+        fetchEvents(selectedEventScope);
       }, 2500);
     }
     return () => {
       if (timer) clearInterval(timer);
     };
   }, [activeTab, isLiveSync, selectedEventScope]);
+
+  const filteredEvents = useMemo(() => {
+    const q = (eventFilter || "").trim().toLowerCase();
+    if (!q) return eventsList;
+    return eventsList.filter((ev) => {
+      if (!ev) return false;
+      const strId = String(ev.event_id || "").toLowerCase();
+      const strAgent = String(ev.agent_id || "").toLowerCase();
+      const strAction = String(ev.action_semantic || ev.action || ev.tool_name || ev.tool_operation || "").toLowerCase();
+      const strResource = String(ev.resource_id || ev.resource_uri || ev.resource_type || "").toLowerCase();
+      const strSensitivity = String(ev.sensitivity_label || ev.sensitivity || "").toLowerCase();
+      const strOutcome = String(ev.action_outcome || ev.status || "").toLowerCase();
+      const strDelegation = String(ev.delegation_id || "").toLowerCase();
+      const strWf = String(ev.workflow_id || "").toLowerCase();
+      const strSummary = String(ev.output_summary || ev.tool_operation || "").toLowerCase();
+      return (
+        strId.includes(q) ||
+        strAgent.includes(q) ||
+        strAction.includes(q) ||
+        strResource.includes(q) ||
+        strSensitivity.includes(q) ||
+        strOutcome.includes(q) ||
+        strDelegation.includes(q) ||
+        strWf.includes(q) ||
+        strSummary.includes(q) ||
+        JSON.stringify(ev).toLowerCase().includes(q)
+      );
+    });
+  }, [eventsList, eventFilter]);
 
   // Voice Command (Web Speech API)
   const handleVoiceCommand = () => {
@@ -3490,7 +3528,7 @@ export default function App() {
                       setTimelineScope(val);
                       fetchInteractions(val, timelineAgentFilter, timelineTypeFilter);
                     }}
-                    style={{ padding: "8px 12px", background: "#ffffff", border: "1px solid #dadce0", borderRadius: 6, color: "#fff", fontSize: 13 }}
+                    style={{ padding: "8px 12px", background: "#ffffff", border: "1px solid #dadce0", borderRadius: 6, color: "#202124", fontSize: 13 }}
                   >
                     <option value="all">🌐 All Workflows (Latest Activity)</option>
                     {workflows.map((w) => (
@@ -3511,7 +3549,7 @@ export default function App() {
                       setTimelineAgentFilter(val);
                       fetchInteractions(timelineScope, val, timelineTypeFilter);
                     }}
-                    style={{ padding: "8px 12px", background: "#ffffff", border: "1px solid #dadce0", borderRadius: 6, color: "#fff", fontSize: 13 }}
+                    style={{ padding: "8px 12px", background: "#ffffff", border: "1px solid #dadce0", borderRadius: 6, color: "#202124", fontSize: 13 }}
                   >
                     <option value="all">👥 All Agents</option>
                     <option value="agent_coordinator">👑 Coordinator (Agent A)</option>
@@ -3531,7 +3569,7 @@ export default function App() {
                       setTimelineTypeFilter(val);
                       fetchInteractions(timelineScope, timelineAgentFilter, val);
                     }}
-                    style={{ padding: "8px 12px", background: "#ffffff", border: "1px solid #dadce0", borderRadius: 6, color: "#fff", fontSize: 13 }}
+                    style={{ padding: "8px 12px", background: "#ffffff", border: "1px solid #dadce0", borderRadius: 6, color: "#202124", fontSize: 13 }}
                   >
                     <option value="all">⚡ All Types</option>
                     <option value="delegation">📋 Delegation</option>
@@ -3556,7 +3594,7 @@ export default function App() {
                       placeholder="Search summaries, agents, IDs..."
                       value={timelineSearch}
                       onChange={(e) => setTimelineSearch(e.target.value)}
-                      style={{ width: "100%", padding: "8px 12px 8px 32px", background: "#ffffff", border: "1px solid #dadce0", borderRadius: 6, color: "#fff", fontSize: 13 }}
+                      style={{ width: "100%", padding: "8px 12px 8px 32px", background: "#ffffff", border: "1px solid #dadce0", borderRadius: 6, color: "#202124", fontSize: 13 }}
                     />
                   </div>
                 </div>
@@ -4155,13 +4193,16 @@ export default function App() {
                         fetchEvents(newScope);
                       }}
                       style={{
-                        padding: "6px 12px",
+                        padding: "7px 14px",
                         background: "#ffffff",
                         border: "1px solid #dadce0",
-                        borderRadius: 6,
-                        color: "#fff",
+                        borderRadius: 20,
+                        color: "#202124",
                         fontSize: 12.5,
-                        maxWidth: 320
+                        maxWidth: 340,
+                        fontWeight: 500,
+                        outline: "none",
+                        cursor: "pointer"
                       }}
                     >
                       <option value="all">🌐 All System Events (Global)</option>
@@ -4169,6 +4210,15 @@ export default function App() {
                         <option value={`chat:${activeChatId}`}>
                           💬 Current Active Chat ({chatList.find((c) => c.id === activeChatId)?.title || activeChatId.substring(0, 8)})
                         </option>
+                      )}
+                      {selectedEventScope &&
+                        selectedEventScope !== "all" &&
+                        selectedEventScope !== `chat:${activeChatId}` &&
+                        !chatList.some((c) => `chat:${c.id}` === selectedEventScope) &&
+                        !workflows.some((w) => `wf:${w.workflow_id}` === selectedEventScope) && (
+                          <option value={selectedEventScope}>
+                            🎯 Filtered Scope: {selectedEventScope}
+                          </option>
                       )}
                       {chatList.length > 0 && (
                         <optgroup label="Saved Chats (MongoDB)">
@@ -4183,7 +4233,7 @@ export default function App() {
                         <optgroup label="Recent Workflows">
                           {workflows.slice(0, 15).map((w) => (
                             <option key={w.workflow_id} value={`wf:${w.workflow_id}`}>
-                              ⚡ {w.workflow_id} - {w.task_description?.substring(0, 32)}...
+                              ⚡ {w.workflow_id} - {(w.task_description || "").substring(0, 32)}...
                             </option>
                           ))}
                         </optgroup>
@@ -4191,30 +4241,57 @@ export default function App() {
                     </select>
                   </div>
 
-                  <div style={{ position: "relative", flex: 1, minWidth: 200, maxWidth: 360 }}>
-                    <Search size={13} style={{ position: "absolute", left: 10, top: 10, color: "#5f6368" }} />
+                  <div style={{ position: "relative", flex: 1, minWidth: 220, maxWidth: 380 }}>
+                    <Search size={14} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#5f6368" }} />
                     <input
                       type="text"
-                      placeholder="Search by ID, agent, verb, resource..."
+                      placeholder="Search ID, agent, verb, resource, output..."
                       value={eventFilter}
                       onChange={(e) => setEventFilter(e.target.value)}
                       style={{
                         width: "100%",
-                        padding: "6px 10px 6px 30px",
+                        padding: "7px 32px 7px 34px",
                         background: "#ffffff",
                         border: "1px solid #dadce0",
-                        borderRadius: 6,
-                        color: "#fff",
-                        fontSize: 12.5
+                        borderRadius: 20,
+                        color: "#202124",
+                        fontSize: 12.5,
+                        outline: "none",
+                        boxSizing: "border-box"
                       }}
                     />
+                    {eventFilter && (
+                      <button
+                        type="button"
+                        onClick={() => setEventFilter("")}
+                        style={{
+                          position: "absolute",
+                          right: 10,
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          background: "transparent",
+                          border: "none",
+                          cursor: "pointer",
+                          color: "#5f6368",
+                          display: "flex",
+                          alignItems: "center",
+                          padding: 2
+                        }}
+                        title="Clear search"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
                   </div>
                 </div>
 
-                <div style={{ fontSize: 12, color: "#5f6368" }}>
-                  Showing <strong style={{ color: "#1a73e8" }}>
-                    {eventsList.filter((ev) => !eventFilter || JSON.stringify(ev).toLowerCase().includes(eventFilter.toLowerCase())).length}
-                  </strong> of {eventsList.length} events
+                <div style={{ fontSize: 12, color: "#5f6368", display: "flex", alignItems: "center", gap: 6 }}>
+                  <span>Showing <strong style={{ color: "#1a73e8" }}>{filteredEvents.length}</strong> of {eventsList.length} events</span>
+                  {eventFilter && (
+                    <span style={{ color: "#e37400", fontWeight: 500 }}>
+                      (matching "{eventFilter}")
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -4235,10 +4312,51 @@ export default function App() {
                     </tr>
                   </thead>
                   <tbody>
-                    {eventsList
-                      .filter((ev) => !eventFilter || JSON.stringify(ev).toLowerCase().includes(eventFilter.toLowerCase()))
-                      .slice(0, 100)
-                      .map((ev) => {
+                    {eventsLoading ? (
+                      <tr>
+                        <td colSpan={9} style={{ textAlign: "center", padding: "36px 16px", color: "#5f6368" }}>
+                          <RefreshCw size={16} className="spin-icon" style={{ display: "inline-block", verticalAlign: "middle", marginRight: 8 }} />
+                          <span>Loading database events...</span>
+                        </td>
+                      </tr>
+                    ) : filteredEvents.length === 0 ? (
+                      <tr>
+                        <td colSpan={9} style={{ textAlign: "center", padding: "40px 16px", color: "#5f6368" }}>
+                          <div style={{ fontSize: 13.5, fontWeight: 600, color: "#202124", marginBottom: 6 }}>
+                            {eventFilter ? `No events match "${eventFilter}"` : "No events recorded in this scope"}
+                          </div>
+                          <div style={{ fontSize: 12, color: "#5f6368", marginBottom: 12 }}>
+                            {eventFilter
+                              ? "Try searching for a different agent, action verb, or resource name."
+                              : selectedEventScope !== "all"
+                              ? "This chat or workflow has not produced execution events yet, or events were pruned."
+                              : "No Common Information Model (CIM) events currently exist in the database."}
+                          </div>
+                          {eventFilter ? (
+                            <button
+                              className="pill-btn"
+                              onClick={() => setEventFilter("")}
+                              style={{ padding: "5px 14px", fontSize: 12, cursor: "pointer" }}
+                            >
+                              Clear Search
+                            </button>
+                          ) : selectedEventScope !== "all" ? (
+                            <button
+                              className="pill-btn"
+                              onClick={() => {
+                                setSelectedEventScope("all");
+                                navigate("/events", { replace: true });
+                                fetchEvents("all");
+                              }}
+                              style={{ padding: "5px 14px", fontSize: 12, cursor: "pointer" }}
+                            >
+                              Switch to Global System Scope
+                            </button>
+                          ) : null}
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredEvents.slice(0, 100).map((ev) => {
                         const sensitivity = ev.sensitivity_label || ev.sensitivity || "internal";
                         const sensColor =
                           sensitivity === "public"
@@ -4328,13 +4446,7 @@ export default function App() {
                             </td>
                           </tr>
                         );
-                      })}
-                    {eventsList.length === 0 && (
-                      <tr>
-                        <td colSpan={9} style={{ textAlign: "center", padding: "30px", color: "#5f6368" }}>
-                          No execution events found for the selected scope. Chat with the Lead Agent to trigger live agent telemetry.
-                        </td>
-                      </tr>
+                      })
                     )}
                   </tbody>
                 </table>
