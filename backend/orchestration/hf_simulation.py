@@ -304,13 +304,14 @@ def run_huggingface_transparency_simulation(
 
         print(f"--- Turn {turns_executed} ---")
 
-        # Run agent turn via Hugging Face Router with chain-of-thought stripping
-        public_message = run_agent_turn(
+        # Run agent turn with explicit provider identity and telemetry (Finding 3)
+        public_message, meta = run_agent_turn(
             model_name=model_name,
             agent_name=agent_name,
             system_prompt=system_prompt,
             shared_history=communication_log,
-            client=client
+            client=client,
+            return_metadata=True
         )
 
         # Gateway Observability Instrumentation:
@@ -324,30 +325,39 @@ def run_huggingface_transparency_simulation(
             delegation_id=current_del_id,
             conversation_id=conv_id,
             task_id=task_id,
+            workflow_id=workflow_id,
             raw_content=public_message,
             semantic_summary=f"Turn {turns_executed}: {agent_name} communicated under {current_del_id}",
             reply_to_message_id=previous_msg_id,
-            sensitivity_label=SensitivityLabel.INTERNAL
+            sensitivity_label=SensitivityLabel.INTERNAL,
+            metadata={
+                "provider": meta.get("provider", "simulation_engine"),
+                "requested_model": meta.get("requested_model", model_name),
+                "actual_model": meta.get("actual_model", model_name),
+                "execution_mode": meta.get("mode", "fallback")
+            }
         )
 
         message_ids.append(interaction.message_id)
         previous_msg_id = interaction.message_id
 
-        # Record observable execution event in G_exec
+        # Record observable execution event in G_exec with transparent provider identity (Finding 3)
+        is_live = (meta.get("mode") == "live")
+        actual_model_name = meta.get("actual_model", model_name)
         cim_evt = CIMEvent(
             agent_id=agent_id,
-            tool_name="huggingface_router",
-            tool_operation="chat.completions.create",
+            tool_name="gemini_api" if is_live else "simulation_fallback_generator",
+            tool_operation="generate_content" if is_live else "synthetic_dialogue",
             action_semantic=ActionSemantic.INVOKE if "coordinator" in agent_id else ActionSemantic.SEARCH,
             action_outcome=ActionOutcome.SUCCESS,
             resource_type=ResourceClass.MESSAGE,
-            resource_id=model_name,
-            resource_uri=f"huggingface://router.huggingface.co/v1/{model_name}",
+            resource_id=actual_model_name,
+            resource_uri=f"gemini://api/{actual_model_name}" if is_live else f"simulation://local/{actual_model_name}",
             delegation_id=current_del_id,
             principal_user_id=principal_id,
             workflow_id=workflow_id,
             task_id=task_id,
-            output_summary=f"Turn {turns_executed}: {agent_name} executed inference on {model_name}"
+            output_summary=f"Turn {turns_executed} ({meta.get('mode', 'fallback')}): {agent_name} executed inference on {actual_model_name}"
         )
         gw.store.save_execution_event(cim_evt)
 

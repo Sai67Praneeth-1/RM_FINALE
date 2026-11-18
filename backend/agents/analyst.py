@@ -40,9 +40,14 @@ class AnalysisAgent(BaseAgent):
         mode: str = "deterministic_demo"
     ) -> Dict[str, Any]:
         """
-        Executes analytical computations through Gateway, handles clarification if needed,
-        and returns structured findings.
+        Executes analytical computations through Gateway, consumes inbox messages,
+        handles clarification if needed, and returns structured findings.
         """
+        # Consume incoming messages delivered to analyst's inbox (Finding 1)
+        inbox = self.read_inbox()
+        if not upstream_interaction_id and inbox:
+            upstream_interaction_id = inbox[-1].get("interaction_id")
+
         # Check domain: security logs vs. customer complaints vs. general text/notes
         is_security_audit = "access" in dataset_name.lower() or "log" in dataset_name.lower()
         is_text_content = isinstance(raw_records, str) or dataset_name.endswith(".txt") or not isinstance(raw_records, list)
@@ -110,18 +115,24 @@ class AnalysisAgent(BaseAgent):
             summary = f"Text analysis findings ({len(analysis_output.get('topics_identified', []))} topics extracted)"
         else:
             summary = f"Quantitative analysis findings ({analysis_output.get('high_priority_count', 0)} critical issues)"
+        # Send result back to Coordinator (Finding 6: cim_event is prior calculation provenance)
+        prov_refs = [cim_event.event_id]
+        if upstream_interaction_id:
+            prov_refs.append(upstream_interaction_id)
+
         msg_to_coord = self.send_message(
             recipient="agent_coordinator",
             interaction_type=InteractionType.RESULT,
             delegation_id=delegation_id,
             conversation_id=conversation_id,
             task_id=task_id,
+            workflow_id=workflow_id,
             body=key_takeaway,
             summary=summary,
             resource_refs=[f"file://{dataset_name}", "tool://analytics_engine"],
             sensitivity_label=SensitivityLabel.INTERNAL,
-            downstream_action_ids=[cim_event.event_id],
-            provenance_refs=[upstream_interaction_id] if upstream_interaction_id else []
+            downstream_action_ids=[],
+            provenance_refs=prov_refs
         )
 
         # Record explicit provenance edge: Upstream message -> Analysis Calculation

@@ -28,6 +28,7 @@ class InteractionRecord(BaseModel):
     # Context Identifiers
     conversation_id: str = Field(..., description="Conversation or workflow session context")
     task_id: str = Field(..., description="Scoped task or subtask identifier")
+    workflow_id: Optional[str] = Field(None, description="Explicit workflow execution identifier")
     delegation_id: str = Field(..., description="Durable delegation authorization context")
     delegation_parent_id: Optional[str] = Field(None, description="Parent delegation ID for lineage closure")
     

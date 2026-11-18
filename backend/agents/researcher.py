@@ -70,19 +70,20 @@ class ResearchAgent(BaseAgent):
             if llm_summary:
                 transfer_body += f"\nInitial Research Notes: {llm_summary}"
 
-        # 1. Multi-hop transfer: Send findings to Analysis Agent
+        # 1. Multi-hop transfer: Send findings to Analysis Agent (Finding 6: cim_event is upstream provenance)
         msg_to_analyst = self.send_message(
             recipient="agent_analyst",
             interaction_type=InteractionType.INFORMATION_TRANSFER,
             delegation_id=delegation_id,
             conversation_id=conversation_id,
             task_id=task_id,
+            workflow_id=workflow_id,
             body=transfer_body,
             summary=summary,
             resource_refs=[f"file://{dataset_name}"],
             sensitivity_label=SensitivityLabel.INTERNAL,
-            downstream_action_ids=[cim_event.event_id],
-            provenance_refs=[f"file://{dataset_name}"]
+            downstream_action_ids=[],
+            provenance_refs=[cim_event.event_id, f"file://{dataset_name}"]
         )
 
         # 2. Inform Coordinator of task completion
@@ -92,10 +93,13 @@ class ResearchAgent(BaseAgent):
             delegation_id=delegation_id,
             conversation_id=conversation_id,
             task_id=task_id,
+            workflow_id=workflow_id,
             body=f"Data extraction for '{dataset_name}' completed ({row_count} items). Transferred to Analyst.",
             summary=f"Reported extraction success for {dataset_name} to Coordinator.",
             resource_refs=[f"file://{dataset_name}"],
-            sensitivity_label=SensitivityLabel.INTERNAL
+            sensitivity_label=SensitivityLabel.INTERNAL,
+            downstream_action_ids=[],
+            provenance_refs=[cim_event.event_id]
         )
 
         # Record explicit provenance edges:

@@ -10,7 +10,7 @@ Critical Research Invariant (RM_MID Slide 5 & 12):
 """
 
 import re
-from typing import Optional, Dict, Any, Tuple
+from typing import Optional, Dict, Any, Tuple, List
 from backend.schemas.events import CaptureLevel, SensitivityLabel
 
 # Comprehensive regular expressions for sensitive PII, credentials, and tokens
@@ -120,9 +120,11 @@ def apply_capture_policy(
     if capture_level == CaptureLevel.METADATA_ONLY:
         return None, None
     
-    summary = provided_summary or extract_safe_summary(raw_content or "")
-    # Always ensure no chain-of-thought in summary
-    summary = strip_chain_of_thought(summary)
+    # Always ensure no chain-of-thought and apply PII/credential redaction to summaries (Finding 5)
+    if provided_summary:
+        summary = redact_sensitive_content(provided_summary)
+    else:
+        summary = extract_safe_summary(raw_content or "")
     
     if capture_level == CaptureLevel.METADATA_SUMMARY:
         return summary, None
@@ -132,6 +134,22 @@ def apply_capture_policy(
         return summary, safe_content
         
     return None, None
+
+def sanitize_resource_refs(refs: Optional[List[str]]) -> List[str]:
+    """Applies sensitive content redaction to resource identifiers and URIs."""
+    if not refs:
+        return []
+    return [redact_sensitive_content(str(ref)) for ref in refs]
+
+def sanitize_metadata(data: Any) -> Any:
+    """Recursively redacts sensitive strings from arbitrary metadata structures."""
+    if isinstance(data, dict):
+        return {k: sanitize_metadata(v) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [sanitize_metadata(item) for item in data]
+    elif isinstance(data, str):
+        return redact_sensitive_content(data)
+    return data
 
 def get_privacy_metrics_for_level(level: CaptureLevel) -> Dict[str, Any]:
     """

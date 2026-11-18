@@ -145,18 +145,18 @@ class EventStore:
                 """
                 INSERT OR REPLACE INTO interactions (
                     interaction_id, timestamp, sender_agent_id, receiver_agent_id,
-                    interaction_type, conversation_id, task_id, delegation_id,
+                    interaction_type, conversation_id, task_id, workflow_id, delegation_id,
                     delegation_parent_id, trace_id, span_id, message_id,
                     reply_to_message_id, semantic_summary, content, resource_refs,
                     sensitivity_label, status, retry_count, downstream_action_ids,
                     provenance_refs, capture_level, metadata
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     record.interaction_id, record.timestamp, record.sender_agent_id,
                     record.receiver_agent_id,
                     record.interaction_type.value if hasattr(record.interaction_type, "value") else str(record.interaction_type),
-                    record.conversation_id, record.task_id, record.delegation_id,
+                    record.conversation_id, record.task_id, record.workflow_id, record.delegation_id,
                     record.delegation_parent_id, record.trace_id, record.span_id,
                     record.message_id, record.reply_to_message_id,
                     record.semantic_summary, record.content,
@@ -197,8 +197,8 @@ class EventStore:
         clauses = []
         params = []
         if workflow_id:
-            clauses.append("(task_id LIKE ? OR conversation_id LIKE ?)")
-            params.extend([f"%{workflow_id}%", f"%{workflow_id}%"])
+            clauses.append("(workflow_id = ? OR task_id LIKE ? OR conversation_id LIKE ?)")
+            params.extend([workflow_id, f"%{workflow_id}%", f"%{workflow_id}%"])
         if conversation_id:
             clauses.append("conversation_id = ?")
             params.append(conversation_id)

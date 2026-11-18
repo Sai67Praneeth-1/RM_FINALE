@@ -40,24 +40,46 @@ class EvaluationMetrics:
         ground_truth_map: Dict[str, str]
     ) -> float:
         """
-        Delegation Attribution Accuracy / Recall (Mishra & Sharad Section 7.2.4):
-        Numerator: Number of events correctly assigned to their true delegation cluster.
+        Delegation Attribution Accuracy (Mishra & Sharad Section 7.2.4):
+        Uses 1-to-1 maximum-weight matching between predicted clusters and true delegations
+        (solves Finding 2: prevents singleton cluster fragmentation from scoring falsely high).
+        Numerator: Number of events correctly assigned under optimal 1-to-1 cluster-to-delegation assignment.
         Denominator: Total events evaluated.
         """
         if not ground_truth_map:
             return 1.0
 
         total_events = len(ground_truth_map)
+        if total_events == 0:
+            return 1.0
+
+        # Build ground truth delegation clusters
+        true_clusters: Dict[str, Set[str]] = {}
+        for eid, did in ground_truth_map.items():
+            true_clusters.setdefault(did, set()).add(eid)
+
+        # Build candidate overlap matrix: (overlap, cluster_id, true_del_id)
+        candidates = []
+        for cluster_id, event_ids in predicted_partitions.items():
+            cluster_set = set(event_ids)
+            for did, true_set in true_clusters.items():
+                overlap = len(cluster_set.intersection(true_set))
+                if overlap > 0:
+                    candidates.append((overlap, cluster_id, did))
+
+        # Sort candidate assignments descending by overlap count
+        candidates.sort(key=lambda x: x[0], reverse=True)
+
+        # Greedy maximum-weight 1-to-1 bipartite matching
+        matched_clusters = set()
+        matched_dels = set()
         correct = 0
 
-        for cluster_id, event_ids in predicted_partitions.items():
-            true_dels = [ground_truth_map.get(eid) for eid in event_ids if eid in ground_truth_map]
-            if not true_dels:
-                continue
-            most_common = max(set(true_dels), key=true_dels.count)
-            for eid in event_ids:
-                if ground_truth_map.get(eid) == most_common:
-                    correct += 1
+        for overlap, cluster_id, did in candidates:
+            if cluster_id not in matched_clusters and did not in matched_dels:
+                matched_clusters.add(cluster_id)
+                matched_dels.add(did)
+                correct += overlap
 
         return round(min(1.0, correct / total_events), 4)
 
@@ -151,29 +173,82 @@ class EvaluationMetrics:
     def compute_storage_metrics(sample_records: List[Any], baseline_name: str) -> Dict[str, Any]:
         """
         Computes serialized JSON byte overhead per event across baselines (Paper Table 6).
+        Retains only baseline-specific telemetry fields to ensure accurate empirical measurement (Finding 2).
         """
-        default_sizes = {
-            "B0_Trace_Only": 341,
-            "B1_Time_Window": 341,
-            "B2_Hybrid_Heuristic": 400,
-            "B3_CIM_Only": 588,
-            "B4_Proposed_Three_Graphs": 742
-        }
-        avg_bytes = default_sizes.get(baseline_name, 500)
-        if sample_records:
-            total_bytes = 0
-            for rec in sample_records:
-                if hasattr(rec, "model_dump_json"):
-                    total_bytes += len(rec.model_dump_json().encode("utf-8"))
-                elif isinstance(rec, dict):
-                    total_bytes += len(json.dumps(rec).encode("utf-8"))
-                else:
-                    total_bytes += avg_bytes
-            avg_bytes = int(total_bytes / len(sample_records))
+        if not sample_records:
+            default_sizes = {
+                "B0_Trace_Only": 341,
+                "B1_Time_Window": 341,
+                "B2_Hybrid_Heuristic": 400,
+                "B3_CIM_Only": 588,
+                "B4_Proposed_Three_Graphs": 742
+            }
+            avg_bytes = default_sizes.get(baseline_name, 500)
+            return {"bytes_per_event": avg_bytes, "total_kb": round(avg_bytes * 50 / 1024.0, 2)}
 
+        total_bytes = 0
+        for rec in sample_records:
+            if "B0" in baseline_name:
+                projected = {
+                    "trace_id": getattr(rec, "trace_id", "trc_default"),
+                    "span_id": getattr(rec, "span_id", "spn_default"),
+                    "parent_span_id": getattr(rec, "parent_span_id", None),
+                    "time": getattr(rec, "time", ""),
+                    "agent_id": getattr(rec, "agent_id", "")
+                }
+            elif "B1" in baseline_name:
+                projected = {
+                    "trace_id": getattr(rec, "trace_id", "trc_default"),
+                    "span_id": getattr(rec, "span_id", "spn_default"),
+                    "time": getattr(rec, "time", ""),
+                    "agent_id": getattr(rec, "agent_id", ""),
+                    "window_bucket": "15s"
+                }
+            elif "B2" in baseline_name:
+                projected = {
+                    "trace_id": getattr(rec, "trace_id", "trc_default"),
+                    "span_id": getattr(rec, "span_id", "spn_default"),
+                    "time": getattr(rec, "time", ""),
+                    "agent_id": getattr(rec, "agent_id", ""),
+                    "heuristic_tag": f"{getattr(rec, 'agent_id', '')}:{getattr(rec, 'trace_id', '')}"
+                }
+            elif "B3" in baseline_name:
+                projected = {
+                    "event_id": getattr(rec, "event_id", ""),
+                    "time": getattr(rec, "time", ""),
+                    "delegation_id": getattr(rec, "delegation_id", ""),
+                    "delegation_parent_id": getattr(rec, "delegation_parent_id", None),
+                    "agent_id": getattr(rec, "agent_id", ""),
+                    "tool_name": getattr(rec, "tool_name", ""),
+                    "action_semantic": str(getattr(rec, "action_semantic", "")),
+                    "action_outcome": str(getattr(rec, "action_outcome", ""))
+                }
+            else: # B4 Proposed Three-Graphs
+                if hasattr(rec, "model_dump"):
+                    projected = rec.model_dump(mode="json")
+                elif isinstance(rec, dict):
+                    projected = rec
+                else:
+                    projected = {
+                        "event_id": getattr(rec, "event_id", ""),
+                        "time": getattr(rec, "time", ""),
+                        "delegation_id": getattr(rec, "delegation_id", ""),
+                        "delegation_parent_id": getattr(rec, "delegation_parent_id", None),
+                        "principal_user_id": getattr(rec, "principal_user_id", ""),
+                        "agent_id": getattr(rec, "agent_id", ""),
+                        "tool_name": getattr(rec, "tool_name", ""),
+                        "tool_operation": getattr(rec, "tool_operation", ""),
+                        "action_semantic": str(getattr(rec, "action_semantic", "")),
+                        "action_outcome": str(getattr(rec, "action_outcome", "")),
+                        "provenance_layer": True
+                    }
+            total_bytes += len(json.dumps(projected).encode("utf-8"))
+
+        avg_bytes = max(1, int(total_bytes / len(sample_records)))
+        total_kb = round(total_bytes / 1024.0, 2)
         return {
             "bytes_per_event": avg_bytes,
-            "total_kb": round(avg_bytes * 50 / 1024.0, 2)
+            "total_kb": total_kb
         }
 
     @staticmethod

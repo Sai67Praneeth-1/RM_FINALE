@@ -89,14 +89,14 @@ class CrossGraphValidator:
     def validate_interaction_execution_links(self, workflow_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Invariant 2: For every interaction record with non-empty downstream_action_ids,
-        check each action_id exists in execution_events.
+        check each action_id exists in execution_events and satisfies temporal causality (Finding 6).
         Return shape: {passed, failed, score, violations: [{event_id, reason}]}
         """
         interactions = self.store.list_interactions(workflow_id=workflow_id, limit=2000)
 
         conn = self.store._conn()
-        cur = conn.execute("SELECT event_id FROM execution_events")
-        valid_event_ids = {row[0] for row in cur.fetchall() if row[0]}
+        cur = conn.execute("SELECT event_id, time FROM execution_events")
+        event_time_map = {row[0]: row[1] for row in cur.fetchall() if row[0]}
 
         passed = 0
         failed = 0
@@ -108,15 +108,30 @@ class CrossGraphValidator:
                 continue
 
             for action_id in action_ids:
-                if action_id in valid_event_ids:
-                    passed += 1
-                else:
+                if action_id not in event_time_map:
                     failed += 1
                     violations.append({
                         "event_id": action_id,
                         "interaction_id": rec.interaction_id,
                         "reason": f"Downstream action_id '{action_id}' not found in execution_events table"
                     })
+                else:
+                    event_time_str = event_time_map[action_id]
+                    try:
+                        ev_dt = datetime.fromisoformat(event_time_str.replace("Z", "+00:00"))
+                        itr_dt = datetime.fromisoformat(rec.timestamp.replace("Z", "+00:00"))
+                        # Temporal causality: downstream event should occur at or after triggering interaction
+                        if (itr_dt - ev_dt).total_seconds() > 0.05:
+                            failed += 1
+                            violations.append({
+                                "event_id": action_id,
+                                "interaction_id": rec.interaction_id,
+                                "reason": f"Temporal causality inversion: downstream event '{action_id}' ({event_time_str}) occurred before interaction '{rec.interaction_id}' ({rec.timestamp})"
+                            })
+                            continue
+                    except Exception:
+                        pass
+                    passed += 1
 
         total = passed + failed
         score = 1.0 if total == 0 else round(passed / total, 4)

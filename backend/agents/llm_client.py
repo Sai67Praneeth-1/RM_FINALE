@@ -288,12 +288,23 @@ def run_agent_turn(
     shared_history: list,
     client=None,
     temperature: float = 0.3,
-    max_tokens: int = 150
-) -> str:
-    """Executes a single agent turn using Gemini API."""
+    max_tokens: int = 150,
+    return_metadata: bool = False
+):
+    """
+    Executes a single agent turn with explicit provider identity and telemetry (Finding 3).
+    Returns public_message (str) by default, or (public_message, execution_meta) when return_metadata=True.
+    """
     # Build the prompt from shared history
     history_text = "\n".join([m.get("content", "") for m in shared_history[-6:]])
     full_prompt = f"{history_text}\n\nNow respond as {agent_name}:"
+
+    meta = {
+        "provider": "simulation_engine",
+        "requested_model": model_name,
+        "actual_model": "synthetic_dialogue_generator",
+        "mode": "fallback"
+    }
 
     try:
         result = query_gemini(
@@ -305,18 +316,24 @@ def run_agent_turn(
         )
         if result:
             public_message = result
+            meta["provider"] = "google_gemini"
+            meta["actual_model"] = settings.GEMINI_MODEL or model_name
+            meta["mode"] = "live"
         else:
             public_message = generate_simulated_turn_message(agent_name, model_name, shared_history)
-    except Exception:
+    except Exception as e:
         public_message = generate_simulated_turn_message(agent_name, model_name, shared_history)
+        meta["error"] = str(e)
 
-    print(f"[{agent_name} ({model_name})]: {public_message}\n")
+    print(f"[{agent_name} ({model_name} | {meta['mode']})]: {public_message}\n")
 
     shared_history.append({
         "role": "user",
         "content": f"[{agent_name}]: {public_message}"
     })
 
+    if return_metadata:
+        return public_message, meta
     return public_message
 
 

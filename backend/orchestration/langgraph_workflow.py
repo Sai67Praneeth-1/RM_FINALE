@@ -269,6 +269,8 @@ def build_adaptive_multi_agent_graph(gateway: Optional[ObservabilityGateway] = N
             }
 
     def node_finalize(state: MultiAgentWorkflowState) -> Dict[str, Any]:
+        # Coordinator consumes remaining incoming envelopes (Finding 1)
+        coord.read_inbox()
         is_success = state.get("status") in ("completed", "handoff_completed", "analysis_completed", "escalation_resolved")
         return {
             "status": "completed" if is_success else "failed",

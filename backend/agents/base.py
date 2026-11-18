@@ -5,7 +5,7 @@ Base Agent Interface with explicit Gateway-mediated communications and tool oper
 from typing import Dict, Any, List, Optional
 from backend.schemas.events import InteractionType, SensitivityLabel
 from backend.gateway.gateway import ObservabilityGateway, default_gateway
-from backend.gateway.interceptor import InstrumentedChannel, AgentMessageEnvelope
+from backend.gateway.interceptor import InstrumentedChannel, AgentMessageEnvelope, default_channel
 from backend.gateway.tool_wrapper import InstrumentedToolClient
 
 class BaseAgent:
@@ -23,7 +23,7 @@ class BaseAgent:
         self.role = role
         self.system_prompt = system_prompt
         self.gateway = gateway or default_gateway
-        self.channel = channel or InstrumentedChannel(self.gateway)
+        self.channel = channel or (default_channel if (gateway is None or gateway is default_gateway) else InstrumentedChannel(self.gateway))
         self.tools = InstrumentedToolClient(self.gateway)
 
     def send_message(
@@ -42,7 +42,8 @@ class BaseAgent:
         trace_id: Optional[str] = None,
         span_id: Optional[str] = None,
         retry_count: int = 0,
-        downstream_action_ids: Optional[List[str]] = None
+        downstream_action_ids: Optional[List[str]] = None,
+        workflow_id: Optional[str] = None
     ):
         """Sends an instrumented message to another agent through the Gateway."""
         envelope = AgentMessageEnvelope(
@@ -57,7 +58,8 @@ class BaseAgent:
             resource_refs=resource_refs,
             sensitivity_label=sensitivity_label,
             reply_to_message_id=reply_to_message_id,
-            provenance_refs=provenance_refs
+            provenance_refs=provenance_refs,
+            workflow_id=workflow_id
         )
         return self.channel.send_message(
             envelope=envelope,
@@ -68,6 +70,14 @@ class BaseAgent:
         )
 
     def read_inbox(self) -> List[Dict[str, Any]]:
-        """Reads incoming messages delivered through the channel."""
+        """Reads and clears incoming messages delivered through the channel."""
         return self.channel.get_inbox(self.agent_id)
+
+    def peek_inbox(self) -> List[Dict[str, Any]]:
+        """Inspects incoming messages without clearing."""
+        return self.channel.peek_inbox(self.agent_id)
+
+    def acknowledge_message(self, message_id: str) -> bool:
+        """Acknowledges a received message envelope."""
+        return self.channel.acknowledge_message(self.agent_id, message_id)
 

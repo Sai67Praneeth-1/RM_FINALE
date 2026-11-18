@@ -76,6 +76,7 @@ CREATE TABLE IF NOT EXISTS interactions (
     interaction_type TEXT NOT NULL,
     conversation_id TEXT NOT NULL,
     task_id TEXT NOT NULL,
+    workflow_id TEXT,
     delegation_id TEXT NOT NULL,
     delegation_parent_id TEXT,
     trace_id TEXT,
@@ -219,7 +220,27 @@ def init_db(db_path: Optional[str] = None):
     """Initializes SQLite database tables and default agent records."""
     conn = get_connection(db_path)
     with conn:
+        # Pre-migration: If interactions table exists without workflow_id, add it before schema execution
+        cur = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='interactions'")
+        if cur.fetchone():
+            col_cur = conn.execute("PRAGMA table_info(interactions)")
+            existing_cols = {row[1] for row in col_cur.fetchall()}
+            if "workflow_id" not in existing_cols:
+                conn.execute("ALTER TABLE interactions ADD COLUMN workflow_id TEXT")
+
         conn.executescript(SCHEMA_SQL)
+        conn.execute("CREATE INDEX IF NOT EXISTS idx_interact_workflow ON interactions(workflow_id)")
+        
+        # Backfill workflow_id for existing records if null
+        conn.execute("""
+            UPDATE interactions
+            SET workflow_id = CASE
+                WHEN task_id LIKE '%task_%' THEN SUBSTR(task_id, INSTR(task_id, 'task_') + 5)
+                WHEN conversation_id LIKE 'wf_%' THEN conversation_id
+                ELSE conversation_id
+            END
+            WHERE workflow_id IS NULL AND (task_id IS NOT NULL OR conversation_id IS NOT NULL)
+        """)
         
         # Populate default agent identities if not present
         default_agents = [

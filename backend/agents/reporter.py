@@ -43,6 +43,9 @@ class ReportAgent(BaseAgent):
         Synthesizes the final Markdown report via Gateway, attaches provenance citations,
         and saves the artifact.
         """
+        # Consume incoming messages delivered to reporter's inbox (Finding 1)
+        inbox = self.read_inbox()
+
         analysis_out = analysis_data.get("analysis_output", {})
         is_security_audit = "access" in dataset_name.lower() or "log" in dataset_name.lower() or "security" in task_description.lower()
         is_text_content = dataset_name.endswith(".txt") or "notes" in dataset_name.lower() or "topics_identified" in analysis_out
@@ -196,7 +199,7 @@ class ReportAgent(BaseAgent):
             confidence=1.0
         )
 
-        # Deliver final notification to Coordinator
+        # Deliver final notification to Coordinator (Finding 6: cim_event and artifact are upstream provenance)
         summary = f"Delivered completed markdown report artifact ({artifact.artifact_id})."
         msg_to_coord = self.send_message(
             recipient="agent_coordinator",
@@ -204,12 +207,13 @@ class ReportAgent(BaseAgent):
             delegation_id=delegation_id,
             conversation_id=conversation_id,
             task_id=task_id,
+            workflow_id=workflow_id,
             body=f"Final report '{title}' generated successfully. Artifact ID: {artifact.artifact_id}.",
             summary=summary,
             resource_refs=[f"artifact://{artifact.artifact_id}"],
             sensitivity_label=SensitivityLabel.INTERNAL,
-            downstream_action_ids=[cim_event.event_id],
-            provenance_refs=[artifact.artifact_id]
+            downstream_action_ids=[],
+            provenance_refs=[cim_event.event_id, artifact.artifact_id]
         )
 
         return {

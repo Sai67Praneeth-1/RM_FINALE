@@ -176,7 +176,8 @@ def build_security_forensics_graph(gateway: Optional[ObservabilityGateway] = Non
             raw_content=f"Forensics scan completed on system_access_logs.csv: Detected {violations_count} unauthorized drift events (LOG-503, LOG-507, LOG-510, LOG-512, LOG-515). Forwarding for privilege escalation trace.",
             resource_refs=["file://system_access_logs.csv"],
             sensitivity_label=SensitivityLabel.RESTRICTED,
-            downstream_action_ids=[cim_audit.event_id]
+            downstream_action_ids=[],
+            provenance_refs=[cim_audit.event_id, "file://system_access_logs.csv"]
         )
 
         gw.record_interaction(
@@ -411,7 +412,8 @@ def build_consumer_sentiment_graph(gateway: Optional[ObservabilityGateway] = Non
             raw_content=f"Extracted {len(records)} CFPB complaints. Passing records to NLP Sentiment Specialist for polarity and emotion clustering.",
             resource_refs=["file://customer_complaints.csv"],
             sensitivity_label=SensitivityLabel.INTERNAL,
-            downstream_action_ids=[cim_read.event_id]
+            downstream_action_ids=[],
+            provenance_refs=[cim_read.event_id, "file://customer_complaints.csv"]
         )
 
         gw.record_interaction(
@@ -467,7 +469,8 @@ def build_consumer_sentiment_graph(gateway: Optional[ObservabilityGateway] = Non
             raw_content=f"NLP Sentiment Scoring: Avg score {sent_res.get('average_sentiment', -0.62)}. Polarity: strongly negative in Billing Disputes (74%) and Credit Reporting (68%). Forwarding for tier impact evaluation.",
             resource_refs=["file://customer_complaints.csv"],
             sensitivity_label=SensitivityLabel.INTERNAL,
-            downstream_action_ids=[cim_sent.event_id]
+            downstream_action_ids=[],
+            provenance_refs=[cim_sent.event_id, "file://customer_complaints.csv"]
         )
 
         return {

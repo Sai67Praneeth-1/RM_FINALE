@@ -114,13 +114,14 @@ This automatically starts:
 
 ---
 
-## 4. Hugging Face Router Multi-Agent Inference
+## 4. Multi-Agent Inference & Transparency Architecture
 
-The platform utilizes the **Hugging Face Router** (`https://router.huggingface.co/v1`) as its primary multi-agent LLM inference engine:
-- **Coordinator Agent:** `meta-llama/Llama-3.1-8B-Instruct`
-- **Executor Agent:** `Qwen/Qwen2.5-7B-Instruct`
+The platform supports multi-agent LLM inference (Google Gemini / Hugging Face Router API) with seamless local deterministic simulation fallback:
+- **Coordinator Agent:** Orchestrates multi-agent subtasks and authority lineage
+- **Specialized Agents:** Domain-specific execution (Research, Analysis, Reporting, Squad Forensics)
 - **Transparency Safeguard:** Automatically strips internal `<think>...</think>` neural reasoning chains before public inter-agent logging.
-- **Execution:** Open `http://127.0.0.1:5173` and click **"2. 🚀 Hugging Face Simulation"** or run:
+- **Provider Transparency (Audit Finding 3):** Telemetry explicitly identifies the live model provider or local simulation fallback generator (`mode="live"` vs `mode="fallback"`) to ensure rigorous experimental integrity.
+- **Execution:** Open `http://127.0.0.1:5173` and click **"2. 🚀 Simulation"** or run:
   ```powershell
   python scripts/user_hf_simulation.py 6
   ```
@@ -129,19 +130,21 @@ The platform utilizes the **Hugging Face Router** (`https://router.huggingface.c
 
 ## 5. Verification & Testing
 
-### Run Complete Pytest Suite (26/26 Tests)
+### Run Complete Pytest Suite (48/48 Tests)
 ```powershell
 pytest tests/ -v
 ```
-All 26 automated unit and integration tests pass, covering:
-- SQLite persistence and restart survival.
-- Authoritative delegation minting and lineage closure.
-- Privacy capture tiers and sensitive PII regex redaction.
+All 48 automated unit and integration tests pass, covering:
+- SQLite persistence, schema auto-migration, and restart survival.
+- Authoritative delegation minting, binding validation, and lineage closure.
+- Privacy capture tiers (Levels 1-3), metadata sanitization, and sensitive PII regex redaction.
 - LangGraph 4-agent workflow orchestration with clarification branching.
+- Domain-specific Squad topologies (Security Forensics, Consumer Sentiment, Cross-Squad Federation).
 - Three-Graph model reconstruction ($G_{exec}$, $G_{auth}$, $G_{interact}$).
 - W3C PROV provenance DAG and backward lineage traversal.
+- Cross-graph Invariant validation and temporal causality verification.
 - 5 comparative baseline reconstruction algorithms across 8 scenarios.
-- FastAPI REST API endpoints.
+- FastAPI REST API endpoints and telemetry streaming.
 
 ### Run End-to-End Demonstration Script
 ```powershell
