@@ -113,7 +113,7 @@ class AnalysisAgent(BaseAgent):
             llm_insight = query_agent_llm(
                 prompt=f"Provide an analytical takeaway for executive decision makers from these metrics: {analysis_output}",
                 system_prompt=self.system_prompt,
-                model_name=settings.HF_EXECUTOR_MODEL,
+                model_name=settings.GEMINI_MODEL or "gemini-3.5-flash-lite",
                 mode=mode
             )
             if llm_insight:

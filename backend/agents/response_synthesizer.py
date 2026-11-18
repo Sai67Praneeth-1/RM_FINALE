@@ -69,12 +69,12 @@ def answer_user_query_directly(user_prompt: str, run: Optional[Any] = None, stor
     if asks_agent_architecture:
         answer = (
             "### 🤖 Multi-Agent Team Structure\n\n"
-            "Our system coordinates 4 specialized autonomous agents under cryptographic authority delegation:\n\n"
-            "- **Coordinator_Agent (Llama-3.1-8B):** Decomposes research goals and mints scoped sub-delegations.\n"
-            "- **Executor_Agent (Qwen2.5-7B):** Executes normalized CIM tool queries against allowlisted datasets.\n"
-            "- **Critic_Agent (Mistral-7B):** Audits edge cases, reasoning leakage, and delegation drift.\n"
-            "- **Synthesizer_Agent (Gemma-2-9B):** Reconciles evidence and formulates consensus resolutions.\n\n"
-            "*(For complete causal communication traces, delegation lineage, and graph explorer, open **Tab 2 (Hugging Face Simulation)**, **Tab 5**, and **Tab 6**.)*"
+            "Our system coordinates specialized autonomous agents collaborating via Google Gemini under cryptographic authority delegation:\n\n"
+            "- **Coordinator_Agent:** Decomposes research goals and mints scoped sub-delegations.\n"
+            "- **Research_Agent / Executor_Agent:** Executes normalized CIM tool queries against allowlisted datasets.\n"
+            "- **Analyst_Agent / Critic_Agent:** Audits edge cases, reasoning leakage, and delegation drift.\n"
+            "- **Reporter_Agent / Synthesizer_Agent:** Reconciles analytical findings and formulates executive reports.\n\n"
+            "*(For complete causal communication traces, delegation lineage, and graph explorer, open **Agent Simulation**, **Graphs Explorer**, and **Audit Telemetry**.)*"
         )
         return answer, False
 

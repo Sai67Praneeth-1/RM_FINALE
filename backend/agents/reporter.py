@@ -132,7 +132,7 @@ class ReportAgent(BaseAgent):
             llm_report_enhancement = query_agent_llm(
                 prompt=f"Enhance this executive summary for task '{task_description}' based on: {analysis_out}",
                 system_prompt=self.system_prompt,
-                model_name=settings.HF_COORDINATOR_MODEL,
+                model_name=settings.GEMINI_MODEL or "gemini-3.5-flash-lite",
                 mode=mode
             )
             if llm_report_enhancement:

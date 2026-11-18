@@ -1,7 +1,6 @@
 """
 Hugging Face Router Multi-Agent Research Simulation with Goal-Oriented Dynamic Termination & Transparency Capture.
-Executes dynamic multi-agent interaction between Coordinator_Agent (meta-llama/Llama-3.1-8B-Instruct)
-and Executor_Agent (Qwen/Qwen2.5-7B-Instruct):
+Executes dynamic multi-agent interaction between specialized agents (Coordinator_Agent, Executor_Agent, Critic_Agent, Synthesizer_Agent) powered by Google Gemini:
 1. Produces the direct synthesized answer to the research goal first from the LLM outputs.
 2. Emits the end-to-end data flow and inter-agent communication protocol second.
 3. Dynamically terminates upon goal completion (bounded by maximum safety turns).
@@ -27,25 +26,25 @@ DEFAULT_SIMULATION_AGENTS = [
     {
         "name": "Coordinator_Agent",
         "agent_id": "agent_coordinator",
-        "model": "meta-llama/Llama-3.1-8B-Instruct",
+        "model": "gemini-3.5-flash",
         "prompt": "You are a Project Coordinator managing a technical research task. Keep responses focused on macro-level objectives, delegation, and structure."
     },
     {
         "name": "Executor_Agent",
         "agent_id": "agent_executor",
-        "model": "Qwen/Qwen2.5-7B-Instruct",
+        "model": "gemini-3.5-flash",
         "prompt": "You are a Technical Executor. Provide concrete implementation steps, code logic, or architectural solutions based on the ongoing discussion."
     },
     {
         "name": "Critic_Agent",
         "agent_id": "agent_critic",
-        "model": "mistralai/Mistral-7B-Instruct-v0.3",
+        "model": "gemini-3.5-flash",
         "prompt": "You are a Critical Reviewer. Analyze previous proposals for edge cases, security flaws, communication bottlenecks, or logical inconsistencies."
     },
     {
         "name": "Synthesizer_Agent",
         "agent_id": "agent_synthesizer",
-        "model": "google/gemma-2-9b-it",
+        "model": "gemini-3.5-flash",
         "prompt": "You are a Research Synthesizer. Summarize insights, reconcile differing viewpoints, and unify the team's ongoing dialogue."
     }
 ]
@@ -250,7 +249,7 @@ def run_huggingface_transparency_simulation(
             task_id=task_id,
             parent_delegation_id=root_del.delegation_id,
             scope=scope_key,
-            metadata={"model": ag["model"], "framework": "huggingface_router"}
+            metadata={"model": ag["model"], "framework": "gemini_agent_framework"}
         )
         del_map[ag_id] = sub_del.delegation_id
         del_map[ag["name"]] = sub_del.delegation_id
@@ -270,7 +269,7 @@ def run_huggingface_transparency_simulation(
     # Record workflow entry in store
     wf_run = WorkflowRun(
         workflow_id=workflow_id,
-        name=f"Hugging Face Goal-Oriented Simulation ({goal_directive[:35]}...)",
+        name=f"Gemini Goal-Oriented Simulation ({goal_directive[:35]}...)",
         task_description=goal_directive,
         dataset_name=target_dataset,
         mode=WorkflowMode.LIVE_HUGGINGFACE,

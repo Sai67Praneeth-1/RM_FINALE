@@ -1690,10 +1690,10 @@ class SimulationRequest(BaseModel):
     capture_level: Optional[int] = 2
 
 @router.post("/simulation/huggingface")
+@router.post("/simulation/run")
 def run_hf_simulation_endpoint(req: SimulationRequest):
     """
-    Runs the Goal-Oriented Hugging Face Router Multi-Agent Research Simulation
-    between Coordinator_Agent (meta-llama/Llama-3.1-8B-Instruct) and Executor_Agent (Qwen/Qwen2.5-7B-Instruct).
+    Runs the Goal-Oriented Multi-Agent Research Simulation powered by Google Gemini.
     1. Produces the direct synthesized answer from the LLM APIs first.
     2. Emits the complete data flow and communication protocol second.
     3. Dynamically terminates upon goal resolution, bounded by max_turns circuit-breaker.

@@ -83,8 +83,8 @@
     "query_operations": 2,
     "bytes_per_event": 267,
     "privacy_exposure": 0.0,
-    "latency_p50_ms": 0.4238,
-    "latency_p95_ms": 0.6632,
+    "latency_p50_ms": 0.2332,
+    "latency_p95_ms": 0.3176,
     "total_events": 50
   },
   {
@@ -105,8 +105,8 @@
     "query_operations": 1,
     "bytes_per_event": 703,
     "privacy_exposure": 0.12,
-    "latency_p50_ms": 0.4238,
-    "latency_p95_ms": 0.6632,
+    "latency_p50_ms": 0.2332,
+    "latency_p95_ms": 0.3176,
     "total_events": 50
   },
   {
@@ -193,8 +193,8 @@
     "query_operations": 2,
     "bytes_per_event": 279,
     "privacy_exposure": 0.0,
-    "latency_p50_ms": 0.4238,
-    "latency_p95_ms": 0.6632,
+    "latency_p50_ms": 0.2332,
+    "latency_p95_ms": 0.3176,
     "total_events": 25
   },
   {
@@ -215,8 +215,8 @@
     "query_operations": 1,
     "bytes_per_event": 700,
     "privacy_exposure": 0.12,
-    "latency_p50_ms": 0.4238,
-    "latency_p95_ms": 0.6632,
+    "latency_p50_ms": 0.2332,
+    "latency_p95_ms": 0.3176,
     "total_events": 25
   },
   {
@@ -303,8 +303,8 @@
     "query_operations": 2,
     "bytes_per_event": 304,
     "privacy_exposure": 0.0,
-    "latency_p50_ms": 0.4238,
-    "latency_p95_ms": 0.6632,
+    "latency_p50_ms": 0.2332,
+    "latency_p95_ms": 0.3176,
     "total_events": 36
   },
   {
@@ -325,8 +325,8 @@
     "query_operations": 1,
     "bytes_per_event": 742,
     "privacy_exposure": 0.12,
-    "latency_p50_ms": 0.4238,
-    "latency_p95_ms": 0.6632,
+    "latency_p50_ms": 0.2332,
+    "latency_p95_ms": 0.3176,
     "total_events": 36
   },
   {
@@ -413,8 +413,8 @@
     "query_operations": 2,
     "bytes_per_event": 275,
     "privacy_exposure": 0.0,
-    "latency_p50_ms": 0.4238,
-    "latency_p95_ms": 0.6632,
+    "latency_p50_ms": 0.2332,
+    "latency_p95_ms": 0.3176,
     "total_events": 50
   },
   {
@@ -435,8 +435,8 @@
     "query_operations": 1,
     "bytes_per_event": 691,
     "privacy_exposure": 0.12,
-    "latency_p50_ms": 0.4238,
-    "latency_p95_ms": 0.6632,
+    "latency_p50_ms": 0.2332,
+    "latency_p95_ms": 0.3176,
     "total_events": 50
   },
   {
@@ -523,8 +523,8 @@
     "query_operations": 2,
     "bytes_per_event": 276,
     "privacy_exposure": 0.0,
-    "latency_p50_ms": 0.4238,
-    "latency_p95_ms": 0.6632,
+    "latency_p50_ms": 0.2332,
+    "latency_p95_ms": 0.3176,
     "total_events": 32
   },
   {
@@ -545,8 +545,8 @@
     "query_operations": 1,
     "bytes_per_event": 691,
     "privacy_exposure": 0.12,
-    "latency_p50_ms": 0.4238,
-    "latency_p95_ms": 0.6632,
+    "latency_p50_ms": 0.2332,
+    "latency_p95_ms": 0.3176,
     "total_events": 32
   },
   {
@@ -633,8 +633,8 @@
     "query_operations": 2,
     "bytes_per_event": 285,
     "privacy_exposure": 0.0,
-    "latency_p50_ms": 0.4238,
-    "latency_p95_ms": 0.6632,
+    "latency_p50_ms": 0.2332,
+    "latency_p95_ms": 0.3176,
     "total_events": 15
   },
   {
@@ -655,8 +655,8 @@
     "query_operations": 1,
     "bytes_per_event": 705,
     "privacy_exposure": 0.12,
-    "latency_p50_ms": 0.4238,
-    "latency_p95_ms": 0.6632,
+    "latency_p50_ms": 0.2332,
+    "latency_p95_ms": 0.3176,
     "total_events": 15
   },
   {
@@ -743,8 +743,8 @@
     "query_operations": 2,
     "bytes_per_event": 273,
     "privacy_exposure": 0.0,
-    "latency_p50_ms": 0.4238,
-    "latency_p95_ms": 0.6632,
+    "latency_p50_ms": 0.2332,
+    "latency_p95_ms": 0.3176,
     "total_events": 50
   },
   {
@@ -765,8 +765,8 @@
     "query_operations": 1,
     "bytes_per_event": 704,
     "privacy_exposure": 0.12,
-    "latency_p50_ms": 0.4238,
-    "latency_p95_ms": 0.6632,
+    "latency_p50_ms": 0.2332,
+    "latency_p95_ms": 0.3176,
     "total_events": 50
   },
   {
@@ -853,8 +853,8 @@
     "query_operations": 2,
     "bytes_per_event": 272,
     "privacy_exposure": 0.0,
-    "latency_p50_ms": 0.4238,
-    "latency_p95_ms": 0.6632,
+    "latency_p50_ms": 0.2332,
+    "latency_p95_ms": 0.3176,
     "total_events": 25
   },
   {
@@ -875,8 +875,8 @@
     "query_operations": 1,
     "bytes_per_event": 696,
     "privacy_exposure": 0.12,
-    "latency_p50_ms": 0.4238,
-    "latency_p95_ms": 0.6632,
+    "latency_p50_ms": 0.2332,
+    "latency_p95_ms": 0.3176,
     "total_events": 25
   }
 ]

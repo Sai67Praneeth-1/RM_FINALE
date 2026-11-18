@@ -194,7 +194,7 @@ export default function App() {
   const [editingChatId, setEditingChatId] = useState(null);
   const [editTitleText, setEditTitleText] = useState("");
 
-  // Tab 2: Hugging Face Goal-Oriented Simulation State
+  // Tab 2: Gemini Goal-Oriented Simulation State
   const [maxTurnsLimit, setMaxTurnsLimit] = useState(20);
   const [simPrompt, setSimPrompt] = useState(
     "Audit customer complaints for High and Critical severity issues and verify system SLAs."
@@ -212,7 +212,7 @@ export default function App() {
   const [taskDesc, setTaskDesc] = useState("Audit customer complaints for High and Critical severity issues");
   const [selectedDataset, setSelectedDataset] = useState("customer_complaints.csv");
   const [workflowType, setWorkflowType] = useState("adaptive");
-  const [runMode, setRunMode] = useState("live_huggingface");
+  const [runMode, setRunMode] = useState("live_gemini");
   const [captureLevel, setCaptureLevel] = useState(2);
   const [workspaceRunning, setWorkspaceRunning] = useState(false);
   const [latestRunResult, setLatestRunResult] = useState(null);
@@ -1020,7 +1020,7 @@ export default function App() {
         body: JSON.stringify({
           message: textToSend,
           conversation_id: activeChatId || undefined,
-          mode: "live_huggingface",
+          mode: "live_gemini",
           squad_type: activeSquad,
           workflow_type: activeSquad,
         }),
@@ -1074,7 +1074,7 @@ export default function App() {
       setSimPrompt(customPrompt);
     }
     try {
-      const res = await fetch(`${API_BASE}/simulation/huggingface`, {
+      const res = await fetch(`${API_BASE}/simulation/run`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -1399,54 +1399,6 @@ export default function App() {
               )}
             </div>
           </div>
-
-          <div className="sidebar-status" style={{ marginTop: "auto", paddingTop: 12 }}>
-            <div style={{
-              background: "#ffffff",
-              padding: "10px 12px",
-              borderRadius: 8,
-              border: "1px solid #dadce0",
-              display: "flex",
-              flexDirection: "column",
-              gap: 6
-            }}>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#1a73e8", textTransform: "uppercase", letterSpacing: "0.04em" }}>
-                  System Health
-                </span>
-                <span style={{
-                  fontSize: 10,
-                  padding: "1px 8px",
-                  borderRadius: 16,
-                  background: "#e6f4ea",
-                  color: "#137333",
-                  border: "1px solid #dadce0",
-                  fontWeight: 600
-                }}>
-                  Online
-                </span>
-              </div>
-              <div className="status-indicator">
-                <div className="status-dot" style={{ background: "#137333" }} />
-                <span style={{ fontSize: 11.5, color: "#202124" }}>Backend API Ready</span>
-              </div>
-              <div className="status-indicator">
-                <div
-                  className="status-dot"
-                  style={{
-                    background: status?.mongodb_connected ? "#137333" : "#b06000",
-                  }}
-                />
-                <span style={{ color: status?.mongodb_connected ? "#137333" : "#b06000", fontSize: 11.5, fontWeight: 500 }}>
-                  {status?.mongodb_connected ? "MongoDB Atlas Synced" : "Resilient Cache Mode"}
-                </span>
-              </div>
-              <div style={{ borderTop: "1px solid #dadce0", paddingTop: 6, marginTop: 2, display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: 11, color: "#5f6368" }}>
-                <span>Engine:</span>
-                <span style={{ color: "#202124", fontWeight: 600 }}>Gemini 3.5 Flash</span>
-              </div>
-            </div>
-          </div>
         </div>
       </aside>
 
@@ -1487,20 +1439,6 @@ export default function App() {
                 <span>&bull;</span>
                 <span style={{ color: "#1a73e8", fontWeight: 500 }}>Google Gemini 3.5 Flash</span>
               </div>
-            </div>
-          </div>
-          <div className="top-badges">
-            <div className="pill-badge" style={{ background: "#e8f0fe", color: "#1a73e8", border: "1px solid #dadce0", borderRadius: 16 }}>
-              <Bot size={13} />
-              <span>4 Agents Active</span>
-            </div>
-            <div className="pill-badge active" style={{ background: "#e6f4ea", color: "#137333", border: "1px solid #dadce0", borderRadius: 16 }}>
-              <ShieldCheck size={13} />
-              <span>W3C PROV Audited</span>
-            </div>
-            <div className="pill-badge" style={{ background: "#f1f3f4", color: "#202124", border: "1px solid #dadce0", borderRadius: 16 }}>
-              <Database size={13} />
-              <span>{status?.metrics_summary?.total_events || 0} Telemetry Events</span>
             </div>
           </div>
         </header>
@@ -2002,18 +1940,17 @@ export default function App() {
         </div>
       )}
 
-        {/* View 2: Hugging Face Multi-Agent Research Simulation */}
+        {/* View 2: Gemini Multi-Agent Research Simulation */}
         {activeTab === "hf_simulation" && (
           <div className="content-panel">
             <div className="stat-card" style={{ marginBottom: 20, background: "#ffffff", border: "1px solid #dadce0", borderRadius: 8 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                 <div>
                   <h3 style={{ color: "#1a73e8", fontSize: 18, fontWeight: 700, marginBottom: 6 }}>
-                    Hugging Face Router Multi-Agent Research Simulation
+                    Gemini Multi-Agent Research Simulation
                   </h3>
                   <p style={{ color: "#5f6368", fontSize: 13, lineHeight: 1.5 }}>
-                    Dynamic inter-agent dialogue between <strong>Coordinator_Agent</strong> (<code>meta-llama/Llama-3.1-8B-Instruct</code>) 
-                    and <strong>Executor_Agent</strong> (<code>Qwen/Qwen2.5-7B-Instruct</code>) over the Hugging Face Router.
+                    Dynamic inter-agent dialogue between specialized agents (<strong>Coordinator_Agent</strong>, <strong>Executor_Agent</strong>, <strong>Critic_Agent</strong>, <strong>Synthesizer_Agent</strong>) powered by Google Gemini.
                   </p>
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
@@ -2203,7 +2140,7 @@ export default function App() {
                   </div>
 
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14, fontSize: 11, color: "#5f6368" }}>
-                    <span>Inference Models: <code>meta-llama/Llama-3.1-8B-Instruct</code> & <code>Qwen/Qwen2.5-7B-Instruct</code></span>
+                    <span>Inference Models: <code>Google Gemini 3.5 Flash</code> (Multi-Agent Swarm)</span>
                     <span>Target Dataset: <code>{simResult.direct_answer?.dataset_grounding}</code></span>
                   </div>
                 </div>
@@ -2350,7 +2287,7 @@ export default function App() {
                                 {isCoord ? "COORDINATOR" : isExec ? "EXECUTOR" : "PRINCIPAL"}
                               </span>
                               <span style={{ fontSize: 12, color: "#5f6368" }}>
-                                {isCoord ? "meta-llama/Llama-3.1-8B-Instruct" : isExec ? "Qwen/Qwen2.5-7B-Instruct" : "User Principal"}
+                                {isCoord ? "Google Gemini (Coordinator)" : isExec ? "Google Gemini (Executor)" : "User Principal"}
                               </span>
                             </div>
                             <span style={{ fontSize: 11, color: "#5f6368" }}>Turn {idx + 1} • Public Envelope</span>
@@ -3123,8 +3060,8 @@ export default function App() {
                       onChange={(e) => setRunMode(e.target.value)}
                       style={{ width: "100%", padding: "10px", background: "#ffffff", border: "1px solid #dadce0", borderRadius: 8, color: "#202124" }}
                     >
-                      <option value="live_api">🌐 Live Cloud API (OpenAI / Groq / Router)</option>
-                      <option value="live_huggingface">🤗 Hugging Face Router</option>
+                      <option value="live_gemini">✨ Google Gemini Multi-Agent</option>
+                      <option value="live_api">🌐 Live Cloud API</option>
                       <option value="deterministic_demo">Deterministic Demo</option>
                     </select>
                   </div>
@@ -3358,9 +3295,9 @@ export default function App() {
                   </div>
 
                   <div className="telemetry-infra-item">
-                    <div className="telemetry-infra-label">Hugging Face Router</div>
+                    <div className="telemetry-infra-label">Gemini Foundation Model</div>
                     <div className="telemetry-infra-val">
-                      <span style={{ fontSize: 12 }}>Llama-3.1-8B & Qwen2.5-7B</span>
+                      <span style={{ fontSize: 12 }}>Google Gemini 3.5 Flash</span>
                       <span className="telemetry-infra-badge online">● Ready</span>
                     </div>
                   </div>

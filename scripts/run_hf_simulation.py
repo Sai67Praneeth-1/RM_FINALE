@@ -1,8 +1,6 @@
 """
-Standalone Hugging Face Router Goal-Oriented Multi-Agent Research Simulation & Transparency Observer.
-Executes dynamic multi-agent interaction between:
-- Coordinator_Agent (meta-llama/Llama-3.1-8B-Instruct)
-- Executor_Agent (Qwen/Qwen2.5-7B-Instruct)
+Standalone Goal-Oriented Multi-Agent Research Simulation & Transparency Observer powered by Google Gemini.
+Executes dynamic multi-agent interaction between specialized agents (Coordinator, Executor, Critic, Synthesizer).
 """
 
 import sys

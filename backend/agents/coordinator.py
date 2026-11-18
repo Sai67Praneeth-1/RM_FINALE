@@ -128,7 +128,7 @@ class CoordinatorAgent(BaseAgent):
             llm_reply = query_agent_llm(
                 prompt=f"The sub-agent asked: '{question}'. Provide concise clarification for our complaint analysis task.",
                 system_prompt=self.system_prompt,
-                model_name=settings.HF_COORDINATOR_MODEL,
+                model_name=settings.GEMINI_MODEL or "gemini-3.5-flash-lite",
                 mode=mode
             )
             if llm_reply:

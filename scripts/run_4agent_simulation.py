@@ -113,27 +113,27 @@ def run_multi_agent_simulation(agents: list, initial_prompt: str, max_turns: int
 [Central Observability Gateway] ──► Mints Root Delegation Token
        │
        ▼
-[Coordinator_Agent (Llama-3.1-8B)]
+[Coordinator_Agent (Gemini 3.5 Flash)]
        │
        ├─► [Turn 1]: Macro-level agenda & delegation boundaries
        │
        ▼ (Sub-Delegation: technical_execution)
-[Executor_Agent (Qwen2.5-7B)]
+[Executor_Agent (Gemini 3.5 Flash)]
        │
        ├─► [Turn 2]: Architecture analysis & CIM envelope design
        │
        ▼ (Sub-Delegation: critical_review)
-[Critic_Agent (Mistral-7B)]
+[Critic_Agent (Gemini 3.5 Flash)]
        │
        ├─► [Turn 3]: Vulnerability audit & <think> leakage remediation
        │
        ▼ (Sub-Delegation: research_synthesis)
-[Synthesizer_Agent (Gemma-2-9B)]
+[Synthesizer_Agent (Gemini 3.5 Flash)]
        │
        ├─► [Turn 4]: Consensus framework & Three-Graph convergence
        │
        ▼ (Convergence & Ratification)
-[Coordinator_Agent (Llama-3.1-8B)]
+[Coordinator_Agent (Gemini 3.5 Flash)]
        │
        ├─► [Turn 5-6]: Conclusive Executive Resolution ratified!
        │
@@ -159,22 +159,22 @@ def run_multi_agent_simulation(agents: list, initial_prompt: str, max_turns: int
 my_agents = [
     {
         "name": "Coordinator_Agent",
-        "model": "meta-llama/Llama-3.1-8B-Instruct",
+        "model": "gemini-3.5-flash",
         "prompt": "You are a Project Coordinator managing a technical research task. Keep responses focused on macro-level objectives, delegation, and structure.",
     },
     {
         "name": "Executor_Agent",
-        "model": "Qwen/Qwen2.5-7B-Instruct",
+        "model": "gemini-3.5-flash",
         "prompt": "You are a Technical Executor. Provide concrete implementation steps, code logic, or architectural solutions based on the ongoing discussion.",
     },
     {
         "name": "Critic_Agent",
-        "model": "mistralai/Mistral-7B-Instruct-v0.3",
+        "model": "gemini-3.5-flash",
         "prompt": "You are a Critical Reviewer. Analyze previous proposals for edge cases, security flaws, communication bottlenecks, or logical inconsistencies.",
     },
     {
         "name": "Synthesizer_Agent",
-        "model": "google/gemma-2-9b-it",
+        "model": "gemini-3.5-flash",
         "prompt": "You are a Research Synthesizer. Summarize insights, reconcile differing viewpoints, and unify the team's ongoing dialogue.",
     },
 ]

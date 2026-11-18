@@ -63,8 +63,8 @@ export function generateC4ContainerDiagram() {
     end
 
     subgraph ExternalServices ["☁️ External Foundation Models"]
-        Gemini["Google Gemini 1.5 Flash / 2.0<br/>[REST API with active keepalive fallback]"]:::llm
-        HFRouter["HuggingFace Model Router<br/>[Llama-3.1-8B Coordinator & Qwen2.5-7B Executor]"]:::llm
+        Gemini["Google Gemini 1.5 Flash / 2.0 / 3.5<br/>[Primary Multi-Agent LLM Gateway]"]:::llm
+        ConsensusEngine["Consensus & Synthesis Engine<br/>[Cross-Agent Verification & Review]"]:::llm
     end
 
     %% Interactions & Dataflows

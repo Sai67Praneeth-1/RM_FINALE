@@ -1,15 +1,6 @@
 """
-Goal-Oriented Multi-Agent Research Simulation using Hugging Face Router.
-Executes dynamic multi-agent interaction between:
-- Coordinator_Agent (meta-llama/Llama-3.1-8B-Instruct)
-- Executor_Agent (Qwen/Qwen2.5-7B-Instruct)
-
-Key Guarantees:
-1. Goal-driven: dynamically takes as many turns as needed to solve the directive;
-   max_turns serves strictly as a safety circuit-breaker to stop runaway loops.
-2. First: Produces the concrete synthesized answer from the LLM outputs.
-3. Second: Presents the full data flow and inter-agent communication protocol.
-4. Strips internal reasoning (<think> blocks) before recording in the EventStore.
+Goal-Oriented Multi-Agent Research Simulation powered by Google Gemini.
+Executes dynamic multi-agent interaction between specialized agents (Coordinator, Executor, Critic, Synthesizer).
 """
 
 import os
@@ -41,25 +32,25 @@ agents = [
     {
         "name": "Coordinator_Agent",
         "agent_id": "agent_coordinator",
-        "model": "meta-llama/Llama-3.1-8B-Instruct",
+        "model": "gemini-3.5-flash",
         "prompt": "You are a Project Coordinator managing a technical research task. Keep responses focused on macro-level objectives, delegation, and structure."
     },
     {
         "name": "Executor_Agent",
         "agent_id": "agent_executor",
-        "model": "Qwen/Qwen2.5-7B-Instruct",
+        "model": "gemini-3.5-flash",
         "prompt": "You are a Technical Executor. Provide concrete implementation steps, code logic, or architectural solutions based on the ongoing discussion."
     },
     {
         "name": "Critic_Agent",
         "agent_id": "agent_critic",
-        "model": "mistralai/Mistral-7B-Instruct-v0.3",
+        "model": "gemini-3.5-flash",
         "prompt": "You are a Critical Reviewer. Analyze previous proposals for edge cases, security flaws, communication bottlenecks, or logical inconsistencies."
     },
     {
         "name": "Synthesizer_Agent",
         "agent_id": "agent_synthesizer",
-        "model": "google/gemma-2-9b-it",
+        "model": "gemini-3.5-flash",
         "prompt": "You are a Research Synthesizer. Summarize insights, reconcile differing viewpoints, and unify the team's ongoing dialogue."
     }
 ]

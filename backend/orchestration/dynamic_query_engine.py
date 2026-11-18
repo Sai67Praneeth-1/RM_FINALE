@@ -235,10 +235,8 @@ def _synthesize_irrelevant_response(goal: str) -> Dict[str, Any]:
         "recommendations": recommendations,
         "markdown": markdown,
         "models_used": [
-            "meta-llama/Llama-3.1-8B-Instruct",
-            "Qwen/Qwen2.5-7B-Instruct",
-            "mistralai/Mistral-7B-Instruct-v0.3",
-            "google/gemma-2-9b-it"
+            "Google Gemini 3.5 Flash",
+            "Gemini Multi-Agent System"
         ]
     }
 
@@ -269,8 +267,7 @@ def _synthesize_architecture_analysis(goal: str, target_dataset: str) -> Dict[st
         f"**Direct Answer:**\n{exec_summary}\n\n"
         f"**📊 Key Discovered Evidence & Metrics:**\n" + "\n".join([f"- {f}" for f in key_findings]) + "\n\n"
         f"**💡 Actionable Recommendations:**\n" + "\n".join([f"1. {r}" for r in recommendations]) + "\n\n"
-        f"*Synthesized via 4-Agent Team: `meta-llama/Llama-3.1-8B-Instruct` (Coordinator), `Qwen/Qwen2.5-7B-Instruct` (Executor), "
-        f"`mistralai/Mistral-7B-Instruct-v0.3` (Critic), & `google/gemma-2-9b-it` (Synthesizer)*"
+        f"*Synthesized via 4-Agent Team: Google Gemini Multi-Agent System (Coordinator, Executor, Critic, & Synthesizer)*"
     )
 
     return {
@@ -283,10 +280,8 @@ def _synthesize_architecture_analysis(goal: str, target_dataset: str) -> Dict[st
         "recommendations": recommendations,
         "markdown": markdown,
         "models_used": [
-            "meta-llama/Llama-3.1-8B-Instruct",
-            "Qwen/Qwen2.5-7B-Instruct",
-            "mistralai/Mistral-7B-Instruct-v0.3",
-            "google/gemma-2-9b-it"
+            "Google Gemini 3.5 Flash",
+            "Gemini Multi-Agent System"
         ]
     }
 
@@ -477,7 +472,7 @@ def _synthesize_complaint_analysis(goal: str, records: List[Dict[str, str]], tar
         f"**Direct Answer:**\n{exec_summary}\n\n"
         f"**📊 Key Discovered Evidence & Metrics:**\n" + "\n".join([f"- {f}" for f in key_findings]) + "\n\n"
         f"**💡 Actionable Recommendations:**\n" + "\n".join([f"1. {r}" for r in recommendations]) + "\n\n"
-        f"*Synthesized via Hugging Face Router models: `meta-llama/Llama-3.1-8B-Instruct` (Coordinator) & `Qwen/Qwen2.5-7B-Instruct` (Executor)*"
+        f"*Synthesized via Google Gemini Multi-Agent System (Coordinator & Specialized Agents)*"
     )
 
     return {
@@ -489,7 +484,7 @@ def _synthesize_complaint_analysis(goal: str, records: List[Dict[str, str]], tar
         "key_findings": key_findings,
         "recommendations": recommendations,
         "markdown": markdown,
-        "models_used": ["meta-llama/Llama-3.1-8B-Instruct", "Qwen/Qwen2.5-7B-Instruct"]
+        "models_used": ["Google Gemini 3.5 Flash", "Gemini Multi-Agent System"]
     }
 
 
@@ -540,7 +535,7 @@ def _synthesize_security_analysis(goal: str, records: List[Dict[str, str]], targ
         f"**Direct Answer:**\n{exec_summary}\n\n"
         f"**📊 Key Discovered Evidence & Metrics:**\n" + "\n".join([f"- {f}" for f in key_findings]) + "\n\n"
         f"**💡 Actionable Recommendations:**\n" + "\n".join([f"1. {r}" for r in recommendations]) + "\n\n"
-        f"*Synthesized via Hugging Face Router models: `meta-llama/Llama-3.1-8B-Instruct` (Coordinator) & `Qwen/Qwen2.5-7B-Instruct` (Executor)*"
+        f"*Synthesized via Google Gemini Multi-Agent System (Coordinator & Specialized Agents)*"
     )
 
     return {
@@ -552,7 +547,7 @@ def _synthesize_security_analysis(goal: str, records: List[Dict[str, str]], targ
         "key_findings": key_findings,
         "recommendations": recommendations,
         "markdown": markdown,
-        "models_used": ["meta-llama/Llama-3.1-8B-Instruct", "Qwen/Qwen2.5-7B-Instruct"]
+        "models_used": ["Google Gemini 3.5 Flash", "Gemini Multi-Agent System"]
     }
 
 

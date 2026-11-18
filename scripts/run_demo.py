@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from backend.orchestration.workflow_runner import WorkflowRunner
 from backend.schemas.workflow import WorkflowMode
 from backend.schemas.events import CaptureLevel
-from backend.agents.llm_client import is_ollama_available
+from backend.agents.llm_client import is_gemini_available
 from backend.storage.event_store import EventStore
 from backend.graphs.three_graphs import ThreeGraphCoordinator
 
@@ -23,9 +23,9 @@ def main():
     print(" MULTI-AGENT TRANSPARENCY PLATFORM: END-TO-END DEMO")
     print("================================================================================")
     
-    ollama_ok = is_ollama_available()
-    mode = WorkflowMode.LIVE_OLLAMA if ollama_ok else WorkflowMode.DETERMINISTIC_DEMO
-    print(f"Inference Mode: {mode.value} (Ollama Available: {ollama_ok})")
+    gemini_ok = is_gemini_available()
+    mode = WorkflowMode.LIVE_GEMINI if gemini_ok else WorkflowMode.DETERMINISTIC_DEMO
+    print(f"Inference Mode: {mode.value} (Gemini Available: {gemini_ok})")
     print(f"Capture Level: Level 2 (Metadata + Summary)")
     
     task = "Analyze customer complaints for High/Critical severity issues, request priority clarification from Coordinator, and generate executive report."

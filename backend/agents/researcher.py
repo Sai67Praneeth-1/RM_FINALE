@@ -80,7 +80,7 @@ class ResearchAgent(BaseAgent):
             llm_summary = query_agent_llm(
                 prompt=f"Summarize these initial sample records for an analyst: {sample_slice}",
                 system_prompt=self.system_prompt,
-                model_name=settings.HF_EXECUTOR_MODEL,
+                model_name=settings.GEMINI_MODEL or "gemini-3.5-flash-lite",
                 mode=mode
             )
             if llm_summary:
