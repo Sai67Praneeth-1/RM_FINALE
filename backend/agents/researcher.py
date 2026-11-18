@@ -38,7 +38,19 @@ class ResearchAgent(BaseAgent):
     ) -> Dict[str, Any]:
         """
         Executes allowlisted file read via Gateway and transfers structured findings.
+        Consumes delegation envelope as source of truth and acknowledges triggering message (Issue 1).
         """
+        # Consume incoming delegation envelope from coordinator (Issue 1)
+        inbox = self.read_inbox()
+        triggering_msg_id = None
+        for env in inbox:
+            if env.get("sender") == "agent_coordinator":
+                triggering_msg_id = env.get("message_id")
+                payload = env.get("payload", {})
+                if payload.get("dataset_name"):
+                    dataset_name = payload["dataset_name"]
+                break
+
         # Execute tool call via Gateway
         read_result, cim_event = self.tools.read_dataset(
             file_name=dataset_name,
@@ -48,6 +60,10 @@ class ResearchAgent(BaseAgent):
             workflow_id=workflow_id,
             task_id=task_id
         )
+
+        # Acknowledge triggering delegation message and record downstream consequence (Issue 1)
+        if triggering_msg_id:
+            self.acknowledge_message(triggering_msg_id, downstream_action_ids=[cim_event.event_id])
 
         extracted_data = read_result.get("data", [])
         row_count = read_result.get("row_count", len(extracted_data) if isinstance(extracted_data, list) else 1)
@@ -70,7 +86,7 @@ class ResearchAgent(BaseAgent):
             if llm_summary:
                 transfer_body += f"\nInitial Research Notes: {llm_summary}"
 
-        # 1. Multi-hop transfer: Send findings to Analysis Agent (Finding 6: cim_event is upstream provenance)
+        # 1. Multi-hop transfer: Send findings to Analysis Agent with actual payload (Issue 1)
         msg_to_analyst = self.send_message(
             recipient="agent_analyst",
             interaction_type=InteractionType.INFORMATION_TRANSFER,
@@ -79,9 +95,11 @@ class ResearchAgent(BaseAgent):
             task_id=task_id,
             workflow_id=workflow_id,
             body=transfer_body,
+            payload={"extracted_data": extracted_data, "row_count": row_count, "format": read_result.get("format"), "dataset_name": dataset_name},
             summary=summary,
             resource_refs=[f"file://{dataset_name}"],
             sensitivity_label=SensitivityLabel.INTERNAL,
+            reply_to_message_id=triggering_msg_id,
             downstream_action_ids=[],
             provenance_refs=[cim_event.event_id, f"file://{dataset_name}"]
         )

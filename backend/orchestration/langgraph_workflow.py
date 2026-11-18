@@ -230,11 +230,14 @@ def build_adaptive_multi_agent_graph(gateway: Optional[ObservabilityGateway] = N
     def node_handoff(state: MultiAgentWorkflowState) -> Dict[str, Any]:
         ans_data = state.get("analysis_data", {})
         takeaway = ans_data.get("key_takeaway", "Analytical synthesis ready")
+        out = ans_data.get("analysis_output", {})
         coord.handoff_to_reporter(
             delegation_id=state["root_delegation_id"],
             conversation_id=state["conversation_id"],
             task_id=f"root_task_{state['workflow_id']}",
-            findings_summary=takeaway
+            findings_summary=takeaway,
+            workflow_id=state["workflow_id"],
+            analysis_output=out
         )
         return {
             "status": "handoff_completed",
@@ -269,8 +272,13 @@ def build_adaptive_multi_agent_graph(gateway: Optional[ObservabilityGateway] = N
             }
 
     def node_finalize(state: MultiAgentWorkflowState) -> Dict[str, Any]:
-        # Coordinator consumes remaining incoming envelopes (Finding 1)
-        coord.read_inbox()
+        # Coordinator consumes and acknowledges remaining incoming envelopes (Issue 1)
+        inbox = coord.read_inbox()
+        for env in inbox:
+            msg_id = env.get("message_id") if isinstance(env, dict) else getattr(env, "message_id", None)
+            is_ack = env.get("acknowledged", False) if isinstance(env, dict) else (getattr(env, "status", None) == "acknowledged")
+            if msg_id and not is_ack:
+                coord.acknowledge_message(msg_id)
         is_success = state.get("status") in ("completed", "handoff_completed", "analysis_completed", "escalation_resolved")
         return {
             "status": "completed" if is_success else "failed",

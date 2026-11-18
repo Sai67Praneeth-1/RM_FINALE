@@ -14,8 +14,9 @@ specified in:
    - Privacy Exposure & Storage Cost
 """
 
-from typing import Dict, Any, List, Set, Optional
+from typing import Dict, Any, List, Set, Optional, Tuple
 import json
+import time
 import networkx as nx
 
 class EvaluationMetrics:
@@ -82,6 +83,62 @@ class EvaluationMetrics:
                 correct += overlap
 
         return round(min(1.0, correct / total_events), 4)
+
+    @staticmethod
+    def compute_pairwise_f1(
+        predicted_partitions: Dict[str, List[str]],
+        ground_truth_map: Dict[str, str]
+    ) -> Dict[str, float]:
+        """
+        Computes Pairwise F1 Score over all event pairs (Issue 3):
+        Evaluates co-clustering decisions against independent ground truth.
+        TP: Pair in same cluster in predicted and same delegation in ground truth.
+        FP: Pair in same cluster in predicted but different delegation in ground truth.
+        FN: Pair in different cluster in predicted but same delegation in ground truth.
+        TN: Pair in different cluster in predicted and different delegation in ground truth.
+        """
+        if not ground_truth_map or len(ground_truth_map) < 2:
+            return {"pairwise_precision": 1.0, "pairwise_recall": 1.0, "pairwise_f1": 1.0}
+
+        pred_map: Dict[str, str] = {}
+        for c_id, eids in predicted_partitions.items():
+            for eid in eids:
+                pred_map[eid] = c_id
+
+        events = list(ground_truth_map.keys())
+        n = len(events)
+        tp = fp = fn = tn = 0
+
+        for i in range(n):
+            e_i = events[i]
+            gt_i = ground_truth_map[e_i]
+            pred_i = pred_map.get(e_i)
+            for j in range(i + 1, n):
+                e_j = events[j]
+                gt_j = ground_truth_map[e_j]
+                pred_j = pred_map.get(e_j)
+
+                same_gt = (gt_i == gt_j)
+                same_pred = (pred_i is not None and pred_j is not None and pred_i == pred_j)
+
+                if same_gt and same_pred:
+                    tp += 1
+                elif not same_gt and same_pred:
+                    fp += 1
+                elif same_gt and not same_pred:
+                    fn += 1
+                else:
+                    tn += 1
+
+        precision = tp / (tp + fp) if (tp + fp) > 0 else (1.0 if fn == 0 else 0.0)
+        recall = tp / (tp + fn) if (tp + fn) > 0 else 1.0
+        f1 = (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
+
+        return {
+            "pairwise_precision": round(precision, 4),
+            "pairwise_recall": round(recall, 4),
+            "pairwise_f1": round(f1, 4)
+        }
 
     @staticmethod
     def compute_delegation_recall_stats(
@@ -168,6 +225,52 @@ class EvaluationMetrics:
         if not supports_provenance:
             return 0.0
         return 1.0 if edges_count > 0 else 0.0
+
+    @staticmethod
+    def compute_provenance_graph_coverage(
+        prov_edges: List[Any],
+        source_resources: Optional[List[str]] = None,
+        target_artifacts: Optional[List[str]] = None
+    ) -> float:
+        """
+        Computes real provenance graph reachability coverage (Issue 3):
+        Fraction of terminal output artifacts that possess a verifiable W3C PROV
+        causal lineage path back to one or more primary source resources in G_prov.
+        """
+        if not prov_edges:
+            return 0.0
+
+        G = nx.DiGraph()
+        for edge in prov_edges:
+            if isinstance(edge, (tuple, list)) and len(edge) >= 2:
+                u, v = edge[0], edge[1]
+                G.add_edge(str(u), str(v))
+            elif hasattr(edge, "source") and hasattr(edge, "target"):
+                G.add_edge(str(edge.source), str(edge.target))
+
+        if G.number_of_nodes() == 0:
+            return 0.0
+
+        if source_resources and target_artifacts:
+            reachable_count = 0
+            for tgt in target_artifacts:
+                tgt_str = str(tgt)
+                is_reachable = False
+                for src in source_resources:
+                    src_str = str(src)
+                    if G.has_node(src_str) and G.has_node(tgt_str):
+                        if nx.has_path(G, src_str, tgt_str) or nx.has_path(G, tgt_str, src_str):
+                            is_reachable = True
+                            break
+                if is_reachable:
+                    reachable_count += 1
+            return round(reachable_count / len(target_artifacts), 4)
+
+        wccs = list(nx.weakly_connected_components(G))
+        if not wccs:
+            return 0.0
+        max_comp_size = max(len(c) for c in wccs)
+        return round(min(1.0, max_comp_size / G.number_of_nodes()), 4)
 
     @staticmethod
     def compute_storage_metrics(sample_records: List[Any], baseline_name: str) -> Dict[str, Any]:
@@ -292,3 +395,68 @@ class EvaluationMetrics:
         elif capture_level == 2:
             return 0.12
         return 0.35
+
+    @staticmethod
+    def measure_empirical_gateway_overhead(
+        gateway: Optional[Any] = None,
+        n_iterations: int = 50
+    ) -> Dict[str, float]:
+        """
+        Empirically measures central gateway interception latency overhead (Issue 3)
+        using time.perf_counter across real gateway operations.
+        """
+        from backend.gateway.gateway import ObservabilityGateway
+        from backend.storage.event_store import EventStore
+        from backend.schemas.events import InteractionType
+        import tempfile
+        import os
+
+        fd, db_path = tempfile.mkstemp(suffix="_gw_bench.db")
+        os.close(fd)
+        bench_store = EventStore(db_path=db_path)
+        gw = gateway or ObservabilityGateway(event_store=bench_store)
+
+        latencies_ms = []
+        try:
+            for i in range(n_iterations):
+                # 1. Measure delegation minting
+                t0 = time.perf_counter()
+                del_rec = gw.mint_delegation(
+                    principal_id="user_bench",
+                    agent_id="agent_bench",
+                    task_id=f"bench_task_{i}",
+                    scope="bench_scope"
+                )
+                latencies_ms.append((time.perf_counter() - t0) * 1000.0)
+
+                # 2. Measure interaction interception
+                t1 = time.perf_counter()
+                gw.record_interaction(
+                    sender_agent_id="agent_bench",
+                    receiver_agent_id="agent_analyst",
+                    interaction_type=InteractionType.DELEGATION,
+                    conversation_id=f"conv_bench_{i}",
+                    task_id=f"bench_task_{i}",
+                    delegation_id=del_rec.delegation_id,
+                    semantic_summary="Benchmark measurement interaction"
+                )
+                latencies_ms.append((time.perf_counter() - t1) * 1000.0)
+
+            latencies_ms.sort()
+            n = len(latencies_ms)
+            p50 = latencies_ms[n // 2] if n > 0 else 0.01
+            p95 = latencies_ms[int(n * 0.95)] if n > 0 else 0.25
+            mean_val = sum(latencies_ms) / n if n > 0 else 0.05
+
+            return {
+                "p50_latency_ms": round(max(0.005, p50), 4),
+                "p95_latency_ms": round(max(0.015, p95), 4),
+                "mean_latency_ms": round(mean_val, 4)
+            }
+        finally:
+            bench_store.close()
+            try:
+                if os.path.exists(db_path):
+                    os.remove(db_path)
+            except Exception:
+                pass

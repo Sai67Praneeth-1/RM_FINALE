@@ -40,11 +40,22 @@ class AnalysisAgent(BaseAgent):
         mode: str = "deterministic_demo"
     ) -> Dict[str, Any]:
         """
-        Executes analytical computations through Gateway, consumes inbox messages,
-        handles clarification if needed, and returns structured findings.
+        Executes analytical computations through Gateway, consumes inbox messages as source of truth,
+        handles clarification if needed, acknowledges triggering message, and returns structured findings (Issue 1).
         """
-        # Consume incoming messages delivered to analyst's inbox (Finding 1)
+        # Consume incoming messages delivered to analyst's inbox (Issue 1)
         inbox = self.read_inbox()
+        triggering_msg_id = None
+        for env in inbox:
+            if env.get("sender") in ("agent_researcher", "agent_coordinator"):
+                triggering_msg_id = env.get("message_id")
+                upstream_interaction_id = env.get("interaction_id") or upstream_interaction_id
+                payload = env.get("payload", {})
+                if payload.get("extracted_data") is not None:
+                    raw_records = payload["extracted_data"]
+                if payload.get("dataset_name"):
+                    dataset_name = payload["dataset_name"]
+                break
         if not upstream_interaction_id and inbox:
             upstream_interaction_id = inbox[-1].get("interaction_id")
 
@@ -115,6 +126,10 @@ class AnalysisAgent(BaseAgent):
             summary = f"Text analysis findings ({len(analysis_output.get('topics_identified', []))} topics extracted)"
         else:
             summary = f"Quantitative analysis findings ({analysis_output.get('high_priority_count', 0)} critical issues)"
+        # Acknowledge triggering research/delegation message and record calculation consequence (Issue 1)
+        if triggering_msg_id:
+            self.acknowledge_message(triggering_msg_id, downstream_action_ids=[cim_event.event_id])
+
         # Send result back to Coordinator (Finding 6: cim_event is prior calculation provenance)
         prov_refs = [cim_event.event_id]
         if upstream_interaction_id:
@@ -128,9 +143,11 @@ class AnalysisAgent(BaseAgent):
             task_id=task_id,
             workflow_id=workflow_id,
             body=key_takeaway,
+            payload={"analysis_output": analysis_output, "key_takeaway": key_takeaway, "dataset_name": dataset_name},
             summary=summary,
             resource_refs=[f"file://{dataset_name}", "tool://analytics_engine"],
             sensitivity_label=SensitivityLabel.INTERNAL,
+            reply_to_message_id=triggering_msg_id,
             downstream_action_ids=[],
             provenance_refs=prov_refs
         )

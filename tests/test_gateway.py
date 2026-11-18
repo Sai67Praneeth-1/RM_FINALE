@@ -91,3 +91,72 @@ def test_inter_agent_interaction_recording(temp_gateway):
     assert itr.sender_agent_id == "agent_coordinator"
     assert itr.receiver_agent_id == "agent_analyst"
     assert itr.interaction_type == InteractionType.DELEGATION
+
+def test_delegation_authority_validation_and_isolation(temp_gateway):
+    gw, _, _ = temp_gateway
+    # 1. Mint legitimate delegation
+    del_rec = gw.mint_delegation(
+        principal_id="user_admin",
+        agent_id="agent_researcher",
+        task_id="task_data_gather_01",
+        scope="data_collection"
+    )
+
+    # 2. Valid authority check
+    is_valid, reason, d = gw.validate_authority(del_rec.delegation_id, agent_id="agent_researcher")
+    assert is_valid is True
+    assert "verified" in reason.lower()
+    assert d.delegation_id == del_rec.delegation_id
+
+    # 3. Mismatched agent check (Issue 2)
+    is_valid, reason, _ = gw.validate_authority(del_rec.delegation_id, agent_id="agent_rogue")
+    assert is_valid is False
+    assert "mismatch" in reason.lower()
+
+    # 4. Scope restriction check (Issue 2)
+    is_valid, reason, _ = gw.validate_authority(del_rec.delegation_id, agent_id="agent_researcher", required_scope="admin_wipe")
+    assert is_valid is False
+    assert "scope" in reason.lower()
+
+    # 5. Unverified authority isolation in tool execution
+    tool_client = InstrumentedToolClient(gateway=gw)
+    res, cim_evt = tool_client.read_dataset(
+        file_name="customer_complaints.csv",
+        agent_id="agent_unverified",
+        delegation_id="del_fake_nonexistent",
+        principal_id="user_admin",
+        workflow_id="wf_isolation_test",
+        task_id="task_isolation"
+    )
+    assert cim_evt.labels["authority_status"] == "isolated"
+    assert cim_evt.labels["authority_quarantined"] == "true"
+    assert "isolation_reason" in cim_evt.labels
+
+    # 6. Unverified authority isolation in inter-agent interaction
+    itr = gw.record_interaction(
+        sender_agent_id="agent_unverified",
+        receiver_agent_id="agent_analyst",
+        interaction_type=InteractionType.DELEGATION,
+        conversation_id="conv_isolation_01",
+        task_id="task_isolation",
+        delegation_id="del_fake_nonexistent",
+        semantic_summary="Attempted unverified delegation"
+    )
+    assert itr.status == "isolated_quarantine"
+    assert itr.metadata.get("authority_status") == "isolated"
+
+def test_strict_authority_rejection(temp_gateway):
+    gw, store, _ = temp_gateway
+    gw.strict_authority_enforcement = True
+
+    tool_client = InstrumentedToolClient(gateway=gw)
+    with pytest.raises(PermissionError) as exc_info:
+        tool_client.read_dataset(
+            file_name="customer_complaints.csv",
+            agent_id="agent_unverified",
+            delegation_id="del_unverified_xyz",
+            principal_id="user_admin",
+            workflow_id="wf_strict_test",
+            task_id="task_strict"
+        )
+    assert "rejected unverified authority" in str(exc_info.value)

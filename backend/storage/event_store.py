@@ -183,6 +183,37 @@ class EventStore:
         d["metadata"] = json.loads(d["metadata"]) if d["metadata"] else {}
         return InteractionRecord(**d)
 
+    def update_interaction_acknowledgment(
+        self,
+        interaction_id: str,
+        status: str = "acknowledged",
+        downstream_action_ids: Optional[List[str]] = None
+    ) -> bool:
+        """
+        Updates the delivery/consumption status and downstream consequences of an interaction.
+        Enforces persistent message acknowledgment and causality linking (Issue 1).
+        """
+        conn = self._conn()
+        with conn:
+            if downstream_action_ids is not None:
+                cur = conn.execute(
+                    "SELECT downstream_action_ids FROM interactions WHERE interaction_id = ? OR message_id = ?",
+                    (interaction_id, interaction_id)
+                )
+                row = cur.fetchone()
+                existing_actions = json.loads(row[0]) if row and row[0] else []
+                merged = list(dict.fromkeys(existing_actions + downstream_action_ids))
+                conn.execute(
+                    "UPDATE interactions SET status = ?, downstream_action_ids = ? WHERE interaction_id = ? OR message_id = ?",
+                    (status, json.dumps(merged), interaction_id, interaction_id)
+                )
+            else:
+                conn.execute(
+                    "UPDATE interactions SET status = ? WHERE interaction_id = ? OR message_id = ?",
+                    (status, interaction_id, interaction_id)
+                )
+        return True
+
     def list_interactions(
         self,
         conversation_id: Optional[str] = None,

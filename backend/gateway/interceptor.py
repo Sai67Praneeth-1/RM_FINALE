@@ -10,7 +10,7 @@ from backend.schemas.interaction import InteractionRecord
 from backend.gateway.gateway import ObservabilityGateway, default_gateway
 
 class AgentMessageEnvelope:
-    """Standardized envelope for inter-agent communication."""
+    """Standardized envelope for inter-agent communication carrying actual task payloads (Issue 1)."""
     def __init__(
         self,
         sender: str,
@@ -20,6 +20,7 @@ class AgentMessageEnvelope:
         conversation_id: str,
         task_id: str,
         body: str,
+        payload: Optional[Dict[str, Any]] = None,
         summary: Optional[str] = None,
         resource_refs: Optional[List[str]] = None,
         sensitivity_label: SensitivityLabel = SensitivityLabel.INTERNAL,
@@ -34,6 +35,7 @@ class AgentMessageEnvelope:
         self.conversation_id = conversation_id
         self.task_id = task_id
         self.body = body
+        self.payload = payload or {}
         self.summary = summary
         self.resource_refs = resource_refs or []
         self.sensitivity_label = sensitivity_label
@@ -110,6 +112,7 @@ class InstrumentedChannel:
             "recipient": envelope.recipient,
             "type": envelope.interaction_type.value if hasattr(envelope.interaction_type, "value") else str(envelope.interaction_type),
             "body": envelope.body,
+            "payload": envelope.payload,
             "summary": record.semantic_summary or envelope.summary,
             "resource_refs": envelope.resource_refs,
             "timestamp": record.timestamp,
@@ -117,13 +120,15 @@ class InstrumentedChannel:
             "conversation_id": envelope.conversation_id,
             "task_id": envelope.task_id,
             "workflow_id": envelope.workflow_id,
-            "acknowledged": False
+            "reply_to_message_id": envelope.reply_to_message_id,
+            "acknowledged": False,
+            "consumed": False
         })
 
         return record
 
     def get_inbox(self, agent_id: str, clear: bool = True) -> List[Dict[str, Any]]:
-        """Retrieves and clears incoming messages for an agent."""
+        """Retrieves and optionally clears incoming messages for an agent."""
         mailboxes = self._mailboxes
         inbox = list(mailboxes.get(agent_id, []))
         if clear:
@@ -134,14 +139,37 @@ class InstrumentedChannel:
         """Retrieves incoming messages without clearing them."""
         return list(self._mailboxes.get(agent_id, []))
 
-    def acknowledge_message(self, agent_id: str, message_id: str) -> bool:
-        """Marks a message in agent's inbox as acknowledged."""
+    def acknowledge_message(
+        self,
+        agent_id: str,
+        message_id: str,
+        downstream_action_ids: Optional[List[str]] = None
+    ) -> bool:
+        """
+        Marks a message in agent's inbox as acknowledged and consumed,
+        linking any downstream consequences to the triggering message (Issue 1).
+        """
         mailboxes = self._mailboxes
+        found = False
         for msg in mailboxes.get(agent_id, []):
-            if msg.get("message_id") == message_id:
+            if msg.get("message_id") == message_id or msg.get("interaction_id") == message_id:
                 msg["acknowledged"] = True
-                return True
-        return False
+                msg["consumed"] = True
+                if downstream_action_ids:
+                    msg.setdefault("downstream_action_ids", []).extend(downstream_action_ids)
+                found = True
+                break
+        
+        # Persist acknowledgment and downstream consequences in SQLite
+        try:
+            self.gateway.store.update_interaction_acknowledgment(
+                interaction_id=message_id,
+                status="acknowledged",
+                downstream_action_ids=downstream_action_ids
+            )
+        except Exception:
+            pass
+        return found
 
 # Default singleton channel instance
 default_channel = InstrumentedChannel(default_gateway)

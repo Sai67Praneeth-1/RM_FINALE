@@ -43,8 +43,16 @@ class ReportAgent(BaseAgent):
         Synthesizes the final Markdown report via Gateway, attaches provenance citations,
         and saves the artifact.
         """
-        # Consume incoming messages delivered to reporter's inbox (Finding 1)
+        # Consume incoming messages delivered to reporter's inbox as source of truth (Issue 1)
         inbox = self.read_inbox()
+        triggering_msg_id = None
+        for env in inbox:
+            if env.get("sender") in ("agent_coordinator", "agent_analyst"):
+                triggering_msg_id = env.get("message_id")
+                payload = env.get("payload", {})
+                if payload.get("analysis_output") is not None:
+                    analysis_data = payload
+                break
 
         analysis_out = analysis_data.get("analysis_output", {})
         is_security_audit = "access" in dataset_name.lower() or "log" in dataset_name.lower() or "security" in task_description.lower()
@@ -199,6 +207,10 @@ class ReportAgent(BaseAgent):
             confidence=1.0
         )
 
+        # Acknowledge triggering analysis/handoff message linking synthesis consequence (Issue 1)
+        if triggering_msg_id:
+            self.acknowledge_message(triggering_msg_id, downstream_action_ids=[cim_event.event_id])
+
         # Deliver final notification to Coordinator (Finding 6: cim_event and artifact are upstream provenance)
         summary = f"Delivered completed markdown report artifact ({artifact.artifact_id})."
         msg_to_coord = self.send_message(
@@ -209,9 +221,11 @@ class ReportAgent(BaseAgent):
             task_id=task_id,
             workflow_id=workflow_id,
             body=f"Final report '{title}' generated successfully. Artifact ID: {artifact.artifact_id}.",
+            payload={"artifact_id": artifact.artifact_id, "markdown_content": markdown_content},
             summary=summary,
             resource_refs=[f"artifact://{artifact.artifact_id}"],
             sensitivity_label=SensitivityLabel.INTERNAL,
+            reply_to_message_id=triggering_msg_id,
             downstream_action_ids=[],
             provenance_refs=[cim_event.event_id, artifact.artifact_id]
         )

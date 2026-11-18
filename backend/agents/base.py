@@ -34,6 +34,7 @@ class BaseAgent:
         conversation_id: str,
         task_id: str,
         body: str,
+        payload: Optional[Dict[str, Any]] = None,
         summary: Optional[str] = None,
         resource_refs: Optional[List[str]] = None,
         sensitivity_label: SensitivityLabel = SensitivityLabel.INTERNAL,
@@ -45,7 +46,7 @@ class BaseAgent:
         downstream_action_ids: Optional[List[str]] = None,
         workflow_id: Optional[str] = None
     ):
-        """Sends an instrumented message to another agent through the Gateway."""
+        """Sends an instrumented message to another agent through the Gateway carrying actual payloads (Issue 1)."""
         envelope = AgentMessageEnvelope(
             sender=self.agent_id,
             recipient=recipient,
@@ -54,6 +55,7 @@ class BaseAgent:
             conversation_id=conversation_id,
             task_id=task_id,
             body=body,
+            payload=payload,
             summary=summary,
             resource_refs=resource_refs,
             sensitivity_label=sensitivity_label,
@@ -77,7 +79,7 @@ class BaseAgent:
         """Inspects incoming messages without clearing."""
         return self.channel.peek_inbox(self.agent_id)
 
-    def acknowledge_message(self, message_id: str) -> bool:
-        """Acknowledges a received message envelope."""
-        return self.channel.acknowledge_message(self.agent_id, message_id)
+    def acknowledge_message(self, message_id: str, downstream_action_ids: Optional[List[str]] = None) -> bool:
+        """Acknowledges a received message envelope and links downstream consequences (Issue 1)."""
+        return self.channel.acknowledge_message(self.agent_id, message_id, downstream_action_ids=downstream_action_ids)
 

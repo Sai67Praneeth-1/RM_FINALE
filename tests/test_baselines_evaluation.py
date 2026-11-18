@@ -89,3 +89,43 @@ def test_gateway_latency_and_privacy_metrics():
     assert EvaluationMetrics.get_privacy_exposure_index(2) == 0.12
     assert EvaluationMetrics.get_privacy_exposure_index(3) == 0.35
 
+def test_pairwise_f1_metric():
+    gt_map = {"e1": "d1", "e2": "d1", "e3": "d2", "e4": "d2"}
+    # Perfect partition
+    pred_perfect = {"p1": ["e1", "e2"], "p2": ["e3", "e4"]}
+    res_perfect = EvaluationMetrics.compute_pairwise_f1(pred_perfect, gt_map)
+    assert res_perfect["pairwise_f1"] == 1.0
+
+    # Over-clustered partition (all in one)
+    pred_all_in_one = {"p1": ["e1", "e2", "e3", "e4"]}
+    res_over = EvaluationMetrics.compute_pairwise_f1(pred_all_in_one, gt_map)
+    assert res_over["pairwise_precision"] < 1.0
+
+def test_provenance_graph_coverage_metric():
+    prov_edges = [
+        ("table_raw", "task_clean", "used"),
+        ("task_clean", "table_clean", "wasGeneratedBy"),
+        ("table_clean", "report_final", "wasDerivedFrom")
+    ]
+    cov = EvaluationMetrics.compute_provenance_graph_coverage(
+        prov_edges,
+        source_resources=["table_raw"],
+        target_artifacts=["report_final"]
+    )
+    assert cov == 1.0
+
+    # Unreachable artifact
+    cov_bad = EvaluationMetrics.compute_provenance_graph_coverage(
+        prov_edges,
+        source_resources=["table_raw"],
+        target_artifacts=["unconnected_artifact"]
+    )
+    assert cov_bad == 0.0
+
+def test_empirical_gateway_overhead_measurement():
+    overhead = EvaluationMetrics.measure_empirical_gateway_overhead(n_iterations=10)
+    assert "p50_latency_ms" in overhead
+    assert "p95_latency_ms" in overhead
+    assert overhead["p50_latency_ms"] >= 0.0
+    assert overhead["p95_latency_ms"] >= overhead["p50_latency_ms"]
+

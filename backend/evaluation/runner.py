@@ -32,6 +32,11 @@ class BenchmarkRunner:
 
         print(f"=== Starting Research Evaluation ({8} Scenarios x {5} Baselines) ===")
 
+        # Measure actual gateway processing latency using time.perf_counter across real operations (Issue 3)
+        gw_overhead = EvaluationMetrics.measure_empirical_gateway_overhead(n_iterations=30)
+        measured_p50 = gw_overhead["p50_latency_ms"]
+        measured_p95 = gw_overhead["p95_latency_ms"]
+
         for scenario_id in range(1, 9):
             scenario_data = self.generator.generate_scenario(scenario_id, size=size_per_scenario)
             s_name = scenario_data["scenario_name"]
@@ -53,6 +58,10 @@ class BenchmarkRunner:
                 if getattr(ev, "resource_id", None):
                     prov_edges.append((ev.resource_id, ev.event_id, "generatedBy"))
 
+            # Extract source resources and target artifacts for real provenance coverage
+            source_resources = list({getattr(e, "resource_id", "") for e in events if getattr(e, "resource_id", None)} | {ref for itr in interactions for ref in (itr.resource_refs or [])})
+            target_artifacts = list({itr.interaction_id for itr in interactions if "report" in str(getattr(itr, "receiver_agent_id", "")).lower() or getattr(itr, "interaction_type", None) == "handoff"} | {getattr(e, "event_id", "") for e in events if "write" in str(getattr(e, "action_semantic", "")).lower()})
+
             # Run all 5 Baselines
             b0_res = ReconstructionBaselines.reconstruct_b0_trace_only(events)
             b1_res = ReconstructionBaselines.reconstruct_b1_time_window(events)
@@ -68,18 +77,11 @@ class BenchmarkRunner:
                 ("B4_Proposed_Three_Graphs", b4_res, len(interactions))
             ]
 
-            # Measure real gateway processing latency using perf_counter (Finding 2)
-            latencies = []
-            for _ in range(25):
-                t_bench_start = time.perf_counter()
-                self.store._conn()
-                latencies.append((time.perf_counter() - t_bench_start) * 1000.0)
-            latencies.sort()
-            measured_p50 = round(max(0.005, latencies[len(latencies) // 2]), 4)
-            measured_p95 = round(max(0.015, latencies[int(len(latencies) * 0.95)]), 4)
-
             for b_name, b_res, captured_itrs in baselines:
                 acc = EvaluationMetrics.compute_delegation_attribution_accuracy(
+                    b_res.get("predicted_partitions", {}), gt_map
+                )
+                pairwise = EvaluationMetrics.compute_pairwise_f1(
                     b_res.get("predicted_partitions", {}), gt_map
                 )
                 rec_stats = EvaluationMetrics.compute_delegation_recall_stats(
@@ -89,6 +91,7 @@ class BenchmarkRunner:
                 itr_comp = EvaluationMetrics.compute_interaction_completeness(captured_itrs, true_itrs)
                 amb = EvaluationMetrics.compute_ambiguity(b_res.get("partition_count", 1), true_dels)
                 prov_comp = EvaluationMetrics.compute_provenance_completeness("B4" in b_name, len(prov_edges))
+                prov_cov = EvaluationMetrics.compute_provenance_graph_coverage(prov_edges if "B4" in b_name else [], source_resources, target_artifacts)
                 query_ops = b_res.get("query_ops_count", EvaluationMetrics.get_query_operations_burden(b_name))
                 storage_metrics = EvaluationMetrics.compute_storage_metrics(events, b_name)
                 privacy_exp = EvaluationMetrics.get_privacy_exposure_index(2 if "B4" in b_name else 1)
@@ -101,12 +104,16 @@ class BenchmarkRunner:
                     "scenario_name": s_name,
                     "baseline": b_name,
                     "delegation_attribution_accuracy": acc,
+                    "pairwise_f1": pairwise["pairwise_f1"],
+                    "pairwise_precision": pairwise["pairwise_precision"],
+                    "pairwise_recall": pairwise["pairwise_recall"],
                     "median_recall": rec_stats["median_recall"],
                     "p05_recall": rec_stats["p05_recall"],
                     "divergence_comp_d": comp_d,
                     "interaction_completeness": itr_comp,
                     "ambiguity": amb,
                     "provenance_completeness": prov_comp,
+                    "provenance_coverage": prov_cov,
                     "query_operations": query_ops,
                     "bytes_per_event": storage_metrics["bytes_per_event"],
                     "privacy_exposure": privacy_exp,
@@ -120,12 +127,14 @@ class BenchmarkRunner:
                     "Scenario": s_name,
                     "Baseline": b_name,
                     "Delegation_Accuracy": acc,
+                    "Pairwise_F1": pairwise["pairwise_f1"],
                     "Median_Recall": rec_stats["median_recall"],
                     "p05_Recall": rec_stats["p05_recall"],
                     "Divergence_Comp_d": comp_d,
                     "Interaction_Completeness": itr_comp,
                     "Ambiguity": amb,
                     "Provenance_Completeness": prov_comp,
+                    "Provenance_Coverage": prov_cov,
                     "Query_Ops": query_ops,
                     "Bytes_Per_Event": storage_metrics["bytes_per_event"],
                     "Privacy_Exposure": privacy_exp,

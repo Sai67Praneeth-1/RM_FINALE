@@ -91,7 +91,9 @@ class CoordinatorAgent(BaseAgent):
             delegation_id=research_del.delegation_id,
             conversation_id=conversation_id,
             task_id=research_del.task_id,
+            workflow_id=workflow_id,
             body=instruction_body,
+            payload={"dataset_name": dataset_name, "task_description": task_description, "workflow_id": workflow_id},
             summary=summary,
             resource_refs=[f"file://{dataset_name}"],
             sensitivity_label=SensitivityLabel.INTERNAL
@@ -172,16 +174,20 @@ class CoordinatorAgent(BaseAgent):
         delegation_id: str,
         conversation_id: str,
         task_id: str,
-        findings_summary: str
+        findings_summary: str,
+        workflow_id: Optional[str] = None,
+        analysis_output: Optional[Dict[str, Any]] = None
     ) -> Any:
-        """Formally hands off verified analytical findings to Report Agent for executive Markdown compilation."""
+        """Formally hands off verified analytical findings to Report Agent with actual payload (Issue 1)."""
         return self.send_message(
             recipient="agent_reporter",
             interaction_type=InteractionType.HANDOFF,
             delegation_id=delegation_id,
             conversation_id=conversation_id,
             task_id=task_id,
+            workflow_id=workflow_id,
             body=f"Verified findings handoff: {findings_summary}",
+            payload={"findings_summary": findings_summary, "analysis_output": analysis_output or {}},
             summary="Handed off verified findings to Report Agent for final executive report synthesis.",
             sensitivity_label=SensitivityLabel.INTERNAL
         )
