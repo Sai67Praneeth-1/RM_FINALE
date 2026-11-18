@@ -1403,49 +1403,38 @@ export default function App() {
       </aside>
 
       {/* Main Content Area */}
-      <div className="main-wrapper" style={{ background: "#f8f9fa", display: "flex", flexDirection: "column", height: "100%", overflow: "hidden" }}>
-        <header className="top-bar" style={{ background: "#ffffff", borderBottom: "1px solid #dadce0" }}>
-          <div className="top-left-section">
-            {!isSidebarOpen && (
-              <button
-                className="sidebar-toggle-btn open-btn"
-                onClick={toggleSidebar}
-                title="Open sidebar (Ctrl+B)"
-                aria-label="Open sidebar"
-                style={{ color: "#5f6368" }}
-              >
-                <PanelLeftOpen size={19} />
-              </button>
-            )}
-            <div className="top-title" style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 16, fontWeight: 700, color: "#202124" }}>
-                  {NAV_ITEMS.find((n) => n.id === activeTab)?.label}
-                </span>
-                <span style={{
-                  fontSize: 11,
-                  padding: "2px 10px",
-                  borderRadius: 16,
-                  background: "#e8f0fe",
-                  color: "#1a73e8",
-                  border: "1px solid #dadce0",
-                  fontWeight: 600
-                }}>
-                  Lead Orchestrator
-                </span>
-              </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: "#5f6368" }}>
-                <span>Autonomous Multi-Agent Investigation</span>
-                <span>&bull;</span>
-                <span style={{ color: "#1a73e8", fontWeight: 500 }}>Google Gemini 3.5 Flash</span>
-              </div>
-            </div>
-          </div>
-        </header>
+      <div className="main-wrapper" style={{ background: "#f8f9fa", display: "flex", flexDirection: "column", height: "100%", overflow: "hidden", position: "relative" }}>
+        {!isSidebarOpen && (
+          <button
+            className="sidebar-toggle-btn open-btn"
+            onClick={toggleSidebar}
+            title="Open sidebar (Ctrl+B)"
+            aria-label="Open sidebar"
+            style={{
+              position: "fixed",
+              top: 14,
+              left: 14,
+              zIndex: 100,
+              background: "#ffffff",
+              border: "1px solid #dadce0",
+              borderRadius: 24,
+              padding: "7px 10px",
+              cursor: "pointer",
+              color: "#5f6368",
+              boxShadow: "0 1px 3px 1px rgba(60,64,67,0.15)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+            }}
+          >
+            <PanelLeftOpen size={18} />
+          </button>
+        )}
 
         {/* View 1: Chat with Lead Agent */}
         {activeTab === "chat" && (
-          <div className="content-panel" style={{ height: "calc(100vh - 90px)", minHeight: 0, padding: 16, background: "#f8f9fa" }}>
+          <div className="content-panel" style={{ height: "100%", minHeight: 0, padding: 16, background: "#f8f9fa" }}>
             <div
               style={{
                 display: "grid",
