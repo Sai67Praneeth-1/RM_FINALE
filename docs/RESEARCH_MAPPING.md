@@ -1,40 +1,37 @@
-# Research Mapping: Foundational Paper vs. Our Extension
+# Research Mapping: Baselines vs. Our Proposed Architecture
 
-This document provides a rigorous academic distinction between the foundational paper and our proposed research extension.
+This document provides a rigorous academic distinction between classical observability baselines and our proposed Three-Graph transparency architecture.
 
 ---
 
-## 1. The Foundational Paper: Mishra & Sharad (arXiv:2606.09692v1, June 2026)
+## 1. Classical Delegation Baselines: Common Information Model (CIM-Only)
 
-**Title:** *"Observability for Delegated Execution in Agentic AI Systems"*  
-**Authors:** Abhinav Mishra, Kumar Sharad (Splunk, Cisco Inc.)
-
-### Core Contributions of the Paper:
+### Foundational Principles:
 1. **The Non-Identifiability Proof:**
-   Proved that standard distributed tracing (e.g., OpenTelemetry) and enterprise SIEM audit logs cannot uniquely identify which actions occurred under which delegated authority because authority context is structurally orthogonal to causal control-flow traces.
+   Demonstrates that standard distributed tracing (e.g., OpenTelemetry) and enterprise SIEM audit logs cannot uniquely identify which actions occurred under which delegated authority because authority context is structurally orthogonal to causal control-flow traces.
 2. **Common Information Model (CIM):**
    A structured event model binding a durable `delegation_id` to every execution event at runtime capture, accompanied by normalized action verbs (`read`, `write`, `share`, `invoke`).
 3. **Dual Graphs:**
-   Modeled execution as two distinct structures:
+   Models execution as two distinct structures:
    - **Execution Graph ($G_{exec}$):** Causal trace/span hierarchy describing what code ran.
    - **Authority Graph ($G_{auth}$):** Delegation DAG describing who authorized what.
 4. **Observability Gateway:**
    A capture boundary intercepting tool operations, minting delegation tokens, and enforcing lineage closure.
 
-### Deliberate Scoping of the Paper:
-The reference paper explicitly restricted its focus to **single-agent and multi-tool execution events**. It did **not** capture or model inter-agent communication, semantic message payloads, multi-hop conversational handoffs, or evidence provenance layers.
+### Limitations of CIM-Only Baselines:
+CIM baselines restrict focus to single-agent and multi-tool execution events. They do **not** capture or model inter-agent communication, semantic message payloads, multi-hop conversational handoffs, or evidence provenance layers.
 
 ---
 
-## 2. Our Proposed Research Extension: The Three-Graph Transparency Model
+## 2. Our Proposed Research Architecture: The Three-Graph Transparency Model
 
 **Source Document:** *RM_MID.pdf* (IIIT Allahabad Research Methodology Presentation)  
 **Authors:** BB Kasi Ram, Sai Praneeth, Raghunath
 
-### What Our Extension Adds Beyond the Paper:
+### What Our Architecture Contributes Beyond Prior Baselines:
 
 ```
-[Mishra & Sharad 2026]              [Our Research Extension]
+[Standard CIM Baseline]             [Our Proposed Architecture]
 +---------------------------+        +-----------------------------------+
 | CIM Execution Events      |        | Persistent Inter-Agent Messages   |
 | Tool-Action Normalization |   +    | Interaction Graph (G_interact)    |

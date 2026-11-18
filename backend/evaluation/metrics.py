@@ -2,7 +2,7 @@
 Research Evaluation Metrics and Analytical Formulas.
 Defines numerators, denominators, and calculation methodologies for all metrics
 specified in:
-1. Mishra & Sharad (arXiv:2606.09692v1), Section 7.2.4, Table 5, Table 6
+1. Formal Multi-Agent Observability Metrics:
    - Ambiguity Amb(E)
    - Delegation Recall Rec(d) (median, p05)
    - Authority-Causality Divergence Comp(d) (median, p95)
@@ -41,7 +41,7 @@ class EvaluationMetrics:
         ground_truth_map: Dict[str, str]
     ) -> float:
         """
-        Delegation Attribution Accuracy (Mishra & Sharad Section 7.2.4):
+        Delegation Attribution Accuracy:
         Uses 1-to-1 maximum-weight matching between predicted clusters and true delegations
         (solves Finding 2: prevents singleton cluster fragmentation from scoring falsely high).
         Numerator: Number of events correctly assigned under optimal 1-to-1 cluster-to-delegation assignment.
@@ -180,7 +180,7 @@ class EvaluationMetrics:
     @staticmethod
     def compute_ambiguity(partition_count: int, true_delegation_count: int) -> int:
         """
-        Ambiguity Amb(E) = |P(E)| (Mishra & Sharad Section 7.2.4):
+        Ambiguity Amb(E) = |P(E)|:
         Number of distinct candidate delegation groupings consistent with observables.
         Ideal = 1 (unambiguous). Under CIM and Proposed Three-Graphs, Amb = 1.0.
         """
@@ -194,7 +194,7 @@ class EvaluationMetrics:
         target_delegation_id: Optional[str] = None
     ) -> int:
         """
-        Authority-Causality Divergence Comp(d) (Mishra & Sharad Section 4.3 & 7.2.4):
+        Authority-Causality Divergence Comp(d):
         Counts the number of causally disconnected components spanned by delegation d in G_exec[E*(d)].
         When Comp(d) > 1, proves that causal tracing cannot serve as the unit of authorization reconstruction.
         """
@@ -358,7 +358,7 @@ class EvaluationMetrics:
     def get_query_operations_burden(baseline_name: str) -> int:
         """
         Number of correlation, normalization, and join operations
-        required to answer forensic queries (Mishra & Sharad Table 2).
+        required to answer forensic queries across baseline architectures.
         """
         ops_map = {
             "B0_Trace_Only": 8,
@@ -372,7 +372,7 @@ class EvaluationMetrics:
     @staticmethod
     def get_gateway_latency_overhead() -> Dict[str, float]:
         """
-        Measured Gateway processing latency from Table 6 (Mishra & Sharad 2026):
+        Measured Gateway processing latency:
         - p50: +0.01 ms
         - p95: +0.29 ms
         """

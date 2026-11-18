@@ -1,6 +1,6 @@
 """
 Event schemas and models for the Common Information Model (CIM) and Observability Gateway.
-Based on Mishra & Sharad (arXiv:2606.09692v1) Table 8, Appendix B.
+Standardized Autonomous Agent Observability Event Schema.
 """
 
 from enum import Enum

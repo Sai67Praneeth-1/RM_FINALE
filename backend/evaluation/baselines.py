@@ -3,8 +3,8 @@ Implementation of the 5 Comparative Baselines:
 - B0: Trace-only baseline
 - B1: Time-window baseline
 - B2: Hybrid heuristic baseline (SIEM-style)
-- B3: CIM-only (Mishra & Sharad, 2026)
-- B4: Proposed Three-Graph Model (Our Research Extension)
+- B3: CIM-only (Common Information Model Baseline)
+- B4: Proposed Three-Graph Model (Our Architecture)
 """
 
 from typing import Dict, Any, List, Set
@@ -106,7 +106,7 @@ class ReconstructionBaselines:
         }
 
     # -------------------------------------------------------------
-    # B3: CIM-Only (Mishra & Sharad, 2026)
+    # B3: CIM-Only (Common Information Model Baseline)
     # -------------------------------------------------------------
     @staticmethod
     def reconstruct_b3_cim_only(events: List[CIMEvent]) -> Dict[str, Any]:

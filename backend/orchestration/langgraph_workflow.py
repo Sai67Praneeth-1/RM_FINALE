@@ -2,7 +2,7 @@
 LangGraph Multi-Agent Orchestration Workflows.
 Implements the multi-agent delegation, parallel subtasking, trial-and-adapt,
 and communication models specified in:
-1. Mishra & Sharad (arXiv:2606.09692v1, June 2026), Section 4.1, 4.3, 7.2.1 (W1, W2, W3)
+1. Multi-Agent Observability System Specifications (W1, W2, W3)
 2. RM_MID.pdf (IIIT Allahabad), Slides 3, 10, 11, 12
 
 Supports:
@@ -723,21 +723,21 @@ def get_available_workflow_topologies() -> Dict[str, Dict[str, Any]]:
         },
         "adaptive": {
             "name": "Adaptive Multi-Agent Collaboration (Canonical)",
-            "paper_ref": "RM_MID Slide 11 & Mishra & Sharad Section 4",
+            "paper_ref": "RM_MID Slide 11 (Autonomous MAS Architecture)",
             "description": "Full 4-agent collaborative state graph with dynamic tool selection, bi-directional clarification, escalation, handoff, and provenance synthesis.",
             "features": ["Dynamic Clarification", "Anomaly Escalation", "Formal Handoff", "Provenance Footnotes"],
             "agents": ["agent_coordinator", "agent_researcher", "agent_analyst", "agent_reporter"]
         },
         "w1_parallel": {
             "name": "W1: Parallel Disconnected Subtasks",
-            "paper_ref": "Mishra & Sharad Section 7.2.1 (W1)",
+            "paper_ref": "Parallel Execution Workflow (W1)",
             "description": "Issues parallel reads across multiple tools under a single root delegation, inducing causally disconnected components (|Comp(d)| > 1) followed by fan-in join.",
             "features": ["Parallel Tool Reads", "Fan-In Join", "|Comp(d)| > 1 Stress Test", "Cross-Dataset Synthesis"],
             "agents": ["agent_coordinator", "agent_researcher", "agent_reporter"]
         },
         "w3_retry": {
             "name": "W3: Trial-and-Adapt / Dynamic Retries",
-            "paper_ref": "Mishra & Sharad Section 7.2.1 (W3)",
+            "paper_ref": "Trial-and-Adapt Workflow (W3)",
             "description": "Implements iterative trial-and-adapt cycles with parameter refinement, backtracking, and retry logging upon intermediate observations.",
             "features": ["Parameter Backtracking", "Retry Loop", "Dynamic Refinement", "State Recovery"],
             "agents": ["agent_coordinator", "agent_researcher", "agent_reporter"]

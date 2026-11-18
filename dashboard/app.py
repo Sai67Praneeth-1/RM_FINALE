@@ -508,7 +508,7 @@ elif page == "3. 🌐 LangGraph Goal Flow & Topology":
     st.markdown('<div class="main-header">LangGraph Goal Flow & State Machine Topology</div>', unsafe_allow_html=True)
     st.markdown(
         '<div class="sub-header">Inspect genuine compiled LangGraph state machines and visualize how goals propagate across '
-        'specialized agents according to <b>Mishra & Sharad (arXiv:2606.09692v1)</b> and <b>RM_MID.pdf</b>.</div>',
+        'specialized agents according to <b>RM_MID.pdf</b>.</div>',
         unsafe_allow_html=True
     )
 
@@ -955,7 +955,7 @@ elif page == "10. 🧪 Research Evaluation":
         - **B0: Distributed Tracing Only** (Standard OpenTelemetry spans, trace IDs, parent spans).
         - **B1: Time-Window Correlation** (Correlating events within rolling temporal windows).
         - **B2: SIEM Hybrid Heuristics** (Rule-based heuristics and access log joins).
-        - **B3: Common Information Model Only (CIM-Only)** (Mishra & Sharad 2026 reference paper without interaction graph).
+        - **B3: Common Information Model Only (CIM-Only)** (Common Information Model without interaction graph).
         - **B4: Proposed Three-Graph Transparency Platform** (CIM + Interaction Graph + Provenance + 3-Tier Privacy).
         """)
     with col2:
@@ -970,7 +970,7 @@ elif page == "10. 🧪 Research Evaluation":
         
         df_eval = pd.DataFrame(eval_data)
         
-        st.markdown("### 📊 Academic Comparative Benchmark Summary (Mishra & Sharad Table 5 & RM_MID Slide 15)")
+        st.markdown("### 📊 Academic Comparative Benchmark Summary (RM_MID Slide 15)")
         
         # Aggregate summary table matching academic paper
         agg_table = df_eval.groupby("baseline").agg({
@@ -1069,7 +1069,7 @@ elif page == "11. 📖 Architecture & Docs":
     st.markdown("""
     ### 1. Research Foundation vs. Our Extension
     
-    | Dimension | Reference Paper (Mishra & Sharad, 2026) | Our Proposed Research Extension |
+    | Dimension | Standard CIM Architecture | Our Proposed Research Architecture |
     |---|---|---|
     | **Core Problem** | Non-identifiability of delegated execution from standard traces | Ephemeral, opaque inter-agent communication and missing interaction history |
     | **Primary Telemetry** | Common Information Model (CIM) tool execution events | **Persistent Inter-Agent Interaction Graph** integrated with CIM |

@@ -22,8 +22,8 @@ This document details the evaluation methodology, the 8 benchmark experimental s
 - **B0 (Trace-Only):** Distributed tracing (OpenTelemetry-style). Groups events by `trace_id`. Falls back to singletons when missing.
 - **B1 (Time-Window):** Temporal sliding window ($\Delta t \in [5s, 30s]$). Groups events occurring in proximity.
 - **B2 (Hybrid Heuristic):** Merges trace IDs, agent identities, and time-window heuristics (SIEM-style correlation).
-- **B3 (CIM-Only):** Common Information Model from Mishra & Sharad (2026). Durable `delegation_id` bound to execution events. Lacks inter-agent communication records.
-- **B4 (Proposed Three-Graph Model):** Our proposed extension: CIM execution events + authority lineage + persistent inter-agent interaction graph + W3C PROV provenance layer.
+- **B3 (CIM-Only):** Common Information Model baseline. Durable `delegation_id` bound to execution events. Lacks inter-agent communication records.
+- **B4 (Proposed Three-Graph Model):** Our proposed architecture: CIM execution events + authority lineage + persistent inter-agent interaction graph + W3C PROV provenance layer.
 
 ---
 

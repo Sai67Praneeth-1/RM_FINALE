@@ -15,7 +15,7 @@ A complete research implementation and observability platform addressing the **N
 ## 1. Research Background & Contributions
 
 ### The Theoretical Foundation
-Based on *"Observability for Delegated Execution in Agentic AI Systems"* by **Abhinav Mishra & Kumar Sharad** (Splunk, Cisco Inc., arXiv:2606.09692v1, June 2026).
+Autonomous agent observability requires addressing fundamental delegation and tracing limitations:
 - **The Non-Identifiability Problem:** Standard distributed tracing (OpenTelemetry) and audit logs cannot uniquely identify which actions occurred under which delegated authority because authority context is orthogonal to causal control-flow traces.
 - **Common Information Model (CIM):** An event schema that binds durable `delegation_id` contexts to tool operations at execution capture.
 - **Dual Graphs:** Execution Graph ($G_{exec}$) and Authority Graph ($G_{auth}$).
@@ -165,7 +165,7 @@ Executes all 8 scenarios across all 5 baselines and exports:
 
 Exhaustive academic documentation is available in the `docs/` folder:
 - [Architecture & 9-Layer Stack](docs/ARCHITECTURE.md)
-- [Research Mapping: Mishra & Sharad vs. Our Extension](docs/RESEARCH_MAPPING.md)
+- [Research Mapping: Baselines vs. Our Architecture](docs/RESEARCH_MAPPING.md)
 - [Requirements Traceability Matrix](docs/REQUIREMENTS_TRACEABILITY.md)
 - [Event Schema Specification](docs/EVENT_SCHEMA.md)
 - [Research Evaluation, Scenarios & Empirical Results](docs/RESEARCH_EVALUATION.md)

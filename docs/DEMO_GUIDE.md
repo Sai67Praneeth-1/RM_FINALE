@@ -70,6 +70,6 @@ Step-by-step guide for demonstrating the research prototype to a professor, advi
 
 ### Step 7: Architecture, CIM Foundation & Boundary Limits
 - Navigate to **"8. Architecture & Docs"**.
-- Review the comparison table between Mishra & Sharad (2026) and our research extension.
+- Review the comparison table between the Common Information Model baseline and our research architecture.
 - Emphasize the critical scope boundary: **we strictly avoid capturing private neural chain-of-thought or model weights, focusing purely on observable communications and actions.**
 

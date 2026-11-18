@@ -1,10 +1,10 @@
 # Requirements Traceability Matrix
 
-This document maps requirements from the foundational research paper (*"Observability for Delegated Execution in Agentic AI Systems"* by Abhinav Mishra & Kumar Sharad, arXiv:2606.09692v1) and our presentation (*RM_MID.pdf*) to their concrete implementations, modules, and automated tests.
+This document maps system and observability requirements from foundational multi-agent specifications and our presentation (*RM_MID.pdf*) to their concrete implementations, modules, and automated tests.
 
 ---
 
-## 1. Traceability: Reference Paper (Mishra & Sharad, 2026)
+## 1. Traceability: Core Observability Architecture
 
 | Paper Reference | Concept / Requirement | Implementation Module | Automated Test | Status |
 |---|---|---|---|---|

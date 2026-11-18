@@ -6,7 +6,7 @@ This document details the exact JSON and database schemas for all telemetry even
 
 ## 1. Common Information Model (CIM) Event Schema
 
-Based on Mishra & Sharad (arXiv:2606.09692v1), Table 8 & Appendix B.
+Standardized autonomous multi-agent execution event schema specification.
 
 | Field | Required | Type | Semantics |
 |---|---|---|---|
