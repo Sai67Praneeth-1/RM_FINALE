@@ -927,6 +927,19 @@ a:hover {
   box-shadow: 0 1px 3px 1px rgba(60, 64, 67, 0.15);
 }
 
+.pill-btn.active {
+  background: #1a73e8;
+  color: #ffffff;
+  border-color: #1a73e8;
+  font-weight: 600;
+}
+
+.pill-btn.active:hover {
+  background: #1765cc;
+  color: #ffffff;
+  border-color: #1765cc;
+}
+
 /* ==============================================================================
    Cards & Grids (Flat #ffffff background, 1px solid #dadce0, 8px border-radius)
    ============================================================================== */

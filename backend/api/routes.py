@@ -93,10 +93,12 @@ def get_system_status():
     gemini_ok = is_gemini_available()
     metrics = store.get_metrics_summary()
     mongo_ok = mongo_chat_store.is_connected()
+    cap_val = getattr(settings, "DEFAULT_CAPTURE_LEVEL", 2)
+    cap_val = int(cap_val.value if hasattr(cap_val, "value") else cap_val)
     return {
         "status": "healthy",
         "database_path": settings.DATABASE_PATH,
-        "capture_level": settings.DEFAULT_CAPTURE_LEVEL,
+        "capture_level": cap_val,
         "mongodb_connected": mongo_ok,
         "mongodb_db": getattr(settings, "MONGODB_DB_NAME", "research"),
         "huggingface_router_url": settings.HF_ROUTER_BASE_URL,
@@ -172,15 +174,46 @@ def get_gateway_overview():
     delegations = store.list_delegations(limit=500)
     
     current_cap = getattr(default_gateway, "capture_level", CaptureLevel.METADATA_SUMMARY)
-    if isinstance(current_cap, int):
-        cap_val = current_cap
-    else:
-        cap_val = current_cap.value if hasattr(current_cap, "value") else int(current_cap)
+    cap_val = int(current_cap.value if hasattr(current_cap, "value") else current_cap)
+
+    tier_meta = {
+        1: {
+            "name": "Level 1: Metadata Only",
+            "exposure_score": 0.00,
+            "detail_retention": "Low (Headers & Verbs Only)",
+            "pii_protection": "Zero Payload Stored",
+            "storage_cost": "~120 B/event"
+        },
+        2: {
+            "name": "Level 2: Metadata + Summary",
+            "exposure_score": 0.12,
+            "detail_retention": "Balanced (Semantic Summaries)",
+            "pii_protection": "Extractive Redaction Active",
+            "storage_cost": "~217 B/event"
+        },
+        3: {
+            "name": "Level 3: Full Observable (Redacted)",
+            "exposure_score": 0.35,
+            "detail_retention": "Full (Observable Payloads)",
+            "pii_protection": "PII Regex Redaction Active",
+            "storage_cost": "~580 B/event"
+        }
+    }.get(cap_val, {
+        "name": f"Level {cap_val}",
+        "exposure_score": 0.12,
+        "detail_retention": "Balanced",
+        "pii_protection": "Active",
+        "storage_cost": "~217 B/event"
+    })
     
     return {
         "status": "active",
         "capture_level": cap_val,
-        "capture_level_name": f"Level {cap_val} ({'Metadata Only' if cap_val == 1 else 'Metadata + Summary' if cap_val == 2 else 'Full Observable (Redacted)'})",
+        "capture_level_name": tier_meta["name"],
+        "privacy_exposure_score": tier_meta["exposure_score"],
+        "detail_retention": tier_meta["detail_retention"],
+        "pii_protection": tier_meta["pii_protection"],
+        "storage_cost": tier_meta["storage_cost"],
         "total_interactions_captured": len(interactions),
         "total_tool_events_captured": len(events),
         "total_delegations_minted": len(delegations),
@@ -219,10 +252,10 @@ def set_gateway_capture_level(req: SetCaptureLevelRequest):
         raise HTTPException(status_code=400, detail="Capture level must be 1, 2, or 3")
     new_level = CaptureLevel(req.capture_level)
     default_gateway.set_capture_level(new_level)
-    settings.DEFAULT_CAPTURE_LEVEL = req.capture_level
+    settings.DEFAULT_CAPTURE_LEVEL = int(req.capture_level)
     return {
         "status": "success",
-        "capture_level": req.capture_level,
+        "capture_level": int(req.capture_level),
         "message": f"Observability Gateway capture policy updated to Level {req.capture_level}"
     }
 

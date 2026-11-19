@@ -146,3 +146,88 @@ def test_api_chat_telemetry_endpoints(client):
     assert "status" in rec_data
     assert "collections" in rec_data["summary"]
 
+def test_gateway_overview_and_capture_level_endpoints(client):
+    """
+    Verifies that Observability Gateway endpoints return pure integers for capture_level,
+    provide privacy metrics (exposure score, detail retention), and support dynamic level switching.
+    """
+    # 1. Test GET /api/gateway/overview
+    resp = client.get("/api/gateway/overview")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["status"] == "active"
+    assert isinstance(data["capture_level"], int)
+    assert type(data["capture_level"]) is int
+    assert data["capture_level"] in (1, 2, 3)
+    assert "privacy_exposure_score" in data
+    assert isinstance(data["privacy_exposure_score"], (int, float))
+    assert "detail_retention" in data
+    assert isinstance(data["detail_retention"], str)
+    assert "capture_level_name" in data
+
+    # 2. Test POST /api/gateway/capture_level -> Level 1 (Metadata Only)
+    post_res1 = client.post("/api/gateway/capture_level", json={"capture_level": 1})
+    assert post_res1.status_code == 200
+    data1 = post_res1.json()
+    assert data1["status"] == "success"
+    assert data1["capture_level"] == 1
+    assert type(data1["capture_level"]) is int
+
+    # Verify overview immediately reflects Level 1 with 0.00 exposure score
+    ov1 = client.get("/api/gateway/overview").json()
+    assert ov1["capture_level"] == 1
+    assert type(ov1["capture_level"]) is int
+    assert ov1["privacy_exposure_score"] == 0.00
+    assert "Metadata Only" in ov1["capture_level_name"]
+
+    # 3. Test POST /api/gateway/capture_level -> Level 3 (Full Observable)
+    post_res3 = client.post("/api/gateway/capture_level", json={"capture_level": 3})
+    assert post_res3.status_code == 200
+    data3 = post_res3.json()
+    assert data3["capture_level"] == 3
+    assert type(data3["capture_level"]) is int
+
+    # Verify overview reflects Level 3 with 0.35 exposure score
+    ov3 = client.get("/api/gateway/overview").json()
+    assert ov3["capture_level"] == 3
+    assert type(ov3["capture_level"]) is int
+    assert ov3["privacy_exposure_score"] == 0.35
+    assert "Full Observable" in ov3["capture_level_name"]
+
+    # 4. Restore to Level 2 (Default)
+    post_res2 = client.post("/api/gateway/capture_level", json={"capture_level": 2})
+    assert post_res2.status_code == 200
+    assert post_res2.json()["capture_level"] == 2
+
+    ov2 = client.get("/api/gateway/overview").json()
+    assert ov2["capture_level"] == 2
+    assert type(ov2["capture_level"]) is int
+    assert ov2["privacy_exposure_score"] == 0.12
+
+def test_gateway_activity_feed_category_filters(client):
+    """
+    Verifies that the /api/gateway/activity_feed endpoint correctly supports
+    filtering by category: all, communication, and tool.
+    """
+    # 1. Query all
+    resp_all = client.get("/api/gateway/activity_feed?limit=50&activity_type=all")
+    assert resp_all.status_code == 200
+    items_all = resp_all.json()["items"]
+    assert isinstance(items_all, list)
+
+    # 2. Query communications only
+    resp_comm = client.get("/api/gateway/activity_feed?limit=50&activity_type=communication")
+    assert resp_comm.status_code == 200
+    items_comm = resp_comm.json()["items"]
+    assert isinstance(items_comm, list)
+    for it in items_comm:
+        assert it["category"] == "communication"
+
+    # 3. Query tools only
+    resp_tool = client.get("/api/gateway/activity_feed?limit=50&activity_type=tool")
+    assert resp_tool.status_code == 200
+    items_tool = resp_tool.json()["items"]
+    assert isinstance(items_tool, list)
+    for it in items_tool:
+        assert it["category"] == "tool"
+

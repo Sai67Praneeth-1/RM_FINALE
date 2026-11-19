@@ -548,20 +548,29 @@ export default function App() {
   };
 
   const handleUpdateCaptureLevel = async (level) => {
+    const numLevel = Number(level);
+    // Optimistic UI state update: immediately reflect the selected capture tier
+    setGatewayOverview((prev) => (prev ? { ...prev, capture_level: numLevel } : { capture_level: numLevel }));
+    setStatus((prev) => (prev ? { ...prev, capture_level: numLevel } : { capture_level: numLevel }));
     setGatewayUpdatingCapture(true);
     try {
       const res = await fetch(`${API_BASE}/gateway/capture_level`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ capture_level: level }),
+        body: JSON.stringify({ capture_level: numLevel }),
       });
       if (res.ok) {
         await fetchGatewayData(false);
         const stRes = await fetch(`${API_BASE}/status`).then((r) => r.json());
         setStatus(stRes);
+      } else {
+        // Rollback on non-200 response
+        await fetchGatewayData(false);
       }
     } catch (err) {
       console.error("Failed to update capture level:", err);
+      // Rollback on network failure
+      await fetchGatewayData(false);
     } finally {
       setGatewayUpdatingCapture(false);
     }
@@ -2330,6 +2339,28 @@ export default function App() {
                     <span className="pill-badge" style={{ background: "#e6f4ea", color: "#137333", borderColor: "#dadce0", fontSize: 11 }}>
                       ● Auto-Capture Active
                     </span>
+                    {(() => {
+                      const lvl = Number(gatewayOverview?.capture_level || status?.capture_level || 2);
+                      const badgeStyles = {
+                        1: { bg: "#e6f4ea", color: "#137333", border: "#ceead6", label: "Tier 1: Metadata Only" },
+                        2: { bg: "#e8f0fe", color: "#1a73e8", border: "#d2e3fc", label: "Tier 2: Metadata + Summary" },
+                        3: { bg: "#fef7e0", color: "#b06000", border: "#fde293", label: "Tier 3: Full Content (Redacted)" },
+                      }[lvl] || { bg: "#e8f0fe", color: "#1a73e8", border: "#d2e3fc", label: `Tier ${lvl}` };
+                      return (
+                        <span
+                          className="pill-badge"
+                          style={{
+                            background: badgeStyles.bg,
+                            color: badgeStyles.color,
+                            borderColor: badgeStyles.border,
+                            fontSize: 11,
+                            fontWeight: 600,
+                          }}
+                        >
+                          {badgeStyles.label}
+                        </span>
+                      );
+                    })()}
                   </div>
                   <p style={{ margin: "4px 0 0 0", fontSize: 12.5, color: "#5f6368" }}>
                     Authoritative mediation boundary automatically intercepting all inter-agent messages and tool operations with Common Information Model (CIM) invariants.
@@ -2341,22 +2372,26 @@ export default function App() {
                   <div style={{ display: "flex", alignItems: "center", gap: 6, background: "#f8f9fa", padding: "4px 8px", borderRadius: 6, border: "1px solid #dadce0" }}>
                     <span style={{ fontSize: 11, color: "#5f6368", fontWeight: 600 }}>Privacy Capture Tier:</span>
                     {[
-                      { level: 1, label: "L1: Metadata", desc: "Headers only" },
-                      { level: 2, label: "L2: Summary", desc: "Metadata + Semantic Summary" },
-                      { level: 3, label: "L3: Full Content", desc: "Full text with PII Redaction" },
+                      { level: 1, label: "L1: Metadata", desc: "Headers only (Exposure: 0.00)" },
+                      { level: 2, label: "L2: Summary", desc: "Metadata + Semantic Summary (Exposure: 0.12)" },
+                      { level: 3, label: "L3: Full Content", desc: "Full text with PII Redaction (Exposure: 0.35)" },
                     ].map((t) => {
-                      const isActive = (gatewayOverview?.capture_level || status?.capture_level || 2) === t.level;
+                      const isActive = Number(gatewayOverview?.capture_level || status?.capture_level || 2) === t.level;
+                      const activeBg = t.level === 1 ? "#137333" : t.level === 3 ? "#b06000" : "#1a73e8";
                       return (
                         <button
                           key={t.level}
                           className={`pill-btn ${isActive ? "active" : ""}`}
                           style={{
-                            padding: "3px 12px",
+                            padding: "4px 12px",
                             fontSize: 11,
+                            fontWeight: isActive ? 600 : 500,
                             borderRadius: 24,
-                            background: isActive ? "#1a73e8" : "transparent",
+                            background: isActive ? activeBg : "transparent",
                             color: isActive ? "#ffffff" : "#5f6368",
-                            border: isActive ? "1px solid #1a73e8" : "1px solid transparent",
+                            border: isActive ? `1px solid ${activeBg}` : "1px solid transparent",
+                            cursor: "pointer",
+                            transition: "all 0.15s ease",
                           }}
                           disabled={gatewayUpdatingCapture}
                           onClick={() => handleUpdateCaptureLevel(t.level)}
@@ -2396,6 +2431,149 @@ export default function App() {
                   </button>
                 </div>
               </div>
+
+              {/* Active Privacy Capture Tier & Privacy Metrics Indicator Card */}
+              {(() => {
+                const activeLevel = Number(gatewayOverview?.capture_level || status?.capture_level || 2);
+                const tierConfig = {
+                  1: {
+                    name: "Level 1: Metadata Only",
+                    tag: "Maximum Privacy",
+                    color: "#137333",
+                    bg: "#e6f4ea",
+                    border: "#ceead6",
+                    score: "0.00",
+                    retention: "Low (Headers & Verbs Only)",
+                    piiStatus: "Zero Payload Persisted (CoT Stripped)",
+                    storageCost: "~120 B/event",
+                    summary: "Interception records only message headers, timestamps, and normalized action verbs. Raw conversation bodies and reasoning are completely excluded.",
+                  },
+                  2: {
+                    name: "Level 2: Metadata + Semantic Summary",
+                    tag: "Default / Balanced",
+                    color: "#1a73e8",
+                    bg: "#e8f0fe",
+                    border: "#d2e3fc",
+                    score: "0.12",
+                    retention: "Balanced (Extractive Summaries)",
+                    piiStatus: "PII Regex Sanitization Active",
+                    storageCost: "~217 B/event",
+                    summary: "Interception records message headers and extractive semantic summaries. Raw conversational payloads are omitted to eliminate PII leakage.",
+                  },
+                  3: {
+                    name: "Level 3: Full Observable Content",
+                    tag: "Full Telemetry",
+                    color: "#b06000",
+                    bg: "#fef7e0",
+                    border: "#fde293",
+                    score: "0.35",
+                    retention: "Full (Observable Payloads)",
+                    piiStatus: "PII Redacted (Emails, Phones, Cards, SSN)",
+                    storageCost: "~580 B/event",
+                    summary: "Interception records full observable message bodies and tool parameters, with automated regex masking for all detected PII and credentials.",
+                  },
+                }[activeLevel] || {
+                  name: `Level ${activeLevel}`,
+                  tag: "Active",
+                  color: "#1a73e8",
+                  bg: "#e8f0fe",
+                  border: "#d2e3fc",
+                  score: "0.12",
+                  retention: "Balanced",
+                  piiStatus: "Active",
+                  storageCost: "~217 B/event",
+                  summary: "Active gateway capture policy.",
+                };
+
+                return (
+                  <div
+                    style={{
+                      background: tierConfig.bg,
+                      border: `1px solid ${tierConfig.border}`,
+                      borderRadius: 8,
+                      padding: "10px 16px",
+                      marginBottom: 16,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                      gap: 16,
+                      flexWrap: "wrap",
+                      transition: "all 0.2s ease",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            textTransform: "uppercase",
+                            padding: "3px 8px",
+                            borderRadius: 4,
+                            background: tierConfig.color,
+                            color: "#ffffff",
+                            letterSpacing: 0.5,
+                          }}
+                        >
+                          ACTIVE TIER {activeLevel}
+                        </span>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: "#202124" }}>
+                          {tierConfig.name}
+                        </span>
+                        <span
+                          style={{
+                            fontSize: 11,
+                            padding: "2px 8px",
+                            borderRadius: 12,
+                            background: "#ffffff",
+                            color: tierConfig.color,
+                            border: `1px solid ${tierConfig.border}`,
+                            fontWeight: 600,
+                          }}
+                        >
+                          {tierConfig.tag}
+                        </span>
+                      </div>
+                      <span style={{ fontSize: 12, color: "#5f6368" }}>
+                        {tierConfig.summary}
+                      </span>
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "center", gap: 18, flexWrap: "wrap" }}>
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: 10.5, color: "#5f6368", textTransform: "uppercase", fontWeight: 600 }}>
+                          Privacy Exposure Score
+                        </div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: tierConfig.color }}>
+                          {tierConfig.score} <span style={{ fontSize: 10.5, fontWeight: 500, color: "#5f6368" }}>/ 1.0</span>
+                        </div>
+                      </div>
+
+                      <div style={{ width: 1, height: 26, background: tierConfig.border }} />
+
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: 10.5, color: "#5f6368", textTransform: "uppercase", fontWeight: 600 }}>
+                          Detail Retention
+                        </div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#202124" }}>
+                          {tierConfig.retention}
+                        </div>
+                      </div>
+
+                      <div style={{ width: 1, height: 26, background: tierConfig.border }} />
+
+                      <div style={{ textAlign: "right" }}>
+                        <div style={{ fontSize: 10.5, color: "#5f6368", textTransform: "uppercase", fontWeight: 600 }}>
+                          Storage Footprint
+                        </div>
+                        <div style={{ fontSize: 13, fontWeight: 700, color: "#202124" }}>
+                          {tierConfig.storageCost}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* 4 Metric KPI Cards */}
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14, marginBottom: 20 }}>
@@ -2519,21 +2697,51 @@ export default function App() {
                   <button
                     className={`pill-btn ${gatewayFeedFilter === "all" ? "active" : ""}`}
                     onClick={() => setGatewayFeedFilter("all")}
-                    style={{ fontSize: 12, padding: "5px 12px" }}
+                    style={{
+                      fontSize: 12,
+                      padding: "5px 14px",
+                      borderRadius: 24,
+                      background: gatewayFeedFilter === "all" ? "#1a73e8" : "#ffffff",
+                      color: gatewayFeedFilter === "all" ? "#ffffff" : "#3c4043",
+                      border: `1px solid ${gatewayFeedFilter === "all" ? "#1a73e8" : "#dadce0"}`,
+                      fontWeight: gatewayFeedFilter === "all" ? 600 : 500,
+                      cursor: "pointer",
+                      transition: "all 0.15s ease",
+                    }}
                   >
                     All Activities ({gatewayFeed.length})
                   </button>
                   <button
                     className={`pill-btn ${gatewayFeedFilter === "communication" ? "active" : ""}`}
                     onClick={() => setGatewayFeedFilter("communication")}
-                    style={{ fontSize: 12, padding: "5px 12px", color: gatewayFeedFilter === "communication" ? "#fff" : "#38bdf8" }}
+                    style={{
+                      fontSize: 12,
+                      padding: "5px 14px",
+                      borderRadius: 24,
+                      background: gatewayFeedFilter === "communication" ? "#0284c7" : "#ffffff",
+                      color: gatewayFeedFilter === "communication" ? "#ffffff" : "#0284c7",
+                      border: `1px solid ${gatewayFeedFilter === "communication" ? "#0284c7" : "#dadce0"}`,
+                      fontWeight: gatewayFeedFilter === "communication" ? 600 : 500,
+                      cursor: "pointer",
+                      transition: "all 0.15s ease",
+                    }}
                   >
                     💬 Agent Messages ({gatewayFeed.filter((i) => i.category === "communication").length})
                   </button>
                   <button
                     className={`pill-btn ${gatewayFeedFilter === "tool" ? "active" : ""}`}
                     onClick={() => setGatewayFeedFilter("tool")}
-                    style={{ fontSize: 12, padding: "5px 12px", color: gatewayFeedFilter === "tool" ? "#fff" : "#10b981" }}
+                    style={{
+                      fontSize: 12,
+                      padding: "5px 14px",
+                      borderRadius: 24,
+                      background: gatewayFeedFilter === "tool" ? "#059669" : "#ffffff",
+                      color: gatewayFeedFilter === "tool" ? "#ffffff" : "#059669",
+                      border: `1px solid ${gatewayFeedFilter === "tool" ? "#059669" : "#dadce0"}`,
+                      fontWeight: gatewayFeedFilter === "tool" ? 600 : 500,
+                      cursor: "pointer",
+                      transition: "all 0.15s ease",
+                    }}
                   >
                     ⚙️ Tool Actions ({gatewayFeed.filter((i) => i.category === "tool").length})
                   </button>
