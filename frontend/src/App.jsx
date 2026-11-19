@@ -259,6 +259,8 @@ export default function App() {
   const [isLiveSync, setIsLiveSync] = useState(true);
   const [eventsLoading, setEventsLoading] = useState(false);
   const [inspectedEvent, setInspectedEvent] = useState(null);
+  const [eventViewMode, setEventViewMode] = useState("grouped"); // "grouped" | "flat"
+  const [expandedCapturedContent, setExpandedCapturedContent] = useState({});
 
   // Tab 3: Observability Gateway State
   const [gatewayOverview, setGatewayOverview] = useState(null);
@@ -940,6 +942,8 @@ export default function App() {
       const strDelegation = String(ev.delegation_id || "").toLowerCase();
       const strWf = String(ev.workflow_id || "").toLowerCase();
       const strSummary = String(ev.output_summary || ev.tool_operation || "").toLowerCase();
+      const strPrompt = String(ev.prompt || "").toLowerCase();
+      const strChatTitle = String(ev.chat_title || "").toLowerCase();
       return (
         strId.includes(q) ||
         strAgent.includes(q) ||
@@ -950,10 +954,41 @@ export default function App() {
         strDelegation.includes(q) ||
         strWf.includes(q) ||
         strSummary.includes(q) ||
+        strPrompt.includes(q) ||
+        strChatTitle.includes(q) ||
         JSON.stringify(ev).toLowerCase().includes(q)
       );
     });
   }, [eventsList, eventFilter]);
+
+  const promptGroups = useMemo(() => {
+    const groups = [];
+    const map = new Map();
+
+    filteredEvents.forEach((ev) => {
+      const promptText = ev.prompt || ev.workflow_task || (ev.workflow_id ? `Workflow ${ev.workflow_id}` : "System Task / Direct Event");
+      const key = `${ev.chat_id || "global"}_${ev.workflow_id || promptText}`;
+      if (!map.has(key)) {
+        const groupObj = {
+          key,
+          prompt: promptText,
+          chat_id: ev.chat_id || null,
+          chat_title: ev.chat_title || (ev.chat_id ? `Chat ${ev.chat_id.substring(0, 8)}` : null),
+          turn_index: ev.turn_index || null,
+          workflow_id: ev.workflow_id || null,
+          timestamp: ev.time || ev.timestamp || null,
+          assistant_response: ev.assistant_response || null,
+          workflow_output: ev.workflow_output || null,
+          events: []
+        };
+        map.set(key, groupObj);
+        groups.push(groupObj);
+      }
+      map.get(key).events.push(ev);
+    });
+
+    return groups;
+  }, [filteredEvents]);
 
   // Voice Command (Web Speech API)
   const handleVoiceCommand = () => {
@@ -4295,8 +4330,58 @@ export default function App() {
                   </p>
                 </div>
 
-                {/* Live Sync & Quick Actions */}
+                {/* Live Sync, View Mode & Quick Actions */}
                 <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 10 }}>
+                  {/* View Mode Toggle: Group by Prompt vs Flat Stream */}
+                  <div style={{ display: "flex", alignItems: "center", background: "#f1f3f4", padding: 3, borderRadius: 20 }}>
+                    <button
+                      type="button"
+                      onClick={() => setEventViewMode("grouped")}
+                      style={{
+                        padding: "5px 12px",
+                        borderRadius: 16,
+                        border: "none",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 5,
+                        background: eventViewMode === "grouped" ? "#ffffff" : "transparent",
+                        color: eventViewMode === "grouped" ? "#1a73e8" : "#5f6368",
+                        boxShadow: eventViewMode === "grouped" ? "0 1px 3px rgba(0,0,0,0.12)" : "none",
+                        transition: "all 0.15s ease"
+                      }}
+                      title="Organize telemetry by user message/prompt turn with captured content"
+                    >
+                      <Layers size={13} />
+                      <span>Group by Prompt</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEventViewMode("flat")}
+                      style={{
+                        padding: "5px 12px",
+                        borderRadius: 16,
+                        border: "none",
+                        fontSize: 12,
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 5,
+                        background: eventViewMode === "flat" ? "#ffffff" : "transparent",
+                        color: eventViewMode === "flat" ? "#1a73e8" : "#5f6368",
+                        boxShadow: eventViewMode === "flat" ? "0 1px 3px rgba(0,0,0,0.12)" : "none",
+                        transition: "all 0.15s ease"
+                      }}
+                      title="View standard chronological event stream table with prompt attribution"
+                    >
+                      <Activity size={13} />
+                      <span>Flat Event Stream</span>
+                    </button>
+                  </div>
+
                   <button
                     className="pill-btn"
                     onClick={() => setIsLiveSync(!isLiveSync)}
@@ -4356,7 +4441,7 @@ export default function App() {
                         borderRadius: 20,
                         color: "#202124",
                         fontSize: 12.5,
-                        maxWidth: 340,
+                        maxWidth: 360,
                         fontWeight: 500,
                         outline: "none",
                         cursor: "pointer"
@@ -4402,7 +4487,7 @@ export default function App() {
                     <Search size={14} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#5f6368" }} />
                     <input
                       type="text"
-                      placeholder="Search ID, agent, verb, resource, output..."
+                      placeholder="Search prompt, agent, verb, resource..."
                       value={eventFilter}
                       onChange={(e) => setEventFilter(e.target.value)}
                       style={{
@@ -4443,7 +4528,7 @@ export default function App() {
                 </div>
 
                 <div style={{ fontSize: 12, color: "#5f6368", display: "flex", alignItems: "center", gap: 6 }}>
-                  <span>Showing <strong style={{ color: "#1a73e8" }}>{filteredEvents.length}</strong> of {eventsList.length} events</span>
+                  <span>Showing <strong style={{ color: "#1a73e8" }}>{filteredEvents.length}</strong> events across <strong style={{ color: "#1a73e8" }}>{promptGroups.length}</strong> prompt{promptGroups.length !== 1 ? "s" : ""}</span>
                   {eventFilter && (
                     <span style={{ color: "#e37400", fontWeight: 500 }}>
                       (matching "{eventFilter}")
@@ -4452,68 +4537,352 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Responsive Table */}
-              <div style={{ maxHeight: 580, overflowY: "auto", overflowX: "auto" }}>
-                <table style={{ width: "100%", fontSize: 12.5, borderCollapse: "collapse" }}>
-                  <thead>
-                    <tr style={{ borderBottom: "1px solid #dadce0", textAlign: "left", background: "#f8f9fa" }}>
-                      <th style={{ padding: "10px 8px" }}>Timestamp</th>
-                      <th style={{ padding: "10px 8px" }}>Event ID</th>
-                      <th style={{ padding: "10px 8px" }}>Agent</th>
-                      <th style={{ padding: "10px 8px" }}>CIM Action</th>
-                      <th style={{ padding: "10px 8px" }}>Resource</th>
-                      <th style={{ padding: "10px 8px" }}>Sensitivity</th>
-                      <th style={{ padding: "10px 8px" }}>Outcome</th>
-                      <th style={{ padding: "10px 8px" }}>Delegation Token</th>
-                      <th style={{ padding: "10px 8px", textAlign: "right" }}>Inspect</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {eventsLoading ? (
-                      <tr>
-                        <td colSpan={9} style={{ textAlign: "center", padding: "36px 16px", color: "#5f6368" }}>
-                          <RefreshCw size={16} className="spin-icon" style={{ display: "inline-block", verticalAlign: "middle", marginRight: 8 }} />
-                          <span>Loading database events...</span>
-                        </td>
-                      </tr>
-                    ) : filteredEvents.length === 0 ? (
-                      <tr>
-                        <td colSpan={9} style={{ textAlign: "center", padding: "40px 16px", color: "#5f6368" }}>
-                          <div style={{ fontSize: 13.5, fontWeight: 600, color: "#202124", marginBottom: 6 }}>
-                            {eventFilter ? `No events match "${eventFilter}"` : "No events recorded in this scope"}
+              {/* Main Content: Grouped by Prompt vs Flat Event Stream */}
+              {eventsLoading ? (
+                <div style={{ textAlign: "center", padding: "48px 16px", color: "#5f6368", background: "#f8f9fa", borderRadius: 8 }}>
+                  <RefreshCw size={20} className="spin-icon" style={{ display: "inline-block", verticalAlign: "middle", marginRight: 8 }} />
+                  <span style={{ fontSize: 13.5, fontWeight: 500 }}>Loading captured database events...</span>
+                </div>
+              ) : filteredEvents.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "44px 16px", color: "#5f6368", background: "#f8f9fa", borderRadius: 8 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: "#202124", marginBottom: 6 }}>
+                    {eventFilter ? `No events match "${eventFilter}"` : "No events recorded in this scope"}
+                  </div>
+                  <div style={{ fontSize: 12.5, color: "#5f6368", marginBottom: 12 }}>
+                    {eventFilter
+                      ? "Try searching for a different prompt keyword, agent name, or action verb."
+                      : selectedEventScope !== "all"
+                      ? "This chat or workflow has not produced execution events yet, or events were pruned."
+                      : "No Common Information Model (CIM) events currently exist in the database."}
+                  </div>
+                  {eventFilter ? (
+                    <button
+                      className="pill-btn"
+                      onClick={() => setEventFilter("")}
+                      style={{ padding: "6px 16px", fontSize: 12, cursor: "pointer" }}
+                    >
+                      Clear Search
+                    </button>
+                  ) : selectedEventScope !== "all" ? (
+                    <button
+                      className="pill-btn"
+                      onClick={() => {
+                        setSelectedEventScope("all");
+                        navigate("/events", { replace: true });
+                        fetchEvents("all");
+                      }}
+                      style={{ padding: "6px 16px", fontSize: 12, cursor: "pointer" }}
+                    >
+                      Switch to Global System Scope
+                    </button>
+                  ) : null}
+                </div>
+              ) : eventViewMode === "grouped" ? (
+                /* Grouped by Prompt View */
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  {promptGroups.map((group, gIdx) => {
+                    const isContentExpanded = Boolean(expandedCapturedContent[group.key]);
+                    return (
+                      <div
+                        key={group.key || gIdx}
+                        style={{
+                          border: "1px solid #dadce0",
+                          borderRadius: 12,
+                          background: "#ffffff",
+                          overflow: "hidden",
+                          boxShadow: "0 1px 4px rgba(60,64,67,0.06)"
+                        }}
+                      >
+                        {/* Prompt Card Header Banner */}
+                        <div
+                          style={{
+                            padding: "12px 16px",
+                            background: "#f8fafd",
+                            borderBottom: "1px solid #e8eaed",
+                            display: "flex",
+                            flexWrap: "wrap",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            gap: 10
+                          }}
+                        >
+                          <div style={{ flex: 1, minWidth: 280 }}>
+                            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                              <span style={{
+                                background: "#e8f0fe",
+                                color: "#1a73e8",
+                                padding: "2px 8px",
+                                borderRadius: 12,
+                                fontSize: 11,
+                                fontWeight: 700,
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 4
+                              }}>
+                                <MessageSquare size={11} />
+                                {group.turn_index ? `Prompt Turn #${group.turn_index}` : "User Prompt"}
+                              </span>
+
+                              {group.chat_title && (
+                                <span style={{
+                                  background: "#f1f3f4",
+                                  color: "#3c4043",
+                                  padding: "2px 8px",
+                                  borderRadius: 12,
+                                  fontSize: 11,
+                                  fontWeight: 600
+                                }}>
+                                  💬 {group.chat_title}
+                                </span>
+                              )}
+
+                              {group.workflow_id && (
+                                <span style={{
+                                  background: "#fef7e0",
+                                  color: "#b06000",
+                                  padding: "2px 8px",
+                                  borderRadius: 12,
+                                  fontSize: 11,
+                                  fontFamily: "monospace",
+                                  fontWeight: 600
+                                }}>
+                                  ⚡ {group.workflow_id}
+                                </span>
+                              )}
+
+                              {group.timestamp && (
+                                <span style={{ fontSize: 11, color: "#5f6368" }}>
+                                  {new Date(group.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                                </span>
+                              )}
+                            </div>
+
+                            <div style={{
+                              fontSize: 13.5,
+                              fontWeight: 600,
+                              color: "#202124",
+                              lineHeight: 1.4,
+                              marginTop: 2
+                            }}>
+                              "{group.prompt}"
+                            </div>
                           </div>
-                          <div style={{ fontSize: 12, color: "#5f6368", marginBottom: 12 }}>
-                            {eventFilter
-                              ? "Try searching for a different agent, action verb, or resource name."
-                              : selectedEventScope !== "all"
-                              ? "This chat or workflow has not produced execution events yet, or events were pruned."
-                              : "No Common Information Model (CIM) events currently exist in the database."}
+
+                          {/* Right Action Buttons */}
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <span style={{
+                              padding: "3px 9px",
+                              background: "#e6f4ea",
+                              color: "#137333",
+                              borderRadius: 12,
+                              fontSize: 11.5,
+                              fontWeight: 600
+                            }}>
+                              {group.events.length} Event{group.events.length !== 1 ? "s" : ""}
+                            </span>
+
+                            {(group.assistant_response || group.workflow_output) && (
+                              <button
+                                type="button"
+                                className="pill-btn"
+                                onClick={() => {
+                                  setExpandedCapturedContent((prev) => ({
+                                    ...prev,
+                                    [group.key]: !prev[group.key]
+                                  }));
+                                }}
+                                style={{
+                                  padding: "4px 10px",
+                                  fontSize: 11.5,
+                                  borderRadius: 16,
+                                  background: isContentExpanded ? "#e8f0fe" : "#ffffff",
+                                  borderColor: isContentExpanded ? "#1a73e8" : "#dadce0",
+                                  color: isContentExpanded ? "#1a73e8" : "#5f6368",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: 4,
+                                  cursor: "pointer"
+                                }}
+                              >
+                                <FileText size={12} />
+                                <span>{isContentExpanded ? "Hide Captured Content" : "View Captured Content"}</span>
+                                {isContentExpanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                              </button>
+                            )}
                           </div>
-                          {eventFilter ? (
-                            <button
-                              className="pill-btn"
-                              onClick={() => setEventFilter("")}
-                              style={{ padding: "5px 14px", fontSize: 12, cursor: "pointer" }}
-                            >
-                              Clear Search
-                            </button>
-                          ) : selectedEventScope !== "all" ? (
-                            <button
-                              className="pill-btn"
-                              onClick={() => {
-                                setSelectedEventScope("all");
-                                navigate("/events", { replace: true });
-                                fetchEvents("all");
-                              }}
-                              style={{ padding: "5px 14px", fontSize: 12, cursor: "pointer" }}
-                            >
-                              Switch to Global System Scope
-                            </button>
-                          ) : null}
-                        </td>
+                        </div>
+
+                        {/* Captured Content Drawer (Accordion) */}
+                        {isContentExpanded && (
+                          <div style={{
+                            padding: "14px 16px",
+                            background: "#fdfdfd",
+                            borderBottom: "1px solid #e8eaed",
+                            display: "grid",
+                            gridTemplateColumns: group.workflow_output ? "1fr 1fr" : "1fr",
+                            gap: 14
+                          }}>
+                            {group.assistant_response && (
+                              <div style={{ background: "#ffffff", border: "1px solid #e0e0e0", borderRadius: 8, padding: 12 }}>
+                                <div style={{ fontSize: 11.5, fontWeight: 700, color: "#1a73e8", marginBottom: 6, display: "flex", alignItems: "center", gap: 5 }}>
+                                  <Bot size={13} />
+                                  <span>Synthesized AI Response for this Prompt</span>
+                                </div>
+                                <div style={{ fontSize: 12.5, color: "#202124", maxHeight: 160, overflowY: "auto", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>
+                                  {group.assistant_response}
+                                </div>
+                              </div>
+                            )}
+
+                            {group.workflow_output && (
+                              <div style={{ background: "#ffffff", border: "1px solid #e0e0e0", borderRadius: 8, padding: 12 }}>
+                                <div style={{ fontSize: 11.5, fontWeight: 700, color: "#137333", marginBottom: 6, display: "flex", alignItems: "center", gap: 5 }}>
+                                  <Activity size={13} />
+                                  <span>Agent Analytical Findings & Report</span>
+                                </div>
+                                <div style={{ fontSize: 12, color: "#3c4043", maxHeight: 160, overflowY: "auto", whiteSpace: "pre-wrap", lineHeight: 1.45, fontFamily: "monospace" }}>
+                                  {group.workflow_output}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Nested Events Table for this prompt */}
+                        <div style={{ overflowX: "auto" }}>
+                          <table style={{ width: "100%", fontSize: 12.5, borderCollapse: "collapse" }}>
+                            <thead>
+                              <tr style={{ borderBottom: "1px solid #e8eaed", textAlign: "left", background: "#fbfbfc" }}>
+                                <th style={{ padding: "8px 10px", fontSize: 11.5, color: "#5f6368" }}>Timestamp</th>
+                                <th style={{ padding: "8px 10px", fontSize: 11.5, color: "#5f6368" }}>Event ID</th>
+                                <th style={{ padding: "8px 10px", fontSize: 11.5, color: "#5f6368" }}>Agent</th>
+                                <th style={{ padding: "8px 10px", fontSize: 11.5, color: "#5f6368" }}>CIM Action</th>
+                                <th style={{ padding: "8px 10px", fontSize: 11.5, color: "#5f6368" }}>Resource</th>
+                                <th style={{ padding: "8px 10px", fontSize: 11.5, color: "#5f6368" }}>Sensitivity</th>
+                                <th style={{ padding: "8px 10px", fontSize: 11.5, color: "#5f6368" }}>Outcome</th>
+                                <th style={{ padding: "8px 10px", fontSize: 11.5, color: "#5f6368" }}>Delegation Token</th>
+                                <th style={{ padding: "8px 10px", fontSize: 11.5, color: "#5f6368", textAlign: "right" }}>Inspect</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {group.events.map((ev) => {
+                                const sensitivity = ev.sensitivity_label || ev.sensitivity || "internal";
+                                const sensColor =
+                                  sensitivity === "public"
+                                    ? "#60a5fa"
+                                    : sensitivity === "pii_masked"
+                                    ? "#c084fc"
+                                    : sensitivity === "confidential"
+                                    ? "#f59e0b"
+                                    : "#34d399";
+                                return (
+                                  <tr key={ev.event_id} style={{ borderBottom: "1px solid #f1f3f4" }}>
+                                    <td style={{ padding: "8px 10px", color: "#5f6368", whiteSpace: "nowrap" }}>
+                                      {ev.time || ev.timestamp ? new Date(ev.time || ev.timestamp).toLocaleTimeString([], { hour12: false }) : "-"}
+                                    </td>
+                                    <td style={{ padding: "8px 10px" }}>
+                                      <code style={{ color: "#1a73e8" }}>{ev.event_id}</code>
+                                    </td>
+                                    <td style={{ padding: "8px 10px" }}>
+                                      <span style={{
+                                        padding: "2px 7px",
+                                        borderRadius: 4,
+                                        fontSize: 11.5,
+                                        fontWeight: 600,
+                                        background: ev.agent_id?.includes("analyst")
+                                          ? "rgba(168, 85, 247, 0.15)"
+                                          : ev.agent_id?.includes("reporter")
+                                          ? "rgba(245, 158, 11, 0.15)"
+                                          : "rgba(59, 130, 246, 0.15)",
+                                        color: ev.agent_id?.includes("analyst")
+                                          ? "#c084fc"
+                                          : ev.agent_id?.includes("reporter")
+                                          ? "#fbbf24"
+                                          : "#60a5fa"
+                                      }}>
+                                        {ev.agent_id}
+                                      </span>
+                                    </td>
+                                    <td style={{ padding: "8px 10px" }}>
+                                      <code style={{
+                                        color: "#137333",
+                                        background: "#e6f4ea",
+                                        padding: "2px 6px",
+                                        borderRadius: 4
+                                      }}>
+                                        {ev.action_semantic || ev.tool_operation || "execute"}
+                                      </code>
+                                    </td>
+                                    <td style={{ padding: "8px 10px", color: "#202124" }}>
+                                      {ev.resource_id || ev.resource_type || ev.tool_name || "-"}
+                                    </td>
+                                    <td style={{ padding: "8px 10px" }}>
+                                      <span style={{
+                                        padding: "2px 6px",
+                                        borderRadius: 4,
+                                        fontSize: 11,
+                                        fontWeight: 600,
+                                        border: `1px solid ${sensColor}`,
+                                        color: sensColor
+                                      }}>
+                                        {sensitivity}
+                                      </span>
+                                    </td>
+                                    <td style={{ padding: "8px 10px" }}>
+                                      {ev.action_outcome === "success" || !ev.action_outcome ? (
+                                        <span style={{ color: "#137333", fontSize: 11.5, display: "flex", alignItems: "center", gap: 3 }}>
+                                          <CheckCircle2 size={12} />
+                                          <span>Success</span>
+                                        </span>
+                                      ) : (
+                                        <span style={{ color: "#d93025", fontSize: 11.5, display: "flex", alignItems: "center", gap: 3 }}>
+                                          <AlertTriangle size={12} />
+                                          <span>{ev.action_outcome}</span>
+                                        </span>
+                                      )}
+                                    </td>
+                                    <td style={{ padding: "8px 10px" }}>
+                                      <code style={{ color: "#5f6368" }}>{ev.delegation_id || "-"}</code>
+                                    </td>
+                                    <td style={{ padding: "8px 10px", textAlign: "right" }}>
+                                      <button
+                                        className="pill-btn"
+                                        style={{ padding: "3px 10px", fontSize: 11, borderRadius: 20, background: "#ffffff", border: "1px solid #dadce0", color: "#1a73e8", cursor: "pointer" }}
+                                        onClick={() => setInspectedEvent(ev)}
+                                      >
+                                        View CIM
+                                      </button>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                /* Flat Event Stream View with Prompt Column */
+                <div style={{ maxHeight: 600, overflowY: "auto", overflowX: "auto" }}>
+                  <table style={{ width: "100%", fontSize: 12.5, borderCollapse: "collapse" }}>
+                    <thead>
+                      <tr style={{ borderBottom: "1px solid #dadce0", textAlign: "left", background: "#f8f9fa" }}>
+                        <th style={{ padding: "10px 8px" }}>Timestamp</th>
+                        <th style={{ padding: "10px 8px", minWidth: 160 }}>Originating Prompt / Context</th>
+                        <th style={{ padding: "10px 8px" }}>Event ID</th>
+                        <th style={{ padding: "10px 8px" }}>Agent</th>
+                        <th style={{ padding: "10px 8px" }}>CIM Action</th>
+                        <th style={{ padding: "10px 8px" }}>Resource</th>
+                        <th style={{ padding: "10px 8px" }}>Sensitivity</th>
+                        <th style={{ padding: "10px 8px" }}>Outcome</th>
+                        <th style={{ padding: "10px 8px" }}>Delegation Token</th>
+                        <th style={{ padding: "10px 8px", textAlign: "right" }}>Inspect</th>
                       </tr>
-                    ) : (
-                      filteredEvents.slice(0, 100).map((ev) => {
+                    </thead>
+                    <tbody>
+                      {filteredEvents.slice(0, 150).map((ev) => {
                         const sensitivity = ev.sensitivity_label || ev.sensitivity || "internal";
                         const sensColor =
                           sensitivity === "public"
@@ -4526,7 +4895,30 @@ export default function App() {
                         return (
                           <tr key={ev.event_id} style={{ borderBottom: "1px solid #dadce0" }}>
                             <td style={{ padding: "10px 8px", color: "#5f6368", whiteSpace: "nowrap" }}>
-                              {ev.time ? new Date(ev.time).toLocaleTimeString([], { hour12: false }) : "-"}
+                              {ev.time || ev.timestamp ? new Date(ev.time || ev.timestamp).toLocaleTimeString([], { hour12: false }) : "-"}
+                            </td>
+                            <td style={{ padding: "10px 8px", maxWidth: 220 }}>
+                              <span
+                                title={`Prompt: "${ev.prompt || 'System Task'}" (Click to search)`}
+                                style={{
+                                  display: "inline-block",
+                                  maxWidth: "100%",
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                  padding: "2px 8px",
+                                  borderRadius: 12,
+                                  fontSize: 11.5,
+                                  fontWeight: 500,
+                                  background: "#e8f0fe",
+                                  color: "#1a73e8",
+                                  border: "1px solid #d2e3fc",
+                                  cursor: "pointer"
+                                }}
+                                onClick={() => setEventFilter(ev.prompt || "")}
+                              >
+                                💬 {ev.prompt || "System Task"}
+                              </span>
                             </td>
                             <td style={{ padding: "10px 8px" }}>
                               <code style={{ color: "#1a73e8" }}>{ev.event_id}</code>
@@ -4603,11 +4995,11 @@ export default function App() {
                             </td>
                           </tr>
                         );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
 
             {/* CIM Event Detailed Inspection Modal / Side Drawer */}
@@ -4644,8 +5036,38 @@ export default function App() {
                 </div>
 
                 <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column", gap: 12 }}>
+                  {/* Originating Prompt Context Card */}
+                  {inspectedEvent.prompt && (
+                    <div style={{
+                      background: "#e8f0fe",
+                      border: "1px solid #d2e3fc",
+                      borderRadius: 8,
+                      padding: "10px 14px"
+                    }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: "#1a73e8", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4, display: "flex", alignItems: "center", gap: 5 }}>
+                        <MessageSquare size={12} />
+                        <span>Originating Prompt / Chat Turn</span>
+                      </div>
+                      <div style={{ fontSize: 13, color: "#202124", fontWeight: 600, lineHeight: 1.4 }}>
+                        "{inspectedEvent.prompt}"
+                      </div>
+                      {(inspectedEvent.chat_title || inspectedEvent.turn_index) && (
+                        <div style={{ fontSize: 11.5, color: "#5f6368", marginTop: 4, display: "flex", alignItems: "center", gap: 8 }}>
+                          {inspectedEvent.chat_title && <span>Chat: <strong>{inspectedEvent.chat_title}</strong></span>}
+                          {inspectedEvent.turn_index && <span>• Turn #{inspectedEvent.turn_index}</span>}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div style={{ background: "#f8f9fa", padding: 12, borderRadius: 6, fontSize: 12.5 }}>
                     <div style={{ display: "grid", gridTemplateColumns: "110px 1fr", rowGap: 6 }}>
+                      {inspectedEvent.prompt && (
+                        <>
+                          <span style={{ color: "#5f6368" }}>Prompt:</span>
+                          <span style={{ color: "#1a73e8", fontWeight: 500 }}>{inspectedEvent.prompt}</span>
+                        </>
+                      )}
                       <span style={{ color: "#5f6368" }}>Agent:</span>
                       <strong style={{ color: "#202124" }}>{inspectedEvent.agent_id}</strong>
                       <span style={{ color: "#5f6368" }}>Operation:</span>

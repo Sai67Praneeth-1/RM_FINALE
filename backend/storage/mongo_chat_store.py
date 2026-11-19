@@ -476,6 +476,40 @@ class MongoChatStore:
             except Exception:
                 existing = None
 
+        # Extract prompt and turn index from existing conversation
+        prompt_text = (workflow_run.get("task_description") if workflow_run else None)
+        turn_idx = 1
+        chat_title = existing.get("title", "Investigation") if existing else "Investigation"
+        if existing:
+            msgs = existing.get("messages", [])
+            user_count = 0
+            for idx, m in enumerate(msgs):
+                if m.get("role") == "user":
+                    user_count += 1
+                elif m.get("role") == "assistant" and (m.get("workflow_id") == workflow_id):
+                    turn_idx = user_count
+                    if idx > 0 and msgs[idx - 1].get("role") == "user" and not prompt_text:
+                        prompt_text = msgs[idx - 1].get("content")
+                    break
+
+        if not prompt_text and existing:
+            for m in reversed(existing.get("messages", [])):
+                if m.get("role") == "user":
+                    prompt_text = m.get("content")
+                    break
+
+        # Enrich events in-place with prompt attribution
+        if events:
+            for ev in events:
+                if not ev.get("prompt") and prompt_text:
+                    ev["prompt"] = prompt_text
+                if not ev.get("chat_title"):
+                    ev["chat_title"] = chat_title
+                if not ev.get("chat_id"):
+                    ev["chat_id"] = chat_id
+                if not ev.get("turn_index"):
+                    ev["turn_index"] = turn_idx
+
         if existing:
             msgs = existing.get("messages", [])
             target_msg = None
@@ -620,26 +654,184 @@ class MongoChatStore:
             "provenance_stored": bool(provenance)
         }
 
+    def find_chat_by_workflow_id(self, workflow_id: str) -> Optional[Dict[str, Any]]:
+        """Finds the chat document containing the given workflow_id."""
+        if not workflow_id:
+            return None
+        # Check in memory
+        for c in self._in_memory_chats.values():
+            for m in c.get("messages", []):
+                if m.get("workflow_id") == workflow_id or m.get("metadata", {}).get("workflow_id") == workflow_id:
+                    return c
+                if isinstance(m.get("workflow_run"), dict) and m["workflow_run"].get("workflow_id") == workflow_id:
+                    return c
+        # Check in MongoDB
+        if self.is_connected() and self._collection is not None:
+            try:
+                doc = self._collection.find_one({
+                    "$or": [
+                        {"messages.workflow_id": workflow_id},
+                        {"messages.metadata.workflow_id": workflow_id},
+                        {"messages.workflow_run.workflow_id": workflow_id}
+                    ]
+                }, {"_id": 0})
+                if doc:
+                    return doc
+            except Exception:
+                pass
+        return None
+
     def get_chat_events(self, chat_id: str, limit: int = 500) -> List[Dict[str, Any]]:
-        """Returns execution events belonging to a chat, from MongoDB or in-memory cache."""
+        """Returns execution events belonging to a chat, enriched with prompt and chat context."""
+        chat = self.get_chat(chat_id)
+        chat_title = chat.get("title", "Investigation") if chat else "Investigation"
+
+        # Build prompt and workflow turn metadata map from chat messages
+        wf_meta: Dict[str, Dict[str, Any]] = {}
+        if chat:
+            current_prompt = None
+            turn_idx = 0
+            for m in chat.get("messages", []):
+                if m.get("role") == "user":
+                    current_prompt = (m.get("content") or "").strip()
+                    turn_idx += 1
+                elif m.get("role") == "assistant":
+                    wf_id = m.get("workflow_id") or m.get("metadata", {}).get("workflow_id")
+                    if not wf_id and isinstance(m.get("workflow_run"), dict):
+                        wf_id = m["workflow_run"].get("workflow_id")
+                    if wf_id:
+                        wf_meta[wf_id] = {
+                            "prompt": current_prompt or m.get("workflow_run", {}).get("task_description") or "",
+                            "turn_index": turn_idx,
+                            "chat_id": chat_id,
+                            "chat_title": chat_title,
+                            "assistant_response": m.get("content", ""),
+                            "workflow_output": m.get("final_output") or m.get("workflow_run", {}).get("final_output", "")
+                        }
+
+        events: List[Dict[str, Any]] = []
         if self.is_connected() and self._events_col is not None:
             try:
                 events = list(self._events_col.find(
                     {"chat_id": chat_id},
                     {"_id": 0}
                 ).sort("timestamp", 1).limit(limit))
-                if events:
-                    return events
             except Exception:
                 pass
 
-        chat = self._in_memory_chats.get(chat_id)
-        if chat:
-            for m in reversed(chat.get("messages", [])):
-                evs = m.get("execution_events") or m.get("metadata", {}).get("execution_events")
-                if evs:
-                    return evs[:limit]
-        return []
+        if not events and chat:
+            for m in chat.get("messages", []):
+                if m.get("role") == "assistant":
+                    evs = m.get("execution_events") or m.get("metadata", {}).get("execution_events") or []
+                    events.extend(evs)
+
+        # Enrich each event with prompt, chat_id, chat_title, and turn_index
+        enriched_events: List[Dict[str, Any]] = []
+        for ev in events:
+            ev_dict = dict(ev)
+            wf_id = ev_dict.get("workflow_id")
+            meta = wf_meta.get(wf_id, {})
+            ev_dict["chat_id"] = chat_id
+            ev_dict["chat_title"] = chat_title
+            ev_dict["prompt"] = ev_dict.get("prompt") or meta.get("prompt") or "Chat Workflow Task"
+            ev_dict["turn_index"] = ev_dict.get("turn_index") or meta.get("turn_index", 1)
+            ev_dict["assistant_response"] = meta.get("assistant_response", "")
+            ev_dict["workflow_output"] = meta.get("workflow_output", "")
+            if not ev_dict.get("time") and ev_dict.get("timestamp"):
+                ev_dict["time"] = ev_dict["timestamp"]
+            enriched_events.append(ev_dict)
+
+        return enriched_events[:limit]
+
+    def get_chat_prompts_and_events(self, chat_id: str) -> List[Dict[str, Any]]:
+        """
+        Returns an ordered list of prompt/turn records for this chat session,
+        each bundling the original user prompt, timestamp, assistant response,
+        the workflow run, and all captured execution events, delegations, and interactions.
+        """
+        chat = self.get_chat(chat_id)
+        if not chat:
+            return []
+
+        turns: List[Dict[str, Any]] = []
+        messages = chat.get("messages", [])
+        turn_counter = 0
+
+        i = 0
+        while i < len(messages):
+            m = messages[i]
+            if m.get("role") == "user":
+                turn_counter += 1
+                user_prompt = m.get("content", "")
+                user_time = m.get("timestamp", "")
+                prompt_id = m.get("id", str(uuid.uuid4()))
+
+                # Look for matching assistant response
+                asst_msg = None
+                if i + 1 < len(messages) and messages[i + 1].get("role") == "assistant":
+                    asst_msg = messages[i + 1]
+                    i += 1  # advance past assistant
+
+                wf_id = asst_msg.get("workflow_id") or asst_msg.get("metadata", {}).get("workflow_id") if asst_msg else None
+                if not wf_id and asst_msg and isinstance(asst_msg.get("workflow_run"), dict):
+                    wf_id = asst_msg["workflow_run"].get("workflow_id")
+
+                asst_resp = asst_msg.get("content", "") if asst_msg else ""
+                final_out = (asst_msg.get("final_output") or asst_msg.get("metadata", {}).get("final_output") or (asst_msg.get("workflow_run", {}).get("final_output") if asst_msg else "")) if asst_msg else ""
+
+                # Fetch events specifically for this prompt/workflow
+                events = []
+                if asst_msg:
+                    events = asst_msg.get("execution_events") or asst_msg.get("metadata", {}).get("execution_events") or []
+
+                if not events and wf_id:
+                    if self.is_connected() and self._events_col is not None:
+                        try:
+                            events = list(self._events_col.find({"workflow_id": wf_id}, {"_id": 0}).sort("timestamp", 1))
+                        except Exception:
+                            events = []
+
+                enriched_evs = []
+                for ev in events:
+                    ed = dict(ev)
+                    ed["prompt"] = user_prompt
+                    ed["chat_id"] = chat_id
+                    ed["chat_title"] = chat.get("title", "Investigation")
+                    ed["turn_index"] = turn_counter
+                    if not ed.get("time") and ed.get("timestamp"):
+                        ed["time"] = ed["timestamp"]
+                    enriched_evs.append(ed)
+
+                delegations = asst_msg.get("delegations") or asst_msg.get("metadata", {}).get("delegations") or [] if asst_msg else []
+                interactions = asst_msg.get("interactions") or asst_msg.get("metadata", {}).get("interactions") or [] if asst_msg else []
+                graphs = {
+                    "execution_graph": asst_msg.get("execution_graph") or asst_msg.get("metadata", {}).get("execution_graph") if asst_msg else None,
+                    "authority_graph": asst_msg.get("authority_graph") or asst_msg.get("metadata", {}).get("authority_graph") if asst_msg else None,
+                    "interaction_graph": asst_msg.get("interaction_graph") or asst_msg.get("metadata", {}).get("interaction_graph") if asst_msg else None
+                }
+
+                turns.append({
+                    "turn_index": turn_counter,
+                    "prompt_id": prompt_id,
+                    "prompt": user_prompt,
+                    "timestamp": user_time,
+                    "chat_id": chat_id,
+                    "chat_title": chat.get("title", "Investigation"),
+                    "workflow_id": wf_id,
+                    "assistant_response": asst_resp,
+                    "final_output": final_out,
+                    "events": enriched_evs,
+                    "events_count": len(enriched_evs),
+                    "delegations": delegations,
+                    "delegations_count": len(delegations),
+                    "interactions": interactions,
+                    "interactions_count": len(interactions),
+                    "graphs": graphs,
+                    "status": "completed" if wf_id else "conversational"
+                })
+            i += 1
+
+        return turns
 
     def get_chat_delegations(self, chat_id: str) -> List[Dict[str, Any]]:
         """Returns authority delegations belonging to a chat."""

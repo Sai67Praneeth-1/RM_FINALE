@@ -412,13 +412,39 @@ def list_events(
     agent_id: Optional[str] = None,
     limit: int = 500
 ):
-    return store.list_execution_events(
+    raw_events = store.list_execution_events(
         workflow_id=workflow_id,
         delegation_id=delegation_id,
         trace_id=trace_id,
         agent_id=agent_id,
         limit=limit
     )
+    # Enrich with prompt and chat context
+    wf_cache: Dict[str, Any] = {}
+    enriched = []
+    for ev in raw_events:
+        d = ev.model_dump() if hasattr(ev, "model_dump") else (ev.dict() if hasattr(ev, "dict") else dict(ev))
+        wid = d.get("workflow_id")
+        if wid:
+            if wid not in wf_cache:
+                wf_run = store.get_workflow_run(wid)
+                chat = mongo_chat_store.find_chat_by_workflow_id(wid)
+                wf_cache[wid] = {
+                    "prompt": (wf_run.task_description if wf_run else None),
+                    "chat_id": (chat["id"] if chat else None),
+                    "chat_title": (chat["title"] if chat else None),
+                    "final_output": (wf_run.final_output if wf_run else None)
+                }
+            meta = wf_cache[wid]
+            d["prompt"] = meta.get("prompt") or d.get("prompt") or f"Workflow {wid}"
+            d["chat_id"] = meta.get("chat_id")
+            d["chat_title"] = meta.get("chat_title")
+            d["workflow_task"] = meta.get("prompt")
+            d["workflow_output"] = meta.get("final_output")
+        else:
+            d["prompt"] = d.get("prompt") or "System Task"
+        enriched.append(d)
+    return enriched
 
 @router.get("/delegations")
 def list_delegations(limit: int = 100):
@@ -1016,6 +1042,17 @@ def get_chat_telemetry_bundle(chat_id: str):
     if not bundle:
         raise HTTPException(status_code=404, detail="Chat not found")
     return bundle
+
+@router.get("/chats/{chat_id}/prompts_and_events")
+def get_chat_prompts_and_events(chat_id: str):
+    """
+    Returns all user prompts asked in this chat paired with their captured content,
+    assistant responses, analytical reports, and associated execution events.
+    """
+    chat = mongo_chat_store.get_chat(chat_id)
+    if not chat:
+        raise HTTPException(status_code=404, detail="Chat not found")
+    return mongo_chat_store.get_chat_prompts_and_events(chat_id)
 
 @router.post("/storage/reconnect")
 def reconnect_mongodb_endpoint():
