@@ -86,3 +86,63 @@ def test_api_chat_and_goal_flow(client):
     assert "langgraph_topology_dot" in flow_data
     assert len(flow_data["goal_traceability"]) == 4
 
+def test_api_chat_telemetry_endpoints(client):
+    # 1. Send task chat
+    chat_resp = client.post("/api/chat", json={
+        "message": "Audit customer complaints for fraud severity",
+        "dataset_name": "customer_complaints.csv",
+        "mode": "deterministic_demo"
+    })
+    assert chat_resp.status_code == 200
+    chat_data = chat_resp.json()
+    cid = chat_data["conversation_id"]
+
+    assert "execution_events" in chat_data
+    assert len(chat_data["execution_events"]) > 0
+    assert "delegations" in chat_data
+    assert len(chat_data["delegations"]) > 0
+    assert "interactions" in chat_data
+    assert len(chat_data["interactions"]) > 0
+    assert "execution_graph" in chat_data
+    assert "authority_graph" in chat_data
+    assert "interaction_graph" in chat_data
+
+    # 2. Query chat events
+    ev_resp = client.get(f"/api/chats/{cid}/events")
+    assert ev_resp.status_code == 200
+    events = ev_resp.json()
+    assert isinstance(events, list)
+    assert len(events) > 0
+
+    # 3. Query chat delegations
+    del_resp = client.get(f"/api/chats/{cid}/delegations")
+    assert del_resp.status_code == 200
+    delegations = del_resp.json()
+    assert isinstance(delegations, list)
+    assert len(delegations) > 0
+
+    # 4. Query chat interactions
+    ix_resp = client.get(f"/api/chats/{cid}/interactions")
+    assert ix_resp.status_code == 200
+    interactions = ix_resp.json()
+    assert isinstance(interactions, list)
+    assert len(interactions) > 0
+
+    # 5. Query chat telemetry bundle
+    telem_resp = client.get(f"/api/chats/{cid}/telemetry")
+    assert telem_resp.status_code == 200
+    telemetry = telem_resp.json()
+    assert telemetry["chat_id"] == cid
+    assert len(telemetry["execution_events"]) > 0
+    assert len(telemetry["delegations"]) > 0
+    assert len(telemetry["interactions"]) > 0
+    assert "execution_graph" in telemetry["graphs"]
+    assert "authority_graph" in telemetry["graphs"]
+
+    # 6. Storage reconnect endpoint
+    rec_resp = client.post("/api/storage/reconnect")
+    assert rec_resp.status_code == 200
+    rec_data = rec_resp.json()
+    assert "status" in rec_data
+    assert "collections" in rec_data["summary"]
+

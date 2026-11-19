@@ -81,3 +81,78 @@ def test_interaction_persistence(temp_db):
     assert fetched.sender_agent_id == "agent_coordinator"
     assert fetched.receiver_agent_id == "agent_researcher"
     assert fetched.interaction_type == InteractionType.REQUEST
+
+def test_mongo_chat_store_telemetry_persistence(tmp_path):
+    from backend.storage.mongo_chat_store import MongoChatStore
+
+    store = MongoChatStore(uri="", db_name="test_db")
+    store._local_file_path = str(tmp_path / "test_local_chats.json")
+    chat_id = "test_chat_storage_101"
+    wf_id = "wf_storage_999"
+
+    # Create chat and append assistant message
+    store.create_chat(title="Storage Test Chat", chat_id=chat_id)
+    store.append_message(
+        chat_id=chat_id,
+        role="assistant",
+        content="Workflow analytical result",
+        metadata={"workflow_id": wf_id}
+    )
+
+    sample_events = [
+        {"event_id": "ev_01", "event_type": "task_received", "agent_id": "agent_coordinator"},
+        {"event_id": "ev_02", "event_type": "tool_call", "agent_id": "agent_researcher"}
+    ]
+    sample_delgs = [
+        {"delegation_id": "del_01", "principal_id": "user", "agent_id": "agent_coordinator"}
+    ]
+    sample_ixs = [
+        {"interaction_id": "ix_01", "sender_agent_id": "agent_coordinator", "receiver_agent_id": "agent_researcher"}
+    ]
+    sample_graphs = {
+        "execution_graph": {"nodes": [{"id": "n1"}], "edges": []},
+        "authority_graph": {"nodes": [{"id": "a1"}], "edges": []},
+        "interaction_graph": {"nodes": [{"id": "i1"}], "edges": []}
+    }
+
+    result = store.store_workflow_telemetry(
+        chat_id=chat_id,
+        workflow_id=wf_id,
+        events=sample_events,
+        delegations=sample_delgs,
+        interactions=sample_ixs,
+        workflow_run={"workflow_id": wf_id, "status": "completed"},
+        graphs=sample_graphs,
+        provenance={"nodes": ["p1"]}
+    )
+
+    assert result["status"] == "success"
+    assert result["events_stored"] == 2
+    assert result["delegations_stored"] == 1
+    assert result["interactions_stored"] == 1
+
+    # Verify retrieval methods
+    retrieved_events = store.get_chat_events(chat_id)
+    assert len(retrieved_events) == 2
+    assert retrieved_events[0]["event_id"] == "ev_01"
+
+    retrieved_delgs = store.get_chat_delegations(chat_id)
+    assert len(retrieved_delgs) == 1
+    assert retrieved_delgs[0]["delegation_id"] == "del_01"
+
+    retrieved_ixs = store.get_chat_interactions(chat_id)
+    assert len(retrieved_ixs) == 1
+    assert retrieved_ixs[0]["interaction_id"] == "ix_01"
+
+    telemetry = store.get_chat_telemetry(chat_id)
+    assert telemetry["chat_id"] == chat_id
+    assert telemetry["workflow_id"] == wf_id
+    assert len(telemetry["execution_events"]) == 2
+    assert "execution_graph" in telemetry["graphs"]
+    assert telemetry["provenance"] is not None
+
+    summary = store.get_chat_telemetry_summary()
+    assert summary["total_execution_events"] >= 2
+    assert summary["total_delegations"] >= 1
+    assert summary["total_interactions"] >= 1
+    assert "execution_events" in summary["collections"]
