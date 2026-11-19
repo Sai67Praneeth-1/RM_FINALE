@@ -62,6 +62,9 @@ class ProvenanceTracker:
 
         return G
 
+    # Alias build_provenance_dag to build_provenance_graph for backwards/API compatibility
+    build_provenance_dag = build_provenance_graph
+
     def _classify_prov_type(self, raw_type: str, node_id: str) -> str:
         """Categorizes nodes into W3C PROV standard classes: Entity, Activity, Agent."""
         nid = str(node_id).lower()

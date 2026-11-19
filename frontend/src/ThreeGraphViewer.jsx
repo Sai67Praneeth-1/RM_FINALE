@@ -36,6 +36,10 @@ import {
   generateUnifiedThreeGraphMermaid,
 } from "./utils/mermaidGenerators";
 
+const API_BASE = typeof window !== "undefined" && window.location.hostname !== "127.0.0.1" && window.location.hostname !== "localhost"
+  ? `${window.location.protocol}//${window.location.host}/api`
+  : "http://127.0.0.1:8000/api";
+
 // Google Material Design 3 Node Colors
 export const OBSIDIAN_NODE_COLORS = {
   agent: { color: "#1a73e8", border: "#1a73e8", bg: "#e8f0fe", text: "#1a73e8" },
@@ -90,7 +94,7 @@ export default function ThreeGraphViewer({
     const fetchTrace = async () => {
       setTraceLoading(true);
       try {
-        const res = await fetch(`http://127.0.0.1:8000/api/graphs/backward-trace?workflow_id=${encodeURIComponent(selectedWorkflowId)}`);
+        const res = await fetch(`${API_BASE}/graphs/backward-trace?workflow_id=${encodeURIComponent(selectedWorkflowId)}`);
         if (res.ok && isMounted) {
           const data = await res.json();
           setTraceData(data);

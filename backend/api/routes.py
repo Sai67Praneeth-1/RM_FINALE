@@ -287,7 +287,7 @@ def get_datasets():
 
 @router.post("/workflow/start")
 def start_workflow(req: StartWorkflowRequest):
-    if req.mode in ["live_api", "live_huggingface", "live_ollama"]:
+    if req.mode in ["live_api", "live_gemini", "live_huggingface", "live_ollama"]:
         mode = WorkflowMode.LIVE_API
     else:
         mode = WorkflowMode.DETERMINISTIC_DEMO
@@ -306,7 +306,13 @@ def start_workflow(req: StartWorkflowRequest):
 @router.get("/langgraph/topologies")
 def get_langgraph_topologies():
     """Returns documentation and topology metadata for all research workflows."""
-    return get_available_workflow_topologies()
+    topos = get_available_workflow_topologies()
+    for wf_key, meta in topos.items():
+        try:
+            meta["mermaid_code"] = get_langgraph_mermaid(workflow_type=wf_key)
+        except Exception:
+            meta["mermaid_code"] = ""
+    return topos
 
 @router.get("/langgraph/topology/{workflow_type}")
 def get_langgraph_topology(workflow_type: str):
@@ -1648,6 +1654,13 @@ def get_goal_flow(workflow_id: str):
         "goal_traceability": matrix
     }
 
+@router.get("/provenance")
+def list_provenance(workflow_id: Optional[str] = None):
+    """Returns provenance edges or detailed provenance metadata if workflow_id is provided."""
+    if workflow_id:
+        return get_provenance_details(workflow_id)
+    return store.list_provenance_edges()
+
 @router.get("/provenance/{workflow_id}")
 def get_provenance(workflow_id: str):
     edges = store.list_provenance_edges(workflow_id=workflow_id)
@@ -1655,11 +1668,20 @@ def get_provenance(workflow_id: str):
 
 @router.get("/provenance/{workflow_id}/details")
 def get_provenance_details(workflow_id: str):
-    prov_graph = prov_tracker.build_provenance_dag(workflow_id)
+    prov_graph = prov_tracker.build_provenance_graph(workflow_id)
     edges = store.list_provenance_edges(workflow_id=workflow_id)
     comp = prov_tracker.get_provenance_completeness(workflow_id)
     prov_json = prov_tracker.export_prov_json(workflow_id)
     prov_n = prov_tracker.export_prov_n(workflow_id)
+    nodes = []
+    for nid, data in prov_graph.nodes(data=True):
+        nodes.append({
+            "id": nid,
+            "label": data.get("label", nid),
+            "node_type": data.get("node_type", "entity"),
+            "prov_category": data.get("prov_category", "prov:Entity"),
+            "entity_id": data.get("entity_id", nid)
+        })
     return {
         "workflow_id": workflow_id,
         "completeness": comp,
@@ -1667,7 +1689,8 @@ def get_provenance_details(workflow_id: str):
         "edges_count": len(edges),
         "prov_json": prov_json,
         "prov_n": prov_n,
-        "edges": edges
+        "edges": edges,
+        "nodes": nodes
     }
 
 @router.get("/evaluation/results")

@@ -50,8 +50,12 @@ import ThreeGraphViewer from "./ThreeGraphViewer";
 import ProvenanceDAG from "./components/ProvenanceDAG";
 import ProvenanceDrawer from "./components/ProvenanceDrawer";
 import CommandGraphInspector from "./components/CommandGraphInspector";
+import MermaidViewer from "./components/MermaidViewer";
+import ErrorBoundary from "./components/ErrorBoundary";
 
-const API_BASE = "http://127.0.0.1:8000/api";
+const API_BASE = typeof window !== "undefined" && window.location.hostname !== "127.0.0.1" && window.location.hostname !== "localhost"
+  ? `${window.location.protocol}//${window.location.host}/api`
+  : "http://127.0.0.1:8000/api";
 
 const NAV_SECTIONS = [
   {
@@ -197,7 +201,7 @@ export default function App() {
 
   // Tab 3: Topologies State
   const [topologies, setTopologies] = useState({});
-  const [selectedTopology, setSelectedTopology] = useState("adaptive");
+  const [selectedTopology, setSelectedTopology] = useState("consumer_sentiment");
 
   // Tab 4: Workspace State
   const [taskDesc, setTaskDesc] = useState("Audit customer complaints for High and Critical severity issues");
@@ -507,7 +511,11 @@ export default function App() {
       ]);
       setStatus(statusRes);
       setDatasets(datasetsRes || []);
-      setTopologies(topologiesRes || {});
+      const topos = topologiesRes || {};
+      setTopologies(topos);
+      if (topos && Object.keys(topos).length > 0 && !topos[selectedTopology]) {
+        setSelectedTopology(Object.keys(topos)[0]);
+      }
       setWorkflows(workflowsRes || []);
       if (workflowsRes && workflowsRes.length > 0) {
         setSelectedWorkflowId(workflowsRes[0].workflow_id);
@@ -562,6 +570,22 @@ export default function App() {
       fetchGatewayData();
     }
   }, [activeTab]);
+
+  // Reactive auto-fetch when entering Graphs or Provenance tabs
+  useEffect(() => {
+    if (!selectedWorkflowId && workflows.length > 0) {
+      setSelectedWorkflowId(workflows[0].workflow_id);
+    }
+  }, [workflows, selectedWorkflowId]);
+
+  useEffect(() => {
+    if (!selectedWorkflowId) return;
+    if (activeTab === "graphs") {
+      fetchGraphData(selectedWorkflowId);
+    } else if (activeTab === "provenance") {
+      fetchProvenance(selectedWorkflowId);
+    }
+  }, [activeTab, selectedWorkflowId]);
 
   useEffect(() => {
     let timer = null;
@@ -2830,44 +2854,155 @@ export default function App() {
 
         {/* View 4: LangGraph Topologies */}
         {activeTab === "topologies" && (
-          <div className="content-panel" style={{ background: "#f8f9fa" }}>
-            <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
-              {Object.keys(topologies).map((key) => {
-                const isSel = selectedTopology === key;
-                return (
-                  <button
-                    key={key}
-                    className={`pill-btn ${isSel ? "active" : ""}`}
-                    style={{
-                      background: isSel ? "#1a73e8" : "#ffffff",
-                      color: isSel ? "#ffffff" : "#5f6368",
-                      border: "1px solid #dadce0",
-                      borderRadius: 24,
-                      padding: "6px 16px",
-                      fontWeight: isSel ? 600 : 500,
-                      cursor: "pointer",
-                    }}
-                    onClick={() => setSelectedTopology(key)}
-                  >
-                    {topologies[key]?.name || key}
-                  </button>
-                );
-              })}
-            </div>
-
-            {topologies[selectedTopology] && (
-              <div className="stat-card" style={{ background: "#ffffff", border: "1px solid #dadce0", borderRadius: 8, padding: 20 }}>
-                <h3 style={{ color: "#1a73e8", marginBottom: 8, fontSize: 18, fontWeight: 700 }}>{topologies[selectedTopology].name}</h3>
-                <p style={{ color: "#5f6368", marginBottom: 12, fontSize: 13, lineHeight: 1.5 }}>{topologies[selectedTopology].description}</p>
-                <div style={{ fontSize: 13, color: "#1a73e8", marginBottom: 16, fontWeight: 500 }}>
-                  Paper Reference: {topologies[selectedTopology].paper_ref}
-                </div>
-                <div style={{ background: "#f8f9fa", padding: 16, borderRadius: 8, border: "1px solid #dadce0", overflowX: "auto" }}>
-                  <pre style={{ color: "#202124", fontSize: 13, margin: 0 }}>{topologies[selectedTopology].mermaid_code}</pre>
-                </div>
+          <ErrorBoundary title="Multi-Agent Topologies View Error">
+            <div className="content-panel" style={{ background: "#f8f9fa", display: "flex", flexDirection: "column", gap: 16 }}>
+              {/* Squad Selector Pills */}
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+                {Object.keys(topologies).length === 0 ? (
+                  <div style={{ padding: "8px 16px", color: "#5f6368", fontSize: 13 }}>
+                    <RefreshCw size={14} className="spin-icon" style={{ display: "inline-block", marginRight: 8, verticalAlign: "middle" }} />
+                    Loading Multi-Agent Topologies...
+                  </div>
+                ) : (
+                  Object.keys(topologies).map((key) => {
+                    const activeKey = (selectedTopology && topologies[selectedTopology]) ? selectedTopology : Object.keys(topologies)[0];
+                    const isSel = activeKey === key;
+                    return (
+                      <button
+                        key={key}
+                        className={`pill-btn ${isSel ? "active" : ""}`}
+                        style={{
+                          background: isSel ? "#1a73e8" : "#ffffff",
+                          color: isSel ? "#ffffff" : "#5f6368",
+                          border: isSel ? "1px solid #1a73e8" : "1px solid #dadce0",
+                          borderRadius: 24,
+                          padding: "8px 16px",
+                          fontWeight: isSel ? 600 : 500,
+                          cursor: "pointer",
+                          fontSize: 13,
+                          boxShadow: isSel ? "0 1px 3px rgba(26,115,232,0.3)" : "none",
+                          transition: "all 0.15s ease",
+                        }}
+                        onClick={() => setSelectedTopology(key)}
+                      >
+                        {topologies[key]?.name || key}
+                      </button>
+                    );
+                  })
+                )}
               </div>
-            )}
-          </div>
+
+              {/* Topology Detail & Architecture Diagram */}
+              {(() => {
+                const activeKey = (selectedTopology && topologies[selectedTopology]) ? selectedTopology : Object.keys(topologies)[0];
+                const topo = topologies[activeKey];
+                if (!topo) return null;
+                return (
+                  <div className="stat-card" style={{ background: "#ffffff", border: "1px solid #dadce0", borderRadius: 8, padding: 22 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 12, marginBottom: 12 }}>
+                      <div>
+                        <h3 style={{ color: "#1a73e8", margin: "0 0 6px 0", fontSize: 18, fontWeight: 700 }}>
+                          {topo.name}
+                        </h3>
+                        <p style={{ color: "#5f6368", margin: 0, fontSize: 13, lineHeight: 1.5 }}>
+                          {topo.description}
+                        </p>
+                      </div>
+                      <button
+                        className="pill-btn"
+                        onClick={() => {
+                          setWorkflowType(activeKey);
+                          setActiveTab("workspace");
+                          navigate("/workspace");
+                        }}
+                        style={{
+                          background: "#e8f0fe",
+                          border: "1px solid #1a73e8",
+                          color: "#1a73e8",
+                          padding: "6px 14px",
+                          borderRadius: 20,
+                          fontSize: 12,
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 6,
+                        }}
+                      >
+                        <PlayCircle size={14} />
+                        <span>Run in Workspace</span>
+                      </button>
+                    </div>
+
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 16, alignItems: "center", marginBottom: 16, paddingTop: 12, borderTop: "1px solid #f1f3f4" }}>
+                      <div style={{ fontSize: 12.5, color: "#1a73e8", fontWeight: 600 }}>
+                        Paper Topology Reference: <span style={{ color: "#202124", fontWeight: 500 }}>{topo.paper_ref}</span>
+                      </div>
+
+                      {topo.agents && topo.agents.length > 0 && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                          <span style={{ fontSize: 12, color: "#5f6368", fontWeight: 600 }}>Squad Members:</span>
+                          {topo.agents.map((ag) => (
+                            <span
+                              key={ag}
+                              style={{
+                                background: "#f1f3f4",
+                                color: "#202124",
+                                padding: "2px 8px",
+                                borderRadius: 12,
+                                fontSize: 11,
+                                fontWeight: 500,
+                                border: "1px solid #dadce0",
+                              }}
+                            >
+                              {ag.replace("agent_", "").toUpperCase()}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {topo.features && topo.features.length > 0 && (
+                        <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                          <span style={{ fontSize: 12, color: "#5f6368", fontWeight: 600 }}>Features:</span>
+                          {topo.features.map((feat) => (
+                            <span
+                              key={feat}
+                              style={{
+                                background: "#e6f4ea",
+                                color: "#137333",
+                                padding: "2px 8px",
+                                borderRadius: 12,
+                                fontSize: 11,
+                                fontWeight: 500,
+                                border: "1px solid #ceead6",
+                              }}
+                            >
+                              ✓ {feat}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Interactive Mermaid Topology Diagram */}
+                    <div style={{ border: "1px solid #dadce0", borderRadius: 8, overflow: "hidden" }}>
+                      {topo.mermaid_code ? (
+                        <MermaidViewer
+                          chart={topo.mermaid_code}
+                          title={`${topo.name} Flowchart`}
+                          diagramType="LangGraph Multi-Agent Topology"
+                        />
+                      ) : (
+                        <div style={{ padding: 24, textAlign: "center", color: "#5f6368", fontSize: 13 }}>
+                          Loading LangGraph compiled diagram...
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          </ErrorBoundary>
         )}
 
         {/* View 3: Agent Workspace (Task Runner) */}
@@ -2907,9 +3042,22 @@ export default function App() {
                       onChange={(e) => setWorkflowType(e.target.value)}
                       style={{ width: "100%", padding: "10px", background: "#ffffff", border: "1px solid #dadce0", borderRadius: 8, color: "#202124" }}
                     >
-                      <option value="adaptive">Adaptive Multi-Agent</option>
-                      <option value="w1_parallel">W1 Parallel Subtasks (Sec 7.2.1)</option>
-                      <option value="w3_retry">W3 Trial-and-Adapt (Sec 7.2.3)</option>
+                      {Object.keys(topologies).length > 0 ? (
+                        Object.entries(topologies).map(([k, meta]) => (
+                          <option key={k} value={k}>{meta.name || k}</option>
+                        ))
+                      ) : (
+                        <>
+                          <option value="adaptive">Adaptive Multi-Agent (Canonical)</option>
+                          <option value="consumer_sentiment">Consumer Experience & Sentiment Squad</option>
+                          <option value="security_forensics">SecOps Forensics & Privilege Escalation</option>
+                          <option value="cross_squad">Cross-Squad Enterprise Collaboration</option>
+                          <option value="adversarial_critic">Adversarial Critic & Debate Squad</option>
+                          <option value="rapid_consensus">Rapid Consensus Squad</option>
+                          <option value="w1_parallel">W1 Parallel Subtasks (Sec 7.2.1)</option>
+                          <option value="w3_retry">W3 Trial-and-Adapt (Sec 7.2.3)</option>
+                        </>
+                      )}
                     </select>
                   </div>
 
@@ -3904,26 +4052,29 @@ export default function App() {
 
         {/* View 7: Three-Graph Explorer (Execution, Authority, Interaction, & Unified Overlay) */}
         {activeTab === "graphs" && (
-          <div className="content-panel">
-            <ThreeGraphViewer
-              graphData={graphData}
-              selectedWorkflowId={selectedWorkflowId}
-              workflows={workflows}
-              onSelectWorkflow={(wf) => {
-                setSelectedWorkflowId(wf);
-                navigate(`/graphs?workflow_id=${encodeURIComponent(wf)}`, { replace: true });
-                fetchGraphData(wf);
-              }}
-              onRefresh={() => selectedWorkflowId && fetchGraphData(selectedWorkflowId)}
-              onRunSampleWorkflow={runSampleWorkflow}
-              autoTrace={searchParams.get("auto_trace") === "true"}
-            />
-          </div>
+          <ErrorBoundary title="Three-Graph Explorer View Error">
+            <div className="content-panel">
+              <ThreeGraphViewer
+                graphData={graphData}
+                selectedWorkflowId={selectedWorkflowId}
+                workflows={workflows}
+                onSelectWorkflow={(wf) => {
+                  setSelectedWorkflowId(wf);
+                  navigate(`/graphs?workflow_id=${encodeURIComponent(wf)}`, { replace: true });
+                  fetchGraphData(wf);
+                }}
+                onRefresh={() => selectedWorkflowId && fetchGraphData(selectedWorkflowId)}
+                onRunSampleWorkflow={runSampleWorkflow}
+                autoTrace={searchParams.get("auto_trace") === "true"}
+              />
+            </div>
+          </ErrorBoundary>
         )}
 
         {/* View 7: Provenance Explorer */}
         {activeTab === "provenance" && (
-          <div className="content-panel" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+          <ErrorBoundary title="Provenance & Lineage View Error">
+            <div className="content-panel" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
             {/* Top Bar with Workflow Selector & Completeness Progress */}
             <div
               className="stat-card"
@@ -3964,11 +4115,15 @@ export default function App() {
                     cursor: "pointer",
                   }}
                 >
-                  {workflows.map((w) => (
-                    <option key={w.workflow_id} value={w.workflow_id}>
-                      {w.workflow_id}
-                    </option>
-                  ))}
+                  {workflows.length > 0 ? (
+                    workflows.map((w) => (
+                      <option key={w.workflow_id} value={w.workflow_id}>
+                        {w.workflow_id}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="">No workflows recorded yet</option>
+                  )}
                 </select>
 
                 <button
@@ -4121,11 +4276,13 @@ export default function App() {
               </div>
             </div>
           </div>
+          </ErrorBoundary>
         )}
 
         {/* View 8: Event Inspector */}
         {activeTab === "events" && (
-          <div className="content-panel">
+          <ErrorBoundary title="Raw Event Inspector View Error">
+            <div className="content-panel">
             <div className="stat-card" style={{ marginBottom: 16 }}>
               <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 16 }}>
                 <div>
@@ -4538,6 +4695,7 @@ export default function App() {
               </div>
             )}
           </div>
+          </ErrorBoundary>
         )}
 
 

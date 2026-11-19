@@ -84,7 +84,7 @@ export function generateC4ContainerDiagram() {
 
     ThreeGraphs -->|"10. Validates Structural Invariants"| Validator
     MultiAgentFleet -->|"Queries Inference"| Gemini
-    MultiAgentFleet -->|"Routes Multi-Model Dialogue"| HFRouter
+    MultiAgentFleet -->|"Routes Multi-Agent Consensus"| ConsensusEngine
 `;
 }
 
